@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>为什么我用纯静态页面写博客 · AstraZhou</title>
+<meta name="description" content="选纯静态页面写博客的几个理由。">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="brand" href="../index.html">AstraZhou</a>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../about.html">关于</a>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <header>
+        <h1>为什么我用纯静态页面写博客</h1>
+        <div class="meta"><time datetime="2025-01-02">2025-01-02</time></div>
+      </header>
+
+      <p>博客这个东西，内容的价值远远大于技术栈的价值。所以选技术栈的唯一标准是：它会不会成为我写东西的阻力。</p>
+
+      <h2>理由一：没有服务器可以挂</h2>
+      <p>静态文件只是文件。没有数据库连接池、没有依赖升级、没有半夜的告警。托管平台上放一份，它就在那里。</p>
+
+      <h2>理由二：十年后还能打开</h2>
+      <p>HTML 和 CSS 是向后兼容的。今天写下的页面，十年后浏览器仍然能正确渲染。相比之下，任何一个前端框架的构建产物都活不了那么久。</p>
+
+      <h2>理由三：迁移成本接近零</h2>
+      <p>整个站点就是一堆文件，换托管商只需要把文件复制过去。没有需要重建的运行时环境。</p>
+
+      <h2>代价是什么</h2>
+      <ul>
+        <li>没有后台，加文章要手动改 HTML。</li>
+        <li>没有评论、搜索、标签这些功能，需要自己加。</li>
+        <li>文章多到几百篇时，手动维护列表会很烦——那时候写个十行脚本生成列表就行。</li>
+      </ul>
+
+      <p>在文章数量还不到「需要脚本」之前，这些代价都是零。</p>
+
+      <a class="back" href="../index.html">← 返回首页</a>
+    </article>
+  </main>
+
+  <footer class="site">© <span id="y">2025</span> AstraZhou</footer>
+
+</div>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
