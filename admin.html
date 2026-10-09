@@ -330,6 +330,8 @@
       var marker = '<ul class="posts">\n';
       if (html.indexOf(marker) === -1) throw new Error('index.html 结构变了，找不到文章列表，请手工加一条链接');
       var next = html.replace(marker, marker + li);
+      // 去掉「暂无文章」占位（发出第一篇后它就该消失）
+      next = next.replace(/[ \t]*<li class="empty">[^\n]*<\/li>\n/, '');
 
       return gh('contents/index.html', {
         method: 'PUT',
