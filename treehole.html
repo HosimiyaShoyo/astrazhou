@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>树洞 · Astra Zhou</title>
+<meta name="description" content="Astra Zhou 的树洞：想说什么都可以，只有我能看到。">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  [hidden] { display: none !important; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem; margin: 0 0 1.4rem; }
+  .hint { font-size: .84rem; color: var(--muted); line-height: 1.75; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 1rem 0 .25rem; }
+  input[type=text], textarea, select {
+    width: 100%; padding: .6rem .7rem; font-size: 1rem; font-family: inherit;
+    color: var(--fg); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  textarea { min-height: 11rem; line-height: 1.7; resize: vertical; }
+  button {
+    font: inherit; font-size: .95rem; padding: .65rem 1.4rem; border-radius: 8px;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    cursor: pointer; margin: 1.3rem 0 0;
+  }
+  .msg { margin-top: 1rem; padding: .8rem .95rem; border-radius: 8px; font-size: .9rem; line-height: 1.7; }
+  .msg.ok { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.45); }
+  .form { margin-top: 1.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="brand" href="index.html">Astra Zhou</a>
+    <nav>
+      <a href="index.html">首页</a>
+      <a href="about.html">关于</a>
+      <a href="treehole.html" aria-current="page">树洞</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>树洞</h1>
+    <p class="lead">想说什么都可以，只有我能看到。</p>
+
+    <div class="card">
+      <p class="hint" style="margin:0">
+        不用署名，也不用解释自己。开心、难过、说不出口的话，都可以丢进来。<br>
+        留言会直接送到我的邮箱，我读得到，别人看不到。<br>
+        哪条我想认真回应，会匿名写进博客里 —— 除非你选了「只给我看」。
+      </p>
+    </div>
+
+    <div id="sent" class="msg ok" hidden>
+      收到了，谢谢你愿意说给我听。<br>
+      我会慢慢看，也会认真回。
+    </div>
+
+    <form class="form" action="https://formsubmit.co/zyx3067354436@foxmail.com" method="POST">
+      <input type="hidden" name="_subject" value="【树洞】新留言">
+      <input type="hidden" name="_next" value="https://hosimiyashoyo.github.io/astrazhou/treehole.html?sent=1">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_template" value="table">
+      <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+
+      <label for="nick">怎么称呼你（可以不填）</label>
+      <input type="text" id="nick" name="称呼" maxlength="40" placeholder="匿名也可以">
+
+      <label for="msg">想说的话</label>
+      <textarea id="msg" name="内容" maxlength="2000" required placeholder="慢慢写，不着急……"></textarea>
+
+      <label for="vis">这条可以匿名写进博客吗</label>
+      <select id="vis" name="可否公开">
+        <option value="可以匿名公开">可以，匿名公开</option>
+        <option value="只给我看，不要公开">不要公开，只给我看</option>
+      </select>
+
+      <label for="contact">想让我私下回你，就留个联系方式（选填）</label>
+      <input type="text" id="contact" name="联系方式" maxlength="80" placeholder="邮箱 / 微信 / QQ 都行">
+
+      <button type="submit">投进树洞</button>
+      <p class="hint" style="margin:.9rem 0 0">提交后会跳回这一页，不会有其他人看到你写了什么。</p>
+    </form>
+  </main>
+
+  <footer class="site">© <span id="y">2025</span> Astra Zhou</footer>
+
+</div>
+<script>
+(function () {
+  document.getElementById('y').textContent = new Date().getFullYear();
+  if (location.search.indexOf('sent=1') !== -1) {
+    document.getElementById('sent').hidden = false;
+    window.scrollTo(0, 0);
+  }
+})();
+</script>
+</body>
+</html>
