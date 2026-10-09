@@ -17,16 +17,24 @@
   }
 
   function get(key) {
-    return fetch(API + 'get/' + NS + '/' + encodeURIComponent(key) + '?create=true', { cache: 'no-store' })
+    return fetch(API + 'get/' + NS + '/' + encodeURIComponent(key), { cache: 'no-store' })
       .then(function (r) { return r.json(); })
-      .then(function (d) { return typeof d.value === 'number' ? d.value : null; })
+      .then(function (d) {
+        if (typeof d.value === 'number') return d.value;
+        if (d.error === 'Key not found') return 0;   /* 还没人看过 = 0，而不是读取失败 */
+        return null;
+      })
       .catch(function () { return null; });
   }
 
   function hit(key) {
     return fetch(API + 'hit/' + NS + '/' + encodeURIComponent(key), { keepalive: true })
       .then(function (r) { return r.json(); })
-      .then(function (d) { return typeof d.value === 'number' ? d.value : null; })
+      .then(function (d) {
+        if (typeof d.value === 'number') return d.value;
+        if (d.error === 'Key not found') return 0;   /* 还没人看过 = 0，而不是读取失败 */
+        return null;
+      })
       .catch(function () { return null; });
   }
 
