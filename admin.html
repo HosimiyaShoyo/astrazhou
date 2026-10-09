@@ -201,7 +201,8 @@
       init.headers['Content-Type'] = 'application/json';
       init.body = JSON.stringify(opts.body);
     }
-    return fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/' + path, init)
+    var url = 'https://api.github.com/repos/' + OWNER + '/' + REPO + (path ? '/' + path : '');
+    return fetch(url, init)
       .then(function (res) {
         return res.json().catch(function () { return {}; }).then(function (data) {
           if (!res.ok) {
@@ -373,9 +374,9 @@
     store(K_TOKEN, tk);
     btn.disabled = true;
     say($('setup-msg'), 'ok', '正在验证…');
-    gh('')
-      .then(function (r) {
-        say($('setup-msg'), 'ok', '✅ 连接成功：' + r.full_name);
+    gh('contents/index.html')
+      .then(function () {
+        say($('setup-msg'), 'ok', '✅ 连接成功：' + OWNER + '/' + REPO + '（能读写文件）');
         $('token').value = '';
         refresh();
         initEditor();
