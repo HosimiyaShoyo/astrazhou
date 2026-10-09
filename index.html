@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AstraZhou</title>
+<meta name="description" content="AstraZhou 的个人博客 —— 记录技术、思考与日常。">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="brand" href="index.html">AstraZhou</a>
+    <nav>
+      <a href="index.html" aria-current="page">首页</a>
+      <a href="about.html">关于</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>AstraZhou</h1>
+    <p class="lead">记录技术、思考与日常。</p>
+
+    <h2>文章</h2>
+    <ul class="posts">
+      <li>
+        <a class="title" href="posts/hello-world.html">你好，世界：这个博客的第一篇文章</a>
+        <time datetime="2025-01-01">2025-01-01</time>
+      </li>
+      <li>
+        <a class="title" href="posts/why-static-blog.html">为什么我用纯静态页面写博客</a>
+        <time datetime="2025-01-02">2025-01-02</time>
+      </li>
+    </ul>
+  </main>
+
+  <footer class="site">
+    © <span id="y">2025</span> AstraZhou
+  </footer>
+
+</div>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
