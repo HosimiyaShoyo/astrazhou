@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写作后台 · AstraZhou</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  [hidden] { display: none !important; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem; margin: 0 0 1.4rem; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: .85rem 0 .25rem; }
+  label:first-child { margin-top: 0; }
+  input[type=text], input[type=password], input[type=date], textarea {
+    width: 100%; padding: .6rem .7rem; font-size: 1rem; font-family: inherit;
+    color: var(--fg); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  textarea { min-height: 14rem; line-height: 1.65; resize: vertical; }
+  input[type=file] { font-size: .9rem; color: var(--muted); margin-top: .3rem; }
+  button {
+    font: inherit; font-size: .95rem; padding: .6rem 1.1rem; border-radius: 8px;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    cursor: pointer; margin: .9rem .6rem 0 0;
+  }
+  button.ghost { background: transparent; color: var(--accent); }
+  button.tiny { padding: .3rem .5rem; font-size: .78rem; margin: .35rem 0 0; width: 100%; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .msg { margin-top: 1rem; padding: .75rem .9rem; border-radius: 8px; font-size: .9rem;
+         white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+  .msg.ok  { background: rgba(34,197,94,.12);  border: 1px solid rgba(34,197,94,.45); }
+  .msg.err { background: rgba(239,68,68,.12);  border: 1px solid rgba(239,68,68,.45); }
+  .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+         justify-content: space-between; margin-bottom: 1.2rem; }
+  .hint { font-size: .84rem; color: var(--muted); line-height: 1.7; }
+  .hint ol, .hint ul { padding-left: 1.2rem; margin: .4rem 0; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .9rem; }
+  .thumb { width: 100px; }
+  .thumb img { width: 100px; height: 100px; object-fit: cover;
+               border-radius: 8px; border: 1px solid var(--line); display: block; }
+  .warn { border-left: 3px solid #f59e0b; padding-left: .8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="brand" href="index.html">AstraZhou</a>
+    <nav>
+      <a href="index.html">首页</a>
+      <a href="admin.html" aria-current="page">写作后台</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ========== 1. 密码门 ========== -->
+    <section id="lock" hidden>
+      <h1>写作后台</h1>
+      <div class="card">
+        <label for="pw">管理密码</label>
+        <input type="password" id="pw" autocomplete="current-password" placeholder="输入密码">
+        <button id="unlock">进入</button>
+        <div id="lock-msg" class="msg err" hidden></div>
+      </div>
+      <p class="hint warn">
+        说明：这道密码只是「挡住随手乱点的人」。这个站是纯静态的，密码写在网页源码里，
+        懂技术的人能看到。真正防止别人改你博客的，是下一步要填的 GitHub 钥匙 —— 那串东西只存在
+        你这台设备的浏览器里，没有它谁也写不了任何东西。
+      </p>
+    </section>
+
+    <!-- ========== 2. 连接 GitHub ========== -->
+    <section id="setup" hidden>
+      <h1>连接 GitHub</h1>
+      <p class="hint">
+        要能发文章和传图片，需要一把「只能改这一个仓库」的钥匙（Personal Access Token）。
+        它只保存在本机浏览器，不会发到任何地方去。
+      </p>
+      <div class="card">
+        <p class="hint" style="margin-top:0"><strong>怎么拿这把钥匙：</strong></p>
+        <div class="hint">
+          <ol>
+            <li>打开 <code>https://github.com/settings/personal-access-tokens/new</code></li>
+            <li>Token name 填 <code>blog-admin</code>，Expiration 选 90 days 或 No expiration</li>
+            <li>Repository access 选 <strong>Only select repositories</strong> → 勾 <code>HosimiyaShoyo/astrazhou</code></li>
+            <li>Permissions → Repository permissions → 找到 <strong>Contents</strong> → 选 <strong>Read and write</strong></li>
+            <li>点 Generate token，复制那串 <code>github_pat_...</code></li>
+          </ol>
+        </div>
+        <label for="token">GitHub Token</label>
+        <input type="password" id="token" placeholder="github_pat_... 或 ghp_...">
+        <button id="save-token">保存并测试</button>
+        <div id="setup-msg" class="msg" hidden></div>
+      </div>
+    </section>
+
+    <!-- ========== 3. 编辑器 ========== -->
+    <section id="editor" hidden>
+      <div class="bar">
+        <h1 style="margin:0">写作后台</h1>
+        <div>
+          <button class="ghost" id="change-token">更换钥匙</button>
+          <button class="ghost" id="logout">退出</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">写文章</h2>
+        <label for="a-title">标题</label>
+        <input type="text" id="a-title" placeholder="文章标题">
+
+        <label for="a-slug">文件名（英文、数字、连字符，别用空格和中文）</label>
+        <input type="text" id="a-slug" placeholder="my-post">
+
+        <label for="a-date">日期</label>
+        <input type="date" id="a-date">
+
+        <label for="a-body">正文</label>
+        <textarea id="a-body" placeholder="直接写就行。&#10;&#10;空一行 = 新段落&#10;## 开头 = 小标题&#10;> 开头 = 引用&#10;![说明](图片网址) 单独一行 = 插图"></textarea>
+
+        <button id="publish">发布文章</button>
+        <div id="pub-msg" class="msg" hidden></div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">上传图片</h2>
+        <p class="hint" style="margin-top:0">
+          图片会存进站点的 <code>assets/images/</code>。单张建议不超过 5MB，太大的先压缩一下。
+        </p>
+        <input type="file" id="img" accept="image/*">
+        <div id="img-msg" class="msg" hidden></div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site">© <span id="y">2025</span> AstraZhou</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var OWNER  = 'HosimiyaShoyo';
+  var REPO   = 'astrazhou';
+  var BRANCH = 'main';
+  var SITE   = 'https://hosimiyashoyo.github.io/astrazhou';
+  var PASSWORD = 'zyx0898';
+
+  var K_AUTH  = 'astra_admin_ok';
+  var K_TOKEN = 'astra_gh_token';
+
+  function $(id) { return document.getElementById(id); }
+
+  function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function read(k)      { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function drop(k)      { try { localStorage.removeItem(k); } catch (e) {} }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function b64encode(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function b64decode(b64) {
+    var bin = atob(String(b64).replace(/\s/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function say(el, kind, text) {
+    el.hidden = false;
+    el.className = 'msg ' + kind;
+    el.textContent = text;
+  }
+
+  /* ---------- GitHub API ---------- */
+  function gh(path, opts) {
+    opts = opts || {};
+    var token = read(K_TOKEN);
+    var init = {
+      method: opts.method || 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      cache: 'no-store'
+    };
+    if (opts.body) {
+      init.headers['Content-Type'] = 'application/json';
+      init.body = JSON.stringify(opts.body);
+    }
+    return fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/' + path, init)
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok) {
+            var m = data && data.message ? data.message : ('HTTP ' + res.status);
+            if (res.status === 401) m = '钥匙无效或已过期，请重新生成 Token';
+            if (res.status === 403) m = '钥匙权限不够（需要这个仓库的 Contents: Read and write）';
+            if (res.status === 404) m = '找不到资源或钥匙没有这个仓库的访问权';
+            var err = new Error(m);
+            err.status = res.status;
+            throw err;
+          }
+          return data;
+        });
+      });
+  }
+
+  /* ---------- 正文 -> HTML ---------- */
+  function renderBody(text) {
+    var lines = String(text).replace(/\r\n/g, '\n').split('\n');
+    var out = [];
+    var buf = [];
+
+    function flush() {
+      if (buf.length) {
+        out.push('      <p>' + buf.join('<br>') + '</p>');
+        buf = [];
+      }
+    }
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line) { flush(); continue; }
+
+      var img = line.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/);
+      if (img) {
+        flush();
+        out.push('      <p><img src="' + escapeHtml(img[2]) + '" alt="' +
+                 escapeHtml(img[1]) + '" style="max-width:100%;height:auto"></p>');
+        continue;
+      }
+      if (line.indexOf('## ') === 0) {
+        flush();
+        out.push('      <h2>' + escapeHtml(line.slice(3)) + '</h2>');
+        continue;
+      }
+      if (line.indexOf('> ') === 0) {
+        flush();
+        out.push('      <blockquote>' + escapeHtml(line.slice(2)) + '</blockquote>');
+        continue;
+      }
+      buf.push(escapeHtml(line));
+    }
+    flush();
+    return out.join('\n');
+  }
+
+  function buildPost(title, date, body) {
+    var t = escapeHtml(title);
+    return [
+      '<!DOCTYPE html>',
+      '<html lang="zh-CN">',
+      '<head>',
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      '<title>' + t + ' · AstraZhou</title>',
+      '<meta name="description" content="' + t + '">',
+      '<link rel="stylesheet" href="../assets/style.css">',
+      '</head>',
+      '<body>',
+      '<div class="wrap">',
+      '',
+      '  <header class="site">',
+      '    <a class="brand" href="../index.html">AstraZhou</a>',
+      '    <nav>',
+      '      <a href="../index.html">首页</a>',
+      '      <a href="../about.html">关于</a>',
+      '    </nav>',
+      '  </header>',
+      '',
+      '  <main>',
+      '    <article>',
+      '      <header>',
+      '        <h1>' + t + '</h1>',
+      '        <div class="meta"><time datetime="' + date + '">' + date + '</time></div>',
+      '      </header>',
+      '',
+      renderBody(body),
+      '',
+      '      <a class="back" href="../index.html">← 返回首页</a>',
+      '    </article>',
+      '  </main>',
+      '',
+      '  <footer class="site">© <span id="y">2025</span> AstraZhou</footer>',
+      '',
+      '</div>',
+      '<script>document.getElementById("y").textContent = new Date().getFullYear();<\/script>',
+      '</body>',
+      '</html>',
+      ''
+    ].join('\n');
+  }
+
+  /* ---------- 写文件 / 读文件 ---------- */
+  function putFile(path, content, message) {
+    var url = 'contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + BRANCH;
+    return gh(url).then(function (cur) { return cur.sha; }, function () { return null; })
+      .then(function (sha) {
+        var body = { message: message, content: b64encode(content), branch: BRANCH };
+        if (sha) body.sha = sha;
+        return gh('contents/' + path.split('/').map(encodeURIComponent).join('/'), {
+          method: 'PUT', body: body
+        });
+      });
+  }
+
+  function updateIndex(title, date, path) {
+    return gh('contents/index.html?ref=' + BRANCH).then(function (cur) {
+      var html = b64decode(cur.content);
+      if (html.indexOf('href="' + path + '"') !== -1) return false;
+
+      var li = '      <li>\n' +
+               '        <a class="title" href="' + path + '">' + escapeHtml(title) + '</a>\n' +
+               '        <time datetime="' + date + '">' + date + '</time>\n' +
+               '      </li>\n';
+
+      var marker = '<ul class="posts">\n';
+      if (html.indexOf(marker) === -1) throw new Error('index.html 结构变了，找不到文章列表，请手工加一条链接');
+      var next = html.replace(marker, marker + li);
+
+      return gh('contents/index.html', {
+        method: 'PUT',
+        body: { message: 'index: 添加《' + title + '》', content: b64encode(next), branch: BRANCH, sha: cur.sha }
+      }).then(function () { return true; });
+    });
+  }
+
+  /* ---------- 界面切换 ---------- */
+  function refresh() {
+    var unlocked = read(K_AUTH) === '1';
+    var hasToken = !!read(K_TOKEN);
+    $('lock').hidden   = unlocked;
+    $('setup').hidden  = !unlocked || hasToken;
+    $('editor').hidden = !unlocked || !hasToken;
+  }
+
+  /* ---------- 密码门 ---------- */
+  $('unlock').addEventListener('click', function () {
+    var v = $('pw').value;
+    if (v === PASSWORD) {
+      store(K_AUTH, '1');
+      $('pw').value = '';
+      $('lock-msg').hidden = true;
+      refresh();
+    } else {
+      say($('lock-msg'), 'err', '密码不对。');
+    }
+  });
+  $('pw').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') $('unlock').click();
+  });
+
+  /* ---------- 保存并测试 Token ---------- */
+  $('save-token').addEventListener('click', function () {
+    var tk = $('token').value.trim();
+    var btn = $('save-token');
+    if (!tk) { say($('setup-msg'), 'err', '请先粘贴 Token。'); return; }
+    store(K_TOKEN, tk);
+    btn.disabled = true;
+    say($('setup-msg'), 'ok', '正在验证…');
+    gh('')
+      .then(function (r) {
+        say($('setup-msg'), 'ok', '✅ 连接成功：' + r.full_name);
+        $('token').value = '';
+        refresh();
+        initEditor();
+      })
+      .catch(function (e) {
+        drop(K_TOKEN);
+        say($('setup-msg'), 'err', '❌ ' + e.message);
+      })
+      .then(function () { btn.disabled = false; });
+  });
+
+  $('change-token').addEventListener('click', function () {
+    drop(K_TOKEN);
+    $('setup-msg').hidden = true;
+    refresh();
+  });
+
+  $('logout').addEventListener('click', function () {
+    drop(K_AUTH);
+    refresh();
+  });
+
+  /* ---------- 初始化编辑器 ---------- */
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + '-' +
+           String(d.getMonth() + 1).padStart(2, '0') + '-' +
+           String(d.getDate()).padStart(2, '0');
+  }
+
+  var editorReady = false;
+  function initEditor() {
+    if (editorReady) return;
+    editorReady = true;
+    $('a-date').value = today();
+    $('a-slug').value = 'post-' + today().replace(/-/g, '');
+  }
+
+  /* ---------- 发布文章 ---------- */
+  $('publish').addEventListener('click', function () {
+    var title = $('a-title').value.trim();
+    var slug  = $('a-slug').value.trim();
+    var date  = $('a-date').value || today();
+    var body  = $('a-body').value.trim();
+    var msg   = $('pub-msg');
+    var btn   = $('publish');
+
+    if (!title) { say(msg, 'err', '标题不能为空。'); return; }
+    if (!/^[A-Za-z0-9._-]+$/.test(slug)) {
+      say(msg, 'err', '文件名只能用英文、数字、点、下划线、连字符。');
+      return;
+    }
+    if (!body) { say(msg, 'err', '正文不能为空。'); return; }
+
+    var path = 'posts/' + slug + '.html';
+    btn.disabled = true;
+    say(msg, 'ok', '正在发布…');
+
+    putFile(path, buildPost(title, date, body), 'post: ' + title)
+      .then(function () { return updateIndex(title, date, path); })
+      .then(function (added) {
+        say(msg, 'ok',
+          '✅ 发布成功\n' +
+          '文章：' + SITE + '/' + path + '\n' +
+          (added ? '首页列表已更新。\n' : '（首页里已有这条链接，没重复添加）\n') +
+          'GitHub Pages 需要 1–2 分钟重新构建，稍后刷新首页就能看到。');
+        $('a-title').value = '';
+        $('a-body').value = '';
+      })
+      .catch(function (e) {
+        say(msg, 'err', '❌ ' + e.message);
+      })
+      .then(function () { btn.disabled = false; });
+  });
+
+  /* ---------- 上传图片 ---------- */
+  $('img').addEventListener('change', function () {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    var msg = $('img-msg');
+
+    if (file.size > 5 * 1024 * 1024) {
+      say(msg, 'err', '这张图 ' + (file.size / 1048576).toFixed(1) + 'MB，超过 5MB，先压缩一下再传。');
+      this.value = '';
+      return;
+    }
+
+    var ext = (file.name.match(/\.([A-Za-z0-9]+)$/) || [null, 'jpg'])[1].toLowerCase();
+    var name = 'img-' + Date.now().toString(36) + '.' + ext;
+    var path = 'assets/images/' + name;
+
+    say(msg, 'ok', '正在上传…');
+    var self = this;
+
+    var reader = new FileReader();
+    reader.onload = function () {
+      var base64 = String(reader.result).split(',')[1];
+      gh('contents/' + path, {
+        method: 'PUT',
+        body: { message: 'image: ' + name, content: base64, branch: BRANCH }
+      }).then(function () {
+        var url = SITE + '/' + path;
+        say(msg, 'ok', '✅ 上传成功\n' + url + '\n（已加到下面，点「插入正文」即可）');
+        addThumb(url);
+        self.value = '';
+      }).catch(function (e) {
+        say(msg, 'err', '❌ ' + e.message);
+        self.value = '';
+      });
+    };
+    reader.onerror = function () { say(msg, 'err', '读取文件失败。'); };
+    reader.readAsDataURL(file);
+  });
+
+  function addThumb(url) {
+    var box = document.createElement('div');
+    box.className = 'thumb';
+
+    var im = document.createElement('img');
+    im.src = url;
+    im.alt = '';
+    im.loading = 'lazy';
+
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tiny';
+    b.textContent = '插入正文';
+    b.addEventListener('click', function () {
+      var ta = $('a-body');
+      var snippet = '![' + '](' + url + ')';
+      var s = ta.selectionStart, e = ta.selectionEnd;
+      var val = ta.value;
+      var pad = (s > 0 && val[s - 1] !== '\n') ? '\n' : '';
+      ta.value = val.slice(0, s) + pad + snippet + '\n' + val.slice(e);
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = s + pad.length + snippet.length + 1;
+      say($('img-msg'), 'ok', '已插入到正文光标处。');
+    });
+
+    box.appendChild(im);
+    box.appendChild(b);
+    $('thumbs').appendChild(box);
+  }
+
+  /* ---------- 启动 ---------- */
+  $('y').textContent = new Date().getFullYear();
+  refresh();
+  if (!$('editor').hidden) initEditor();
+})();
+</script>
+</body>
+</html>
