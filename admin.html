@@ -260,7 +260,7 @@
     return out.join('\n');
   }
 
-  function buildPost(title, date, body) {
+  function buildPost(title, date, body, slug) {
     var t = escapeHtml(title);
     return [
       '<!DOCTYPE html>',
@@ -271,8 +271,9 @@
       '<title>' + t + ' · Astra Zhou</title>',
       '<meta name="description" content="' + t + '">',
       '<link rel="stylesheet" href="../assets/style.css">',
+      '<script src="../assets/count.js" defer><\/script>',
       '</head>',
-      '<body>',
+      '<body data-hit="post-' + slug + '">',
       '<div class="wrap">',
       '',
       '  <header class="site">',
@@ -288,7 +289,7 @@
       '    <article>',
       '      <header>',
       '        <h1>' + t + '</h1>',
-      '        <div class="meta"><time datetime="' + date + '">' + date + '</time></div>',
+      '        <div class="meta"><time datetime="' + date + '">' + date + '</time> · <span data-count="post-' + slug + '">—</span> 次浏览</div>',
       '      </header>',
       '',
       renderBody(body),
@@ -325,9 +326,11 @@
       var html = b64decode(cur.content);
       if (html.indexOf('href="' + path + '"') !== -1) return false;
 
+      var slug = path.replace(/^posts\//, '').replace(/\.html$/, '');
       var li = '      <li>\n' +
                '        <a class="title" href="' + path + '">' + escapeHtml(title) + '</a>\n' +
                '        <time datetime="' + date + '">' + date + '</time>\n' +
+               '        <span class="views"><span data-count="post-' + slug + '">—</span> 次浏览</span>\n' +
                '      </li>\n';
 
       var marker = '<ul class="posts">\n';
@@ -437,7 +440,7 @@
     btn.disabled = true;
     say(msg, 'ok', '正在发布…');
 
-    putFile(path, buildPost(title, date, body), 'post: ' + title)
+    putFile(path, buildPost(title, date, body, slug), 'post: ' + title)
       .then(function () { return updateIndex(title, date, path); })
       .then(function (added) {
         say(msg, 'ok',

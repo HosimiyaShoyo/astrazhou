@@ -248,6 +248,13 @@ ul.posts time {
   color: var(--muted);
 }
 
+ul.posts .views {
+  display: block;
+  margin-top: .15rem;
+  font-size: .84rem;
+  color: var(--muted);
+}
+
 /* ---------- 文章页 ---------- */
 article header { margin-bottom: 2rem; }
 article header h1 { margin-bottom: .35rem; }

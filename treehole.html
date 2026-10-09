@@ -6,6 +6,7 @@
 <title>树洞 · Astra Zhou</title>
 <meta name="description" content="Astra Zhou 的树洞：想说什么都可以，只有我能看到。">
 <link rel="stylesheet" href="assets/style.css">
+<script src="assets/count.js" defer></script>
 <style>
   [hidden] { display: none !important; }
   .card { border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem; margin: 0 0 1.4rem; }
@@ -51,6 +52,8 @@
       </p>
     </div>
 
+    <p class="hint" style="text-align:center;margin:0 0 1.4rem">树洞已经收到 <span data-count="treehole-count">—</span> 条留言</p>
+
     <div id="sent" class="msg ok" hidden>
       收到了，谢谢你愿意说给我听。<br>
       我会慢慢看，也会认真回。
@@ -92,6 +95,12 @@
   if (location.search.indexOf('sent=1') !== -1) {
     document.getElementById('sent').hidden = false;
     window.scrollTo(0, 0);
+  }
+  var form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function () {
+      if (window.AstraCount) window.AstraCount.hit('treehole-count');
+    });
   }
 })();
 </script>
