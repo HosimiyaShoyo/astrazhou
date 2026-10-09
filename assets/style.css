@@ -81,6 +81,8 @@ ul.posts li {
 
 ul.posts li:first-child { border-top: 1px solid var(--line); }
 
+ul.posts li.empty { color: var(--muted); }
+
 ul.posts a.title {
   font-size: 1.05rem;
   font-weight: 600;
