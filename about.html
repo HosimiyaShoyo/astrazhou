@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关于 · AstraZhou</title>
+<meta name="description" content="关于 AstraZhou。">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="brand" href="index.html">AstraZhou</a>
+    <nav>
+      <a href="index.html">首页</a>
+      <a href="about.html" aria-current="page">关于</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>关于</h1>
+
+    <p>这里是 AstraZhou 的个人站点，用来放一些写得比较慢的东西。</p>
+
+    <h2>这个站怎么搭的</h2>
+    <ul>
+      <li>纯静态 HTML / CSS，没有构建步骤，没有依赖。</li>
+      <li>托管在免费静态托管平台上，推代码即上线。</li>
+      <li>页面路径就是文件路径，改一个页面不用重新编译整个站。</li>
+    </ul>
+
+    <h2>联系</h2>
+    <p>邮箱：<code>hello@example.com</code>（改成你自己的）</p>
+
+    <a class="back" href="index.html">← 返回首页</a>
+  </main>
+
+  <footer class="site">© <span id="y">2025</span> AstraZhou</footer>
+
+</div>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
