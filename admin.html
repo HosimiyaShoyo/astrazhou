@@ -244,6 +244,12 @@
                  escapeHtml(img[1]) + '" style="max-width:100%;height:auto"></p>');
         continue;
       }
+      var naked = line.match(/^(https?:\/\/\S+\.(?:jpe?g|png|gif|webp|avif|svg))$/i);
+      if (naked) {
+        flush();
+        out.push('      <p><img src="' + escapeHtml(naked[1]) + '" alt="" style="max-width:100%;height:auto"></p>');
+        continue;
+      }
       if (line.indexOf('## ') === 0) {
         flush();
         out.push('      <h2>' + escapeHtml(line.slice(3)) + '</h2>');
