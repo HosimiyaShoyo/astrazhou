@@ -241,13 +241,13 @@
       if (img) {
         flush();
         out.push('      <p><img src="' + escapeHtml(img[2]) + '" alt="' +
-                 escapeHtml(img[1]) + '" style="max-width:100%;height:auto"></p>');
+                 escapeHtml(img[1]) + '" style="max-width:100%;height:auto" loading="lazy" decoding="async"></p>');
         continue;
       }
       var naked = line.match(/^(https?:\/\/\S+\.(?:jpe?g|png|gif|webp|avif|svg))$/i);
       if (naked) {
         flush();
-        out.push('      <p><img src="' + escapeHtml(naked[1]) + '" alt="" style="max-width:100%;height:auto"></p>');
+        out.push('      <p><img src="' + escapeHtml(naked[1]) + '" alt="" style="max-width:100%;height:auto" loading="lazy" decoding="async"></p>');
         continue;
       }
       if (line.indexOf('## ') === 0) {
