@@ -60,6 +60,23 @@
   }
 }
 
+/* ---------- 字体：Comic Neue（Comic Sans 的开源等价字体）---------- */
+@font-face {
+  font-family: "Comic Neue";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/comic-neue-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Comic Neue";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/comic-neue-700.woff2") format("woff2");
+}
+
 * { box-sizing: border-box; }
 
 html {
@@ -151,6 +168,7 @@ header.site {
 }
 
 header.site .brand {
+  font-family: "Comic Neue", "Comic Sans MS", "Comic Sans", cursive;
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: .02em;
