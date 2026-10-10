@@ -127,7 +127,7 @@
       <div class="card">
         <h2 style="margin-top:0">上传图片</h2>
         <p class="hint" style="margin-top:0">
-          图片会存进站点的 <code>assets/images/</code>。单张建议不超过 5MB，太大的先压缩一下。
+          选好图会自动压到 1200px 宽再上传（存进 <code>assets/images/</code>），插入的地址走 CDN，手机上打开更快。
         </p>
         <input type="file" id="img" accept="image/*">
         <div id="img-msg" class="msg" hidden></div>
@@ -463,43 +463,80 @@
       .then(function () { btn.disabled = false; });
   });
 
-  /* ---------- 上传图片 ---------- */
+  /* ---------- 上传图片：先在浏览器里压好，再上传，地址走 CDN ---------- */
+  var MAX_W = 1200;        /* 超过这个宽度就等比缩小 */
+  var JPG_Q = 0.82;        /* 压缩质量 */
+  var IMG_BASE = 'https://cdn.jsdelivr.net/gh/' + OWNER + '/' + REPO + '@' + BRANCH + '/';
+
+  function shrink(file, done, fail) {
+    if (/image\/gif$/i.test(file.type)) { done(file, 'gif'); return; }  /* 动图不压 */
+    var objUrl = URL.createObjectURL(file);
+    var im = new Image();
+    im.onload = function () {
+      var w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
+      var scale = w > MAX_W ? MAX_W / w : 1;
+      var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+      var c = document.createElement('canvas');
+      c.width = cw; c.height = ch;
+      var ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.drawImage(im, 0, 0, cw, ch);
+      URL.revokeObjectURL(objUrl);
+      c.toBlob(function (blob) {
+        if (!blob) { fail('压缩失败，换一张试试'); return; }
+        done(blob, 'jpg');
+      }, 'image/jpeg', JPG_Q);
+    };
+    im.onerror = function () { URL.revokeObjectURL(objUrl); fail('这张图读不出来'); };
+    im.src = objUrl;
+  }
+
+  function toBase64(blob, cb) {
+    var r = new FileReader();
+    r.onload = function () { cb(String(r.result).split(',')[1]); };
+    r.onerror = function () { cb(null); };
+    r.readAsDataURL(blob);
+  }
+
   $('img').addEventListener('change', function () {
     var file = this.files && this.files[0];
     if (!file) return;
     var msg = $('img-msg');
+    var self = this;
 
-    if (file.size > 5 * 1024 * 1024) {
-      say(msg, 'err', '这张图 ' + (file.size / 1048576).toFixed(1) + 'MB，超过 5MB，先压缩一下再传。');
+    if (file.size > 20 * 1024 * 1024) {
+      say(msg, 'err', '这张图 ' + (file.size / 1048576).toFixed(1) + 'MB，太大了，先在相册里裁一下。');
       this.value = '';
       return;
     }
 
-    var ext = (file.name.match(/\.([A-Za-z0-9]+)$/) || [null, 'jpg'])[1].toLowerCase();
-    var name = 'img-' + Date.now().toString(36) + '.' + ext;
-    var path = 'assets/images/' + name;
-
-    say(msg, 'ok', '正在上传…');
-    var self = this;
-
-    var reader = new FileReader();
-    reader.onload = function () {
-      var base64 = String(reader.result).split(',')[1];
-      gh('contents/' + path, {
-        method: 'PUT',
-        body: { message: 'image: ' + name, content: base64, branch: BRANCH }
-      }).then(function () {
-        var url = SITE + '/' + path;
-        say(msg, 'ok', '✅ 上传成功\n' + url + '\n（已加到下面，点「插入正文」即可）');
-        addThumb(url);
-        self.value = '';
-      }).catch(function (e) {
-        say(msg, 'err', '❌ ' + e.message);
-        self.value = '';
+    say(msg, 'ok', '正在压缩…');
+    shrink(file, function (blob, ext) {
+      var name = 'img-' + Date.now().toString(36) + '.' + ext;
+      var path = 'assets/images/' + name;
+      toBase64(blob, function (b64) {
+        if (!b64) { say(msg, 'err', '读取文件失败。'); self.value = ''; return; }
+        say(msg, 'ok', '正在上传…');
+        gh('contents/' + path, {
+          method: 'PUT',
+          body: { message: 'image: ' + name, content: b64, branch: BRANCH }
+        }).then(function () {
+          var url = IMG_BASE + path;
+          say(msg, 'ok', '✅ 已自动压缩 ' + Math.round(file.size / 1024) + 'KB → ' +
+            Math.round(blob.size / 1024) + 'KB 并上传\n' + url +
+            '\n（已加到下面，点「插入正文」即可）');
+          addThumb(url);
+          self.value = '';
+        }).catch(function (e) {
+          say(msg, 'err', '❌ ' + e.message);
+          self.value = '';
+        });
       });
-    };
-    reader.onerror = function () { say(msg, 'err', '读取文件失败。'); };
-    reader.readAsDataURL(file);
+    }, function (err) {
+      say(msg, 'err', '❌ ' + err);
+      self.value = '';
+    });
   });
 
   function addThumb(url) {

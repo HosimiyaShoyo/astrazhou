@@ -53,6 +53,20 @@
     else fill();
   }
 
+  /* ---------- 图片兜底：CDN 抽风时自动换回源站 ---------- */
+  var CDN = 'https://cdn.jsdelivr.net/gh/HosimiyaShoyo/astrazhou@main/';
+  var ORIGIN = 'https://hosimiyashoyo.github.io/astrazhou/';
+
+  document.addEventListener('error', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'IMG' || el.getAttribute('data-fallback')) return;
+    var s = el.getAttribute('src') || '';
+    if (s.indexOf(CDN) === 0) {
+      el.setAttribute('data-fallback', '1');
+      el.setAttribute('src', ORIGIN + s.slice(CDN.length));
+    }
+  }, true);
+
   window.AstraCount = { get: get, hit: hit, fill: fill, fmt: fmt };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
