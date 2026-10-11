@@ -24,15 +24,19 @@
     <h1 class="quote-title">一言</h1>
     <p class="lead" id="lead">Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」</p>
     <script>
-    /* 首页介绍语：
-       ① 先把本地这几句随机挑一句显示出来 —— 页面立刻有内容，且不与上次重复；
-       ② 同时向「一言」(hitokoto) 取一句网络语录，取到了就淡入替换；
-       ③ 3.5 秒还没取到（断网 / 被墙 / 接口挂了）就放弃，保持本地那句。
-       想加本地句子，照格式往 QUOTES 里加一行即可。 */
+    /* 首页介绍语，两个来源：
+       ① 本地池 —— 黄霄雲歌词 + 你自己写的句子，进页面先随机显示一句（不与上次重复）；
+       ② 名人名言 —— 一半概率去向「一言」的哲学分类取一句，取到就淡入替换；
+          3.5 秒取不到（断网 / 接口挂了）就保持①那句。
+       想加句子，照格式往 QUOTES 里加一行即可。 */
     (function () {
       var QUOTES = [
         'Cultivate Justice, Lead Upright.<br>「精思致远，量守本心」',
-        'Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」'
+        'Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」',
+        '我向你奔赴而来，你就是星辰大海<br>—— 黄霄雲《星辰大海》',
+        '我眼中炽热的恒星，长夜里照我前行<br>—— 黄霄雲《星辰大海》',
+        '我愿变成一颗恒星，守护海底的蜂鸣<br>—— 黄霄雲《星辰大海》',
+        '穿过人海，别停下来，趁现在还有期待<br>—— 黄霄雲《星辰大海》'
       ];
       var el = document.getElementById('lead');
       if (!el) return;
@@ -41,7 +45,7 @@
         return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
 
-      /* ① 本地兜底 */
+      /* ① 本地池：立刻显示，不与上次重复 */
       var last = null;
       try { last = localStorage.getItem('astra_quote'); } catch (err) {}
       var i = 0;
@@ -51,12 +55,15 @@
       }
       el.innerHTML = QUOTES[i];
 
-      /* ② 网络语录 */
+      /* ② 一半概率换成名人名言 */
       if (!window.fetch || !window.AbortController) return;
+      if (Math.random() >= 0.5) return;
+
       var ctl = new AbortController();
       var timer = setTimeout(function () { ctl.abort(); }, 3500);
 
-      fetch('https://v1.hitokoto.cn/?encode=json', { signal: ctl.signal })
+      /* c=k 是「哲学」分类，取到的多是带作者的名人名言；_ 参数用来绕开接口缓存 */
+      fetch('https://v1.hitokoto.cn/?encode=json&c=k&_=' + Date.now(), { signal: ctl.signal })
         .then(function (r) { return r.json(); })
         .then(function (d) {
           clearTimeout(timer);
