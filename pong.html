@@ -73,8 +73,9 @@ document.getElementById('y').textContent = new Date().getFullYear();
   var PAD_W = 16;
   var PAD_H = Math.round(H * 0.22);
   var MARGIN = Math.round(W * 0.035);
-  var SPEED_X = W / 165;      /* 每秒……按帧计的基础速度 */
-  var SPEED_Y = H / 165;
+  var CROSS_SECONDS = 3.2;    /* 球横穿屏幕大约要几秒 */
+  var SPEED_X = W / CROSS_SECONDS;   /* 每秒像素 */
+  var SPEED_Y = H / CROSS_SECONDS;
   var LIME = '#a3e635';
   var LIME_DIM = 'rgba(163,230,53,.35)';
 
