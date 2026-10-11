@@ -70,7 +70,7 @@
     <div class="dos-wrap">
       <canvas id="dos" width="640" height="400"></canvas>
 
-      <div class="dos-status" id="status">正在加载 DOS 模拟器…（首次打开要下载约 6 MB 的游戏文件）</div>
+      <div class="dos-status" id="status">正在加载 DOS 模拟器…（首次打开要下载约 2 MB）</div>
 
       <div class="dos-pad">
         <div class="dos-row">
@@ -92,7 +92,7 @@
       <p class="dos-tip">
         手机：<b>在画面上左右滑动</b>转身，W 前进 / S 后退 / A 左移 / D 右移，右下角开火，中间那个开门（对着门按）。<br>
         电脑：直接按 <b>方向键</b>（← → 转身，↑ ↓ 前后）、<b>Ctrl</b> 开火、<b>空格</b> 开门；也能用鼠标在画面上拖动转身。<br>
-        第一次进来 DOS 会解压游戏文件，稍等十几秒，画面停住时在画面上点一下再按回车。
+        首次打开要等 DOS 模拟器加载几秒；进游戏后如果没声音是正常的（没加载音效卡）。
       </p>
     </div>
   </main>
@@ -138,16 +138,13 @@ document.getElementById('y').textContent = new Date().getFullYear();
     scale: 'aspect'
   }).ready(function (fs, main) {
     status.innerHTML = '正在解压 DOOM 游戏文件…';
-    fs.extract('assets/games/doom19s.zip').then(function () {
-      status.innerHTML = '正在启动 DOOM…（如果画面停住，在画面上点一下、再按回车）';
-      main(['-c', 'INSTALL.BAT']);
-      /* 安装脚本跑完后自动尝试启动游戏 */
-      setTimeout(function () {
-        try { main(['-c', 'DOOM.EXE']); } catch (e) {}
-      }, 12000);
+    fs.extract('assets/games/doom.zip').then(function () {
+      status.innerHTML = '正在启动 DOOM…';
+      /* -warp 1 1 = 直接开始第一关，省掉在 DOS 菜单里选 */
+      main(['-c', 'DOOM.EXE -warp 1 1']);
       setTimeout(function () {
         status.innerHTML = 'DOOM 已在运行。手机：<b>滑动画面转身</b> + 下方按钮；电脑：方向键 + Ctrl 开火 + 空格开门。';
-      }, 14000);
+      }, 6000);
     }).catch(function (err) {
       status.innerHTML = '<b>游戏文件解压失败：</b>' + (err && err.message ? err.message : err) + '。刷新重试。';
     });
