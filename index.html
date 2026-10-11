@@ -24,17 +24,15 @@
     <h1 class="quote-title">一言</h1>
     <p class="lead" id="lead">Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」</p>
     <script>
-    /* 首页介绍语，三级来源，从快到慢：
-       ① 内联这几句 —— 进页面立刻显示，零等待；
-       ② assets/lyrics.js —— 黄霄雲 840 句歌词，异步加载不阻塞首屏，浏览器会缓存；
-       ③ 「一言」名人名言（哲学分类）—— 一半概率尝试，取不到就退回②。
-       想改内联那几句，直接改 LOCAL 数组。 */
+    /* 首页介绍语：
+       ① 进页面立刻显示你自己写的那两句之一（零等待、不与上次重复）；
+       ② 同时向「一言」取一句名人名言（哲学分类），取到就淡入替换；
+       ③ 3.5 秒取不到就保持①那句。
+       想改句子，直接改 LOCAL 数组。 */
     (function () {
       var LOCAL = [
         'Cultivate Justice, Lead Upright.<br>「精思致远，量守本心」',
-        'Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」',
-        '我向你奔赴而来，你就是星辰大海<br>—— 黄霄雲《星辰大海》',
-        '我眼中炽热的恒星，长夜里照我前行<br>—— 黄霄雲《星辰大海》'
+        'Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」'
       ];
       var el = document.getElementById('lead');
       if (!el) return;
@@ -42,63 +40,38 @@
       function esc(v) {
         return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
-      function plain(x) {
-        return String(typeof x === 'string' ? x : x[0]).replace(/<[^>]*>/g, ' ');
-      }
+      function plain(x) { return String(x).replace(/<[^>]*>/g, ' '); }
       function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
       function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
-      var last = read('astra_quote_text');
-      function pick(arr) {
-        for (var n = 0; n < 8; n++) {
-          var x = arr[Math.floor(Math.random() * arr.length)];
-          if (plain(x) !== last) return x;
-        }
-        return arr[Math.floor(Math.random() * arr.length)];
-      }
       function show(html) {
-        save('astra_quote_text', html.replace(/<[^>]*>/g, ' '));
+        save('astra_quote_text', plain(html));
         el.style.transition = 'opacity .35s';
         el.style.opacity = '0';
         setTimeout(function () { el.innerHTML = html; el.style.opacity = '1'; }, 360);
       }
 
-      /* ① 立刻显示 */
-      var first = pick(LOCAL);
-      el.innerHTML = first;
-      save('astra_quote_text', plain(first));
+      /* ① 立刻显示本地那句 */
+      var last = read('astra_quote_text'), i = 0;
+      if (LOCAL.length > 1) {
+        do { i = Math.floor(Math.random() * LOCAL.length); } while (plain(LOCAL[i]) === last);
+      }
+      el.innerHTML = LOCAL[i];
+      save('astra_quote_text', plain(LOCAL[i]));
 
-      /* ② 异步取歌词库 */
-      var sc = document.createElement('script');
-      sc.async = true;
-      sc.src = 'assets/lyrics.js';
-      sc.onload = function () {
-        var lib = window.ASTRA_LYRICS || {};
-        var list = lib.q || [];
-        if (list.length) last = read('astra_quote_text');
-
-        function fromLyrics() {
-          var x = list.length ? pick(list) : null;
-          if (!x) return;
-          show(esc(x[0]) + '<br>—— 黄霄雲《' + esc((lib.s || [])[x[1]] || '') + '》');
-        }
-
-        /* ③ 一半概率换成名人名言，取不到就用歌词 */
-        if (Math.random() < 0.5 || !list.length) { fromLyrics(); return; }
-        if (!window.fetch || !window.AbortController) { fromLyrics(); return; }
-        var ctl = new AbortController();
-        var timer = setTimeout(function () { ctl.abort(); }, 3500);
-        fetch('https://v1.hitokoto.cn/?encode=json&c=k&_=' + Date.now(), { signal: ctl.signal })
-          .then(function (r) { return r.json(); })
-          .then(function (d) {
-            clearTimeout(timer);
-            if (!d || !d.hitokoto) { fromLyrics(); return; }
-            var from = [d.from_who, d.from].filter(Boolean).join(' · ');
-            show(esc(d.hitokoto) + (from ? '<br>—— ' + esc(from) : ''));
-          })
-          .catch(function () { clearTimeout(timer); fromLyrics(); });
-      };
-      document.head.appendChild(sc);
+      /* ② 取名人名言，取不到就保持本地那句 */
+      if (!window.fetch || !window.AbortController) return;
+      var ctl = new AbortController();
+      var timer = setTimeout(function () { ctl.abort(); }, 3500);
+      fetch('https://v1.hitokoto.cn/?encode=json&c=k&_=' + Date.now(), { signal: ctl.signal })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          clearTimeout(timer);
+          if (!d || !d.hitokoto) return;
+          var from = [d.from_who, d.from].filter(Boolean).join(' · ');
+          show(esc(d.hitokoto) + (from ? '<br>—— ' + esc(from) : ''));
+        })
+        .catch(function () { clearTimeout(timer); });
     })();
     </script>
 
