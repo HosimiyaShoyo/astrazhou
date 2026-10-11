@@ -45,13 +45,15 @@
 <div class="wrap">
 
   <header class="site">
+    <a class="back-home" href="index.html" aria-label="返回主页">←</a>
     <a class="brand" href="index.html"><img class="avatar" src="assets/avatar.jpg" alt="" width="28" height="28">Astra Zhou’s Blog</a>
     <nav>
       <a href="index.html">首页</a>
+      <a href="posts.html">文章</a>
       <a href="treehole.html">树洞</a>
       <a href="game.html">小游戏</a>
       <a href="about.html">关于</a>
-      <a href="admin.html" aria-current="page">写作后台</a>
+      <a href="admin.html">写作后台</a>
     </nav>
   </header>
 
@@ -294,8 +296,10 @@
       '',
       '  <header class="site">',
       '    <a class="brand" href="../index.html"><img class="avatar" src="../assets/avatar.jpg" alt="" width="28" height="28">Astra Zhou’s Blog</a>',
+      '    <a class="back-home" href="../index.html" aria-label="返回主页">←</a>',
       '    <nav>',
       '      <a href="../index.html">首页</a>',
+      '      <a href="../posts.html">文章</a>',
       '      <a href="../treehole.html">树洞</a>',
       '      <a href="../game.html">小游戏</a>',
       '      <a href="../about.html">关于</a>',
@@ -341,7 +345,7 @@
   }
 
   function updateIndex(title, date, path) {
-    return gh('contents/index.html?ref=' + BRANCH).then(function (cur) {
+    return gh('contents/posts.html?ref=' + BRANCH).then(function (cur) {
       var html = b64decode(cur.content);
       if (html.indexOf('href="' + path + '"') !== -1) return false;
 
@@ -353,14 +357,14 @@
                '      </li>\n';
 
       var marker = '<ul class="posts">\n';
-      if (html.indexOf(marker) === -1) throw new Error('index.html 结构变了，找不到文章列表，请手工加一条链接');
+      if (html.indexOf(marker) === -1) throw new Error('posts.html 结构变了，找不到文章列表，请手工加一条链接');
       var next = html.replace(marker, marker + li);
       // 去掉「暂无文章」占位（发出第一篇后它就该消失）
       next = next.replace(/[ \t]*<li class="empty">[^\n]*<\/li>\n/, '');
 
-      return gh('contents/index.html', {
+      return gh('contents/posts.html', {
         method: 'PUT',
-        body: { message: 'index: 添加《' + title + '》', content: b64encode(next), branch: BRANCH, sha: cur.sha }
+        body: { message: 'posts: 添加《' + title + '》', content: b64encode(next), branch: BRANCH, sha: cur.sha }
       }).then(function () { return true; });
     });
   }
@@ -465,7 +469,7 @@
         say(msg, 'ok',
           '✅ 发布成功\n' +
           '文章：' + SITE + '/' + path + '\n' +
-          (added ? '首页列表已更新。\n' : '（首页里已有这条链接，没重复添加）\n') +
+          (added ? '文章页已更新。\n' : '（文章页里已有这条链接，没重复添加）\n') +
           'GitHub Pages 需要 1–2 分钟重新构建，稍后刷新首页就能看到。');
         $('a-title').value = '';
         $('a-body').value = '';
