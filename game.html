@@ -4,37 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>小游戏 · Astra Zhou</title>
-<meta name="description" content="Astra Zhou 的小游戏：经典 Pong。">
+<meta name="description" content="Astra Zhou 的小游戏：Pong 和 DOOM。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="小游戏 · Astra Zhou">
-<meta property="og:description" content="Astra Zhou 的小游戏：经典 Pong。">
+<meta property="og:description" content="Astra Zhou 的小游戏：Pong 和 DOOM。">
 <meta property="og:image" content="https://hosimiyashoyo.github.io/astrazhou/assets/og-cover.jpg">
 <meta property="og:url" content="https://hosimiyashoyo.github.io/astrazhou/game.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/style.css?v=2">
-<style>
-  .pong-wrap { margin: 1.4rem 0 0; }
-  #pong {
-    display: block; width: 100%; height: auto;
-    background: rgba(18, 30, 10, .55);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    box-shadow: inset 0 1px 0 var(--glass-hi);
-    touch-action: none;
-  }
-  .pong-bar { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-top: .9rem; }
-  .pong-bar button {
-    font: inherit; font-size: .9rem; padding: .45rem .95rem;
-    border-radius: 999px; cursor: pointer;
-    color: var(--fg); background: var(--glass-bg-2);
-    border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-hi);
-    transition: color .2s, border-color .2s;
-  }
-  .pong-bar button:hover { color: var(--accent); border-color: var(--accent); }
-  .pong-tip { font-size: .84rem; color: var(--muted); line-height: 1.6; }
-</style>
 </head>
 <body>
 <div class="wrap">
@@ -53,185 +31,23 @@
 
   <main>
     <h1>小游戏</h1>
-    <p class="lead">经典 Pong —— 接住球，别让它漏过去。</p>
+    <p class="lead">随手做了两个，手机和电脑都能玩。</p>
 
-    <div class="pong-wrap">
-      <canvas id="pong" width="900" height="560"></canvas>
-      <div class="pong-bar">
-        <button id="pong-restart" type="button">重新开始</button>
-        <span class="pong-tip">手机：在画面上上下拖动手指<br>电脑：移动鼠标，或用 ↑ ↓ 键</span>
-      </div>
-    </div>
+    <nav class="game-list">
+      <a class="game-card" href="pong.html">
+        <span class="game-card-t">PONG</span>
+        <span class="game-card-d">1972 年的经典：两根挡板，一个球</span>
+      </a>
+      <a class="game-card" href="doom.html">
+        <span class="game-card-t">DOOM</span>
+        <span class="game-card-d">1993 年的第一人称射击，迷宫、恶魔、霰弹枪</span>
+      </a>
+    </nav>
   </main>
 
   <footer class="site">© <span id="y">2025</span> Astra Zhou</footer>
 
 </div>
-<script>
-document.getElementById('y').textContent = new Date().getFullYear();
-
-(function () {
-  'use strict';
-  var cv = document.getElementById('pong');
-  if (!cv || !cv.getContext) return;
-  var ctx = cv.getContext('2d');
-  var W = cv.width, H = cv.height;
-
-  var PAD_W = 16;
-  var PAD_H = Math.round(H * 0.22);
-  var MARGIN = Math.round(W * 0.035);
-  var SPEED_X = W / 165;      /* 每秒……按帧计的基础速度 */
-  var SPEED_Y = H / 165;
-  var LIME = '#a3e635';
-  var LIME_DIM = 'rgba(163,230,53,.35)';
-
-  var player = { y: (H - PAD_H) / 2 };
-  var ai = { y: (H - PAD_H) / 2 };
-  var ball = { x: W / 2, y: H / 2, r: 10, vx: 0, vy: 0 };
-  var score = { p: 0, a: 0 };
-  var over = false;
-  var keys = { up: false, down: false };
-  var last = 0;
-
-  function serve(dir) {
-    ball.x = W / 2; ball.y = H / 2;
-    ball.vx = dir * SPEED_X;
-    ball.vy = (Math.random() * 2 - 1) * SPEED_Y;
-    if (Math.abs(ball.vy) < SPEED_Y * 0.25) ball.vy = SPEED_Y * 0.4 * (Math.random() < .5 ? 1 : -1);
-  }
-
-  function restart() {
-    score.p = 0; score.a = 0; over = false;
-    player.y = (H - PAD_H) / 2;
-    ai.y = (H - PAD_H) / 2;
-    serve(Math.random() < 0.5 ? 1 : -1);
-  }
-
-  function movePlayer(clientY) {
-    var r = cv.getBoundingClientRect();
-    var y = (clientY - r.top) / r.height * H;
-    player.y = Math.max(0, Math.min(H - PAD_H, y - PAD_H / 2));
-  }
-  cv.addEventListener('mousemove', function (e) { movePlayer(e.clientY); });
-  cv.addEventListener('touchstart', function (e) { e.preventDefault(); movePlayer(e.touches[0].clientY); }, { passive: false });
-  cv.addEventListener('touchmove', function (e) { e.preventDefault(); movePlayer(e.touches[0].clientY); }, { passive: false });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'ArrowUp') { keys.up = true; e.preventDefault(); }
-    if (e.key === 'ArrowDown') { keys.down = true; e.preventDefault(); }
-    if (e.key === ' ' && over) { restart(); e.preventDefault(); }
-  });
-  document.addEventListener('keyup', function (e) {
-    if (e.key === 'ArrowUp') keys.up = false;
-    if (e.key === 'ArrowDown') keys.down = false;
-  });
-  var btn = document.getElementById('pong-restart');
-  if (btn) btn.addEventListener('click', restart);
-
-  function update(dt) {
-    /* 键盘控制 */
-    var kv = H * 0.9 * dt;
-    if (keys.up) player.y -= kv;
-    if (keys.down) player.y += kv;
-    player.y = Math.max(0, Math.min(H - PAD_H, player.y));
-
-    ball.x += ball.vx * dt;
-    ball.y += ball.vy * dt;
-
-    if (ball.y - ball.r < 0) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); }
-    if (ball.y + ball.r > H) { ball.y = H - ball.r; ball.vy = -Math.abs(ball.vy); }
-
-    /* 玩家挡板（左） */
-    if (ball.vx < 0 && ball.x - ball.r <= MARGIN + PAD_W && ball.x > MARGIN &&
-        ball.y >= player.y - ball.r && ball.y <= player.y + PAD_H + ball.r) {
-      ball.x = MARGIN + PAD_W + ball.r;
-      ball.vx = Math.abs(ball.vx) * 1.045;
-      ball.vy += (ball.y - (player.y + PAD_H / 2)) / (PAD_H / 2) * SPEED_Y * 0.6;
-    }
-    /* AI 挡板（右） */
-    if (ball.vx > 0 && ball.x + ball.r >= W - MARGIN - PAD_W && ball.x < W - MARGIN &&
-        ball.y >= ai.y - ball.r && ball.y <= ai.y + PAD_H + ball.r) {
-      ball.x = W - MARGIN - PAD_W - ball.r;
-      ball.vx = -Math.abs(ball.vx) * 1.045;
-      ball.vy += (ball.y - (ai.y + PAD_H / 2)) / (PAD_H / 2) * SPEED_Y * 0.6;
-    }
-
-    /* 出界计分 */
-    if (ball.x < -30) { score.a++; if (score.a >= 7) { over = true; } else serve(1); }
-    if (ball.x > W + 30) { score.p++; if (score.p >= 7) { over = true; } else serve(-1); }
-
-    /* 速度上限，避免太快穿模 */
-    var maxV = SPEED_X * 2.6;
-    if (ball.vx > maxV) ball.vx = maxV;
-    if (ball.vx < -maxV) ball.vx = -maxV;
-
-    /* AI 追踪（带一点滞后，能被打败） */
-    var target = ball.y - PAD_H / 2;
-    ai.y += (target - ai.y) * Math.min(1, dt * 3.4);
-    ai.y = Math.max(0, Math.min(H - PAD_H, ai.y));
-  }
-
-  function roundRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-
-    /* 中线 */
-    ctx.fillStyle = LIME_DIM;
-    var dash = 16, gap = 14;
-    for (var y = 0; y < H; y += dash + gap) ctx.fillRect(W / 2 - 2, y, 4, dash);
-
-    /* 挡板 */
-    ctx.fillStyle = LIME;
-    roundRect(MARGIN, player.y, PAD_W, PAD_H, 8);
-    ctx.fillStyle = 'rgba(163,230,53,.75)';
-    roundRect(W - MARGIN - PAD_W, ai.y, PAD_W, PAD_H, 8);
-
-    /* 球 */
-    ctx.fillStyle = '#eaf4d7';
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-    ctx.fill();
-
-    /* 比分 */
-    ctx.fillStyle = 'rgba(234,244,215,.85)';
-    ctx.font = '600 56px -apple-system, "PingFang SC", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(score.p, W / 2 - 70, 72);
-    ctx.fillText(score.a, W / 2 + 70, 72);
-
-    if (over) {
-      ctx.fillStyle = 'rgba(8,14,4,.55)';
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#eaf4d7';
-      ctx.font = '600 44px -apple-system, "PingFang SC", sans-serif';
-      ctx.fillText(score.p > score.a ? '你赢了！' : '输了，再来一局', W / 2, H / 2 - 6);
-      ctx.font = '400 22px -apple-system, "PingFang SC", sans-serif';
-      ctx.fillStyle = 'rgba(234,244,215,.75)';
-      ctx.fillText('点「重新开始」继续', W / 2, H / 2 + 44);
-    }
-  }
-
-  function loop(ts) {
-    if (!last) last = ts;
-    var dt = Math.min(0.05, (ts - last) / 1000);
-    last = ts;
-    if (!over) update(dt);
-    draw();
-    requestAnimationFrame(loop);
-  }
-
-  restart();
-  requestAnimationFrame(loop);
-})();
-</script>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
 </body>
 </html>
