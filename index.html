@@ -22,7 +22,25 @@
 
   <main>
     <h1>Astra Zhou</h1>
-    <p class="lead">Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」</p>
+    <p class="lead" id="lead">Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」</p>
+    <script>
+    /* 首页介绍语：每次打开随机挑一句（不会连续重复上次那句）。
+       想加句子，照格式往 QUOTES 里加一行即可。 */
+    (function () {
+      var QUOTES = [
+        'Cultivate Justice, Lead Upright.<br>「精思致远，量守本心」',
+        'Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」'
+      ];
+      var el = document.getElementById('lead');
+      if (!el || QUOTES.length < 2) return;
+      var last = null;
+      try { last = localStorage.getItem('astra_quote'); } catch (e) {}
+      var i;
+      do { i = Math.floor(Math.random() * QUOTES.length); } while (String(i) === last);
+      try { localStorage.setItem('astra_quote', String(i)); } catch (e) {}
+      el.innerHTML = QUOTES[i];
+    })();
+    </script>
 
     <h2>文章</h2>
     <ul class="posts">
