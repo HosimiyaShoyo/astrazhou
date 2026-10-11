@@ -24,21 +24,54 @@
     <h1 class="quote-title">一言</h1>
     <p class="lead" id="lead">Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」</p>
     <script>
-    /* 首页介绍语：每次打开随机挑一句（不会连续重复上次那句）。
-       想加句子，照格式往 QUOTES 里加一行即可。 */
+    /* 首页介绍语：
+       ① 先把本地这几句随机挑一句显示出来 —— 页面立刻有内容，且不与上次重复；
+       ② 同时向「一言」(hitokoto) 取一句网络语录，取到了就淡入替换；
+       ③ 3.5 秒还没取到（断网 / 被墙 / 接口挂了）就放弃，保持本地那句。
+       想加本地句子，照格式往 QUOTES 里加一行即可。 */
     (function () {
       var QUOTES = [
         'Cultivate Justice, Lead Upright.<br>「精思致远，量守本心」',
         'Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」'
       ];
       var el = document.getElementById('lead');
-      if (!el || QUOTES.length < 2) return;
+      if (!el) return;
+
+      function esc(v) {
+        return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      /* ① 本地兜底 */
       var last = null;
-      try { last = localStorage.getItem('astra_quote'); } catch (e) {}
-      var i;
-      do { i = Math.floor(Math.random() * QUOTES.length); } while (String(i) === last);
-      try { localStorage.setItem('astra_quote', String(i)); } catch (e) {}
+      try { last = localStorage.getItem('astra_quote'); } catch (err) {}
+      var i = 0;
+      if (QUOTES.length > 1) {
+        do { i = Math.floor(Math.random() * QUOTES.length); } while (String(i) === last);
+        try { localStorage.setItem('astra_quote', String(i)); } catch (err) {}
+      }
       el.innerHTML = QUOTES[i];
+
+      /* ② 网络语录 */
+      if (!window.fetch || !window.AbortController) return;
+      var ctl = new AbortController();
+      var timer = setTimeout(function () { ctl.abort(); }, 3500);
+
+      fetch('https://v1.hitokoto.cn/?encode=json', { signal: ctl.signal })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          clearTimeout(timer);
+          if (!d || !d.hitokoto) return;
+          var html = esc(d.hitokoto);
+          var from = [d.from_who, d.from].filter(Boolean).join(' · ');
+          if (from) html += '<br>—— ' + esc(from);
+          el.style.transition = 'opacity .35s';
+          el.style.opacity = '0';
+          setTimeout(function () {
+            el.innerHTML = html;
+            el.style.opacity = '1';
+          }, 360);
+        })
+        .catch(function () { clearTimeout(timer); });
     })();
     </script>
 
