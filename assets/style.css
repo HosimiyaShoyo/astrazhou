@@ -213,6 +213,9 @@ header.site nav a[aria-current="page"] {
 main { padding: 2rem 0 3rem; }
 
 h1 { font-size: 1.6rem; line-height: 1.35; margin: 0 0 1rem; }
+
+/* 首页「一言」：字号与文章列表标题一致 */
+h1.quote-title { font-size: 1.05rem; margin-bottom: .75rem; }
 h2 { font-size: 1.2rem; margin: 2rem 0 .85rem; }
 h3 { font-size: 1.02rem; margin: 1.5rem 0 .5rem; }
 
