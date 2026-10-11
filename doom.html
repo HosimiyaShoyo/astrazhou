@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>DOOM · Astra Zhou</title>
+<meta name="description" content="Astra Zhou 的小游戏：第一人称迷宫射击，手机和电脑都能玩。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DOOM · Astra Zhou">
+<meta property="og:description" content="Astra Zhou 的小游戏：第一人称迷宫射击，手机和电脑都能玩。">
+<meta property="og:image" content="https://hosimiyashoyo.github.io/astrazhou/assets/og-cover.jpg">
+<meta property="og:url" content="https://hosimiyashoyo.github.io/astrazhou/doom.html">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/style.css?v=2">
+<style>
+  .doom-wrap { margin: 1.4rem 0 0; }
+  #doom {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #0a0f06;
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    box-shadow: inset 0 1px 0 var(--glass-hi), 0 10px 26px rgba(20, 40, 4, .22);
+    image-rendering: pixelated;
+    touch-action: none;            /* 滑动只用于转向，不滚页面 */
+    cursor: grab;
+  }
+  #doom:active { cursor: grabbing; }
+
+  .doom-hud {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    margin-top: .7rem; font-size: .9rem; color: var(--muted);
+  }
+  .doom-hud b { color: var(--fg); font-variant-numeric: tabular-nums; }
+  .hpbar { flex: 1 1 8rem; height: 8px; border-radius: 999px; overflow: hidden;
+           background: var(--glass-bg-2); border: 1px solid var(--glass-border); }
+  .hpbar i { display: block; height: 100%; width: 100%; background: var(--accent); transition: width .2s; }
+
+  .doom-controls {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; margin-top: 1rem; user-select: none; -webkit-user-select: none;
+  }
+  .dpad { display: grid; gap: .4rem; justify-items: center; }
+  .dpad-row { display: flex; gap: .4rem; }
+  .dk, .fire {
+    font: inherit; font-size: 1rem; font-weight: 700;
+    width: 3.1rem; height: 3.1rem; border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--fg);
+    background: var(--glass-bg-2);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-hi), 0 6px 16px rgba(40, 68, 8, .16);
+    -webkit-backdrop-filter: var(--blur-2);
+    backdrop-filter: var(--blur-2);
+    cursor: pointer; touch-action: none;
+    transition: color .15s, border-color .15s, transform .15s;
+  }
+  .dk.on, .fire.on, .dk:active, .fire:active {
+    color: var(--accent); border-color: var(--accent); transform: scale(.95);
+  }
+  .fire {
+    width: 4.4rem; height: 4.4rem; border-radius: 50%; font-size: .95rem;
+    border-color: var(--accent); color: var(--accent);
+  }
+  .doom-tip { font-size: .82rem; color: var(--muted); line-height: 1.7; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="back-home" href="index.html" aria-label="返回主页">←</a>
+    <a class="brand" href="index.html"><img class="avatar" src="assets/avatar.jpg" alt="" width="28" height="28">Astra Zhou’s Blog</a>
+    <nav>
+      <a href="index.html">首页</a>
+      <a href="posts.html">文章</a>
+      <a href="treehole.html">树洞</a>
+      <a href="game.html" aria-current="page">小游戏</a>
+      <a href="about.html">关于</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>DOOM</h1>
+    <p class="lead">第一人称迷宫射击 —— 在屏幕上滑动转身，用下面的 WASD 走动，干掉所有红色的家伙。</p>
+
+    <div class="doom-wrap">
+      <canvas id="doom" width="360" height="220"></canvas>
+
+      <div class="doom-hud">
+        <span>生命 <b id="hp">100</b></span>
+        <div class="hpbar"><i id="hpbar"></i></div>
+        <span>剩余 <b id="left">0</b></span>
+        <button class="dk" id="reset" type="button" style="width:auto;padding:0 .8rem">重开</button>
+      </div>
+
+      <div class="doom-controls">
+        <div class="dpad">
+          <button class="dk" data-k="KeyW" type="button">W</button>
+          <div class="dpad-row">
+            <button class="dk" data-k="KeyA" type="button">A</button>
+            <button class="dk" data-k="KeyS" type="button">S</button>
+            <button class="dk" data-k="KeyD" type="button">D</button>
+          </div>
+        </div>
+        <button class="fire" data-k="Space" type="button">开火</button>
+      </div>
+
+      <p class="doom-tip">
+        手机：在画面上左右滑动转身，W 前进 / S 后退 / A 左移 / D 右移，右下角开火。<br>
+        电脑：按住鼠标在画面上拖动转身，键盘 WASD 移动，空格开火。
+      </p>
+    </div>
+  </main>
+
+  <footer class="site">© <span id="y">2025</span> Astra Zhou</footer>
+
+</div>
+<script>
+document.getElementById('y').textContent = new Date().getFullYear();
+
+(function () {
+  'use strict';
+  var cv = document.getElementById('doom');
+  if (!cv || !cv.getContext) return;
+  var ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+
+  /* 地图：1 是墙，. 是空地 */
+  var MAP = [
+    '1111111111111111',
+    '1..............1',
+    '1.111.11111.11.1',
+    '1.1.....1...1..1',
+    '1.1.111.1.111.11',
+    '1...1...1...1..1',
+    '111.1.111.1.1.11',
+    '1...1.1...1.1..1',
+    '1.111.1.111.11.1',
+    '1.....1.....1..1',
+    '1.111.11111.1.11',
+    '1.1.....1...1..1',
+    '1.1.111.1.1111.1',
+    '1...1...1......1',
+    '1.111.11111.11.1',
+    '1111111111111111'
+  ];
+  var MH = MAP.length, MW = MAP[0].length;
+  var FOV = Math.PI / 3;
+  var px = 1.5, py = 1.5, pa = Math.PI / 4;
+  var hp = 100;
+  var enemies = [];
+  var keys = {};
+  var lastShot = 0;
+
+  function blocked(x, y) {
+    var mx = Math.floor(x), my = Math.floor(y);
+    if (mx < 0 || my < 0 || mx >= MW || my >= MH) return true;
+    return MAP[my].charAt(mx) === '1';
+  }
+
+  function spawnEnemies() {
+    var spots = [[13.5,1.5],[13.5,13.5],[1.5,13.5],[7.5,7.5],[10.5,3.5],[3.5,10.5]];
+    enemies = spots.map(function (s) { return { x: s[0], y: s[1], dead: false, t: 0 }; });
+  }
+
+  function reset() {
+    px = 1.5; py = 1.5; pa = Math.PI / 4; hp = 100;
+    spawnEnemies(); updateHud();
+  }
+
+  function updateHud() {
+    document.getElementById('hp').textContent = Math.max(0, Math.round(hp));
+    document.getElementById('hpbar').style.width = Math.max(0, hp) + '%';
+    document.getElementById('left').textContent = enemies.filter(function (e) { return !e.dead; }).length;
+  }
+
+  /* ---------- 射线求交（DDA） ---------- */
+  function cast(angle) {
+    var sin = Math.sin(angle), cos = Math.cos(angle);
+    var mapX = Math.floor(px), mapY = Math.floor(py);
+    var deltaX = Math.abs(1 / (cos || 1e-6));
+    var deltaY = Math.abs(1 / (sin || 1e-6));
+    var stepX, stepY, sideX, sideY;
+    if (cos < 0) { stepX = -1; sideX = (px - mapX) * deltaX; }
+    else { stepX = 1; sideX = (mapX + 1 - px) * deltaX; }
+    if (sin < 0) { stepY = -1; sideY = (py - mapY) * deltaY; }
+    else { stepY = 1; sideY = (mapY + 1 - py) * deltaY; }
+    var side = 0, hit = false, guard = 0;
+    while (!hit && guard++ < 200) {
+      if (sideX < sideY) { sideX += deltaX; mapX += stepX; side = 0; }
+      else { sideY += deltaY; mapY += stepY; side = 1; }
+      if (mapX < 0 || mapY < 0 || mapX >= MW || mapY >= MH) break;
+      if (MAP[mapY].charAt(mapX) === '1') hit = true;
+    }
+    var dist = side === 0 ? sideX - deltaX : sideY - deltaY;
+    return { d: Math.max(0.15, dist), side: side };
+  }
+
+  function shade(v) {
+    var g = Math.round(120 * v + 20);
+    return 'rgb(' + Math.round(g * 0.55) + ',' + g + ',' + Math.round(g * 0.22) + ')';
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render() {
+    /* 天花板 / 地板 */
+    var grad1 = ctx.createLinearGradient(0, 0, 0, H / 2);
+    grad1.addColorStop(0, '#0a1108'); grad1.addColorStop(1, '#1a2810');
+    ctx.fillStyle = grad1; ctx.fillRect(0, 0, W, H / 2);
+    var grad2 = ctx.createLinearGradient(0, H / 2, 0, H);
+    grad2.addColorStop(0, '#26331a'); grad2.addColorStop(1, '#0d1408');
+    ctx.fillStyle = grad2; ctx.fillRect(0, H / 2, W, H / 2);
+
+    var buf = [];
+    for (var x = 0; x < W; x++) {
+      var ray = pa - FOV / 2 + (x / W) * FOV;
+      var r = cast(ray);
+      var corr = r.d * Math.cos(ray - pa);          /* 鱼眼校正 */
+      var lh = Math.min(H * 1.2, (H / corr) * 0.85);
+      var y0 = H / 2 - lh / 2;
+      var light = Math.max(0.12, 1 - corr / 11) * (r.side ? 0.68 : 1);
+      buf.push([x, y0, lh, shade(light)]);
+    }
+    for (var i = 0; i < buf.length; i++) {
+      ctx.fillStyle = buf[i][3];
+      ctx.fillRect(buf[i][0], buf[i][1], 1, buf[i][2]);
+    }
+
+    /* 敌人（按距离缩放，越近越大） */
+    var alive = enemies.filter(function (e) { return !e.dead; }).sort(function (a, b) {
+      return (Math.hypot(b.x - px, b.y - py)) - (Math.hypot(a.x - px, a.y - py));
+    });
+    alive.forEach(function (e) {
+      var dx = e.x - px, dy = e.y - py;
+      var dist = Math.hypot(dx, dy);
+      var ang = Math.atan2(dy, dx) - pa;
+      while (ang < -Math.PI) ang += Math.PI * 2;
+      while (ang > Math.PI) ang -= Math.PI * 2;
+      if (Math.abs(ang) > FOV / 2 + 0.25) return;
+      var sx = W / 2 + (ang / (FOV / 2)) * (W / 2);
+      var size = Math.min(H * 1.1, (H / dist) * 0.42);
+      var y = H / 2 - size / 2 + size * 0.18;
+      ctx.fillStyle = 'rgba(0,0,0,.45)';
+      ctx.fillRect(sx - size / 2 + 2, y + 2, size, size);
+      ctx.fillStyle = '#c2410c';
+      ctx.fillRect(sx - size / 2, y, size, size);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(sx - size / 4, y + size * 0.25, size * 0.5, size * 0.16);
+    });
+
+    /* 准星 */
+    ctx.fillStyle = 'rgba(234,244,215,.85)';
+    ctx.fillRect(W / 2 - 1, H / 2 - 7, 2, 5);
+    ctx.fillRect(W / 2 - 1, H / 2 + 2, 2, 5);
+    ctx.fillRect(W / 2 - 7, H / 2 - 1, 5, 2);
+    ctx.fillRect(W / 2 + 2, H / 2 - 1, 5, 2);
+
+    /* 枪口 */
+    ctx.fillStyle = hp > 0 ? 'rgba(163,230,53,.9)' : 'rgba(120,120,120,.7)';
+    ctx.fillRect(W / 2 - 8, H - 34, 16, 34);
+    ctx.fillRect(W / 2 - 3, H - 48, 6, 16);
+
+    if (hp <= 0) {
+      ctx.fillStyle = 'rgba(10,6,4,.72)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#f87171';
+      ctx.font = '700 30px -apple-system, "PingFang SC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('你倒下了', W / 2, H / 2);
+      ctx.fillStyle = 'rgba(234,244,215,.8)';
+      ctx.font = '400 15px -apple-system, "PingFang SC", sans-serif';
+      ctx.fillText('点「重开」再来一次', W / 2, H / 2 + 30);
+    } else if (enemies.every(function (e) { return e.dead; })) {
+      ctx.fillStyle = 'rgba(10,20,4,.66)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#a3e635';
+      ctx.font = '700 30px -apple-system, "PingFang SC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('清场了！', W / 2, H / 2);
+      ctx.fillStyle = 'rgba(234,244,215,.8)';
+      ctx.font = '400 15px -apple-system, "PingFang SC", sans-serif';
+      ctx.fillText('剩余生命 ' + Math.round(hp), W / 2, H / 2 + 30);
+    }
+  }
+
+  /* ---------- 移动与逻辑 ---------- */
+  function move(dt) {
+    var speed = 2.6 * dt, strafe = 2.0 * dt;
+    var nx = px, ny = py;
+    var sin = Math.sin(pa), cos = Math.cos(pa);
+    if (keys.KeyW) { nx += cos * speed; ny += sin * speed; }
+    if (keys.KeyS) { nx -= cos * speed; ny -= sin * speed; }
+    if (keys.KeyA) { nx += sin * strafe; ny -= cos * strafe; }
+    if (keys.KeyD) { nx -= sin * strafe; ny += cos * strafe; }
+    /* 分轴碰撞，贴着墙也能滑动 */
+    if (!blocked(nx, py)) px = nx;
+    if (!blocked(px, ny)) py = ny;
+
+    /* 敌人：靠近就咬人 */
+    var now = performance.now();
+    enemies.forEach(function (e) {
+      if (e.dead) return;
+      var dx = px - e.x, dy = py - e.y;
+      var d = Math.hypot(dx, dy);
+      if (d < 6) {
+        var step = 0.9 * dt;
+        var ex = e.x + (dx / d) * step, ey = e.y + (dy / d) * step;
+        if (!blocked(ex, e.y)) e.x = ex;
+        if (!blocked(e.x, ey)) e.y = ey;
+      }
+      if (d < 0.55 && now - (e.hitAt || 0) > 700) {
+        e.hitAt = now;
+        hp -= 12;
+        updateHud();
+      }
+    });
+
+    /* 开火 */
+    if (keys.Space && now - lastShot > 320) {
+      lastShot = now;
+      var target = null, best = 1e9;
+      enemies.forEach(function (e) {
+        if (e.dead) return;
+        var dx = e.x - px, dy = e.y - py;
+        var dist = Math.hypot(dx, dy);
+        var ang = Math.atan2(dy, dx) - pa;
+        while (ang < -Math.PI) ang += Math.PI * 2;
+        while (ang > Math.PI) ang -= Math.PI * 2;
+        if (Math.abs(ang) < 0.14 && dist < 9 && dist < best) { best = dist; target = e; }
+      });
+      if (target) { target.dead = true; updateHud(); }
+    }
+  }
+
+  /* ---------- 输入 ---------- */
+  /* 画面滑动 = 转身 */
+  var dragX = null;
+  cv.addEventListener('touchstart', function (e) {
+    dragX = e.touches[0].clientX; e.preventDefault();
+  }, { passive: false });
+  cv.addEventListener('touchmove', function (e) {
+    if (dragX === null) return;
+    var x = e.touches[0].clientX;
+    pa += (x - dragX) * 0.008;
+    dragX = x;
+    e.preventDefault();
+  }, { passive: false });
+  cv.addEventListener('touchend', function () { dragX = null; });
+
+  var mouseDown = false, mouseX = 0;
+  cv.addEventListener('mousedown', function (e) { mouseDown = true; mouseX = e.clientX; e.preventDefault(); });
+  window.addEventListener('mousemove', function (e) {
+    if (!mouseDown) return;
+    pa += (e.clientX - mouseX) * 0.006;
+    mouseX = e.clientX;
+  });
+  window.addEventListener('mouseup', function () { mouseDown = false; });
+
+  /* 虚拟按键 */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-k]'), function (b) {
+    var k = b.getAttribute('data-k');
+    if (k === 'Space') b.removeAttribute('data-k');
+    var on = function (e) { e.preventDefault(); keys[k] = true; b.classList.add('on'); };
+    var off = function (e) { if (e) e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
+    b.addEventListener('touchstart', on, { passive: false });
+    b.addEventListener('touchend', off, { passive: false });
+    b.addEventListener('touchcancel', off, { passive: false });
+    b.addEventListener('mousedown', on);
+    b.addEventListener('mouseup', off);
+    b.addEventListener('mouseleave', off);
+  });
+
+  /* 键盘 */
+  document.addEventListener('keydown', function (e) {
+    if (['KeyW','KeyA','KeyS','KeyD','Space'].indexOf(e.code) >= 0) { keys[e.code] = true; e.preventDefault(); }
+  });
+  document.addEventListener('keyup', function (e) {
+    if (['KeyW','KeyA','KeyS','KeyD','Space'].indexOf(e.code) >= 0) { keys[e.code] = false; e.preventDefault(); }
+  });
+
+  document.getElementById('reset').addEventListener('click', reset);
+
+  /* ---------- 主循环 ---------- */
+  var last = 0;
+  function loop(ts) {
+    if (!last) last = ts;
+    var dt = Math.min(0.05, (ts - last) / 1000);
+    last = ts;
+    if (hp > 0 && !enemies.every(function (e) { return e.dead; })) move(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
