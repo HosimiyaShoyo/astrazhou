@@ -24,19 +24,17 @@
     <h1 class="quote-title">一言</h1>
     <p class="lead" id="lead">Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」</p>
     <script>
-    /* 首页介绍语，两个来源：
-       ① 本地池 —— 黄霄雲歌词 + 你自己写的句子，进页面先随机显示一句（不与上次重复）；
-       ② 名人名言 —— 一半概率去向「一言」的哲学分类取一句，取到就淡入替换；
-          3.5 秒取不到（断网 / 接口挂了）就保持①那句。
-       想加句子，照格式往 QUOTES 里加一行即可。 */
+    /* 首页介绍语，三级来源，从快到慢：
+       ① 内联这几句 —— 进页面立刻显示，零等待；
+       ② assets/lyrics.js —— 黄霄雲 840 句歌词，异步加载不阻塞首屏，浏览器会缓存；
+       ③ 「一言」名人名言（哲学分类）—— 一半概率尝试，取不到就退回②。
+       想改内联那几句，直接改 LOCAL 数组。 */
     (function () {
-      var QUOTES = [
+      var LOCAL = [
         'Cultivate Justice, Lead Upright.<br>「精思致远，量守本心」',
         'Zephyr, Yore, Xanadu.<br>「晚风，往昔，世外幻境。」',
         '我向你奔赴而来，你就是星辰大海<br>—— 黄霄雲《星辰大海》',
-        '我眼中炽热的恒星，长夜里照我前行<br>—— 黄霄雲《星辰大海》',
-        '我愿变成一颗恒星，守护海底的蜂鸣<br>—— 黄霄雲《星辰大海》',
-        '穿过人海，别停下来，趁现在还有期待<br>—— 黄霄雲《星辰大海》'
+        '我眼中炽热的恒星，长夜里照我前行<br>—— 黄霄雲《星辰大海》'
       ];
       var el = document.getElementById('lead');
       if (!el) return;
@@ -44,41 +42,63 @@
       function esc(v) {
         return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
-
-      /* ① 本地池：立刻显示，不与上次重复 */
-      var last = null;
-      try { last = localStorage.getItem('astra_quote'); } catch (err) {}
-      var i = 0;
-      if (QUOTES.length > 1) {
-        do { i = Math.floor(Math.random() * QUOTES.length); } while (String(i) === last);
-        try { localStorage.setItem('astra_quote', String(i)); } catch (err) {}
+      function plain(x) {
+        return String(typeof x === 'string' ? x : x[0]).replace(/<[^>]*>/g, ' ');
       }
-      el.innerHTML = QUOTES[i];
+      function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+      function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
-      /* ② 一半概率换成名人名言 */
-      if (!window.fetch || !window.AbortController) return;
-      if (Math.random() >= 0.5) return;
+      var last = read('astra_quote_text');
+      function pick(arr) {
+        for (var n = 0; n < 8; n++) {
+          var x = arr[Math.floor(Math.random() * arr.length)];
+          if (plain(x) !== last) return x;
+        }
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+      function show(html) {
+        save('astra_quote_text', html.replace(/<[^>]*>/g, ' '));
+        el.style.transition = 'opacity .35s';
+        el.style.opacity = '0';
+        setTimeout(function () { el.innerHTML = html; el.style.opacity = '1'; }, 360);
+      }
 
-      var ctl = new AbortController();
-      var timer = setTimeout(function () { ctl.abort(); }, 3500);
+      /* ① 立刻显示 */
+      var first = pick(LOCAL);
+      el.innerHTML = first;
+      save('astra_quote_text', plain(first));
 
-      /* c=k 是「哲学」分类，取到的多是带作者的名人名言；_ 参数用来绕开接口缓存 */
-      fetch('https://v1.hitokoto.cn/?encode=json&c=k&_=' + Date.now(), { signal: ctl.signal })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          clearTimeout(timer);
-          if (!d || !d.hitokoto) return;
-          var html = esc(d.hitokoto);
-          var from = [d.from_who, d.from].filter(Boolean).join(' · ');
-          if (from) html += '<br>—— ' + esc(from);
-          el.style.transition = 'opacity .35s';
-          el.style.opacity = '0';
-          setTimeout(function () {
-            el.innerHTML = html;
-            el.style.opacity = '1';
-          }, 360);
-        })
-        .catch(function () { clearTimeout(timer); });
+      /* ② 异步取歌词库 */
+      var sc = document.createElement('script');
+      sc.async = true;
+      sc.src = 'assets/lyrics.js';
+      sc.onload = function () {
+        var lib = window.ASTRA_LYRICS || {};
+        var list = lib.q || [];
+        if (list.length) last = read('astra_quote_text');
+
+        function fromLyrics() {
+          var x = list.length ? pick(list) : null;
+          if (!x) return;
+          show(esc(x[0]) + '<br>—— 黄霄雲《' + esc((lib.s || [])[x[1]] || '') + '》');
+        }
+
+        /* ③ 一半概率换成名人名言，取不到就用歌词 */
+        if (Math.random() < 0.5 || !list.length) { fromLyrics(); return; }
+        if (!window.fetch || !window.AbortController) { fromLyrics(); return; }
+        var ctl = new AbortController();
+        var timer = setTimeout(function () { ctl.abort(); }, 3500);
+        fetch('https://v1.hitokoto.cn/?encode=json&c=k&_=' + Date.now(), { signal: ctl.signal })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            clearTimeout(timer);
+            if (!d || !d.hitokoto) { fromLyrics(); return; }
+            var from = [d.from_who, d.from].filter(Boolean).join(' · ');
+            show(esc(d.hitokoto) + (from ? '<br>—— ' + esc(from) : ''));
+          })
+          .catch(function () { clearTimeout(timer); fromLyrics(); });
+      };
+      document.head.appendChild(sc);
     })();
     </script>
 
