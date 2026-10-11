@@ -4,67 +4,56 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>DOOM · Astra Zhou</title>
-<meta name="description" content="Astra Zhou 的小游戏：第一人称迷宫射击，手机和电脑都能玩。">
+<meta name="description" content="原版 DOOM（1993 共享版）—— 在浏览器里直接玩，手机和电脑都行。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="DOOM · Astra Zhou">
-<meta property="og:description" content="Astra Zhou 的小游戏：第一人称迷宫射击，手机和电脑都能玩。">
+<meta property="og:description" content="原版 DOOM（1993 共享版）—— 在浏览器里直接玩。">
 <meta property="og:image" content="https://hosimiyashoyo.github.io/astrazhou/assets/og-cover.jpg">
 <meta property="og:url" content="https://hosimiyashoyo.github.io/astrazhou/doom.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/style.css?v=2">
 <style>
-  .doom-wrap { margin: 1.4rem 0 0; }
-  #doom {
-    display: block;
-    width: 100%;
-    height: auto;
-    background: #0a0f06;
+  .dos-wrap { margin: 1.3rem 0 0; }
+  #dos {
+    display: block; width: 100%; height: auto;
+    aspect-ratio: 4 / 3;
+    background: #000;
     border: 1px solid var(--glass-border);
     border-radius: 14px;
     box-shadow: inset 0 1px 0 var(--glass-hi), 0 10px 26px rgba(20, 40, 4, .22);
-    image-rendering: pixelated;
-    touch-action: none;            /* 滑动只用于转向，不滚页面 */
-    cursor: grab;
+    overflow: hidden;
+    touch-action: none;
   }
-  #doom:active { cursor: grabbing; }
+  #dos canvas { display: block; width: 100% !important; height: 100% !important; }
 
-  .doom-hud {
-    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-    margin-top: .7rem; font-size: .9rem; color: var(--muted);
+  .dos-status {
+    margin-top: .7rem; padding: .7rem .9rem; border-radius: 10px;
+    font-size: .88rem; line-height: 1.7;
+    background: var(--glass-bg-2); border: 1px solid var(--glass-border);
+    color: var(--muted);
   }
-  .doom-hud b { color: var(--fg); font-variant-numeric: tabular-nums; }
-  .hpbar { flex: 1 1 8rem; height: 8px; border-radius: 999px; overflow: hidden;
-           background: var(--glass-bg-2); border: 1px solid var(--glass-border); }
-  .hpbar i { display: block; height: 100%; width: 100%; background: var(--accent); transition: width .2s; }
+  .dos-status b { color: var(--fg); }
 
-  .doom-controls {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 1rem; margin-top: 1rem; user-select: none; -webkit-user-select: none;
-  }
-  .dpad { display: grid; gap: .4rem; justify-items: center; }
-  .dpad-row { display: flex; gap: .4rem; }
-  .dk, .fire {
+  .dos-pad { margin-top: 1rem; user-select: none; -webkit-user-select: none; }
+  .dos-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .dos-grid { display: grid; gap: .4rem; justify-items: center; }
+  .dos-line { display: flex; gap: .4rem; }
+  .dk {
     font: inherit; font-size: 1rem; font-weight: 700;
-    width: 3.1rem; height: 3.1rem; border-radius: 14px;
+    width: 3.2rem; height: 3.2rem; border-radius: 14px;
     display: inline-flex; align-items: center; justify-content: center;
-    color: var(--fg);
-    background: var(--glass-bg-2);
+    color: var(--fg); background: var(--glass-bg-2);
     border: 1px solid var(--glass-border);
     box-shadow: inset 0 1px 0 var(--glass-hi), 0 6px 16px rgba(40, 68, 8, .16);
-    -webkit-backdrop-filter: var(--blur-2);
-    backdrop-filter: var(--blur-2);
+    -webkit-backdrop-filter: var(--blur-2); backdrop-filter: var(--blur-2);
     cursor: pointer; touch-action: none;
     transition: color .15s, border-color .15s, transform .15s;
   }
-  .dk.on, .fire.on, .dk:active, .fire:active {
-    color: var(--accent); border-color: var(--accent); transform: scale(.95);
-  }
-  .fire {
-    width: 4.4rem; height: 4.4rem; border-radius: 50%; font-size: .95rem;
-    border-color: var(--accent); color: var(--accent);
-  }
-  .doom-tip { font-size: .82rem; color: var(--muted); line-height: 1.7; margin-top: 1rem; }
+  .dk.on, .dk:active { color: var(--accent); border-color: var(--accent); transform: scale(.95); }
+  .dk.wide { width: 4.6rem; }
+  .dk.fire { width: 4.6rem; height: 4.6rem; border-radius: 50%; border-color: var(--accent); color: var(--accent); font-size: .9rem; }
+  .dos-tip { font-size: .82rem; color: var(--muted); line-height: 1.75; margin-top: .9rem; }
 </style>
 </head>
 <body>
@@ -77,33 +66,34 @@
 
   <main>
     <h1>DOOM</h1>
-    <p class="lead">第一人称迷宫射击 —— 在屏幕上滑动转身，用下面的 WASD 走动，干掉所有红色的家伙。</p>
+    <p class="lead">1993 年原版共享版，跑在浏览器的 DOS 模拟器里。</p>
 
-    <div class="doom-wrap">
-      <canvas id="doom" width="360" height="220"></canvas>
+    <div class="dos-wrap">
+      <div id="dos"></div>
 
-      <div class="doom-hud">
-        <span>生命 <b id="hp">100</b></span>
-        <div class="hpbar"><i id="hpbar"></i></div>
-        <span>剩余 <b id="left">0</b></span>
-        <button class="dk" id="reset" type="button" style="width:auto;padding:0 .8rem">重开</button>
-      </div>
+      <div class="dos-status" id="status">正在加载 DOS 模拟器…（首次打开要下载约 6 MB 的游戏文件）</div>
 
-      <div class="doom-controls">
-        <div class="dpad">
-          <button class="dk" data-k="KeyW" type="button">W</button>
-          <div class="dpad-row">
-            <button class="dk" data-k="KeyA" type="button">A</button>
-            <button class="dk" data-k="KeyS" type="button">S</button>
-            <button class="dk" data-k="KeyD" type="button">D</button>
+      <div class="dos-pad">
+        <div class="dos-row">
+          <div class="dos-grid">
+            <button class="dk" data-k="up" type="button">W</button>
+            <div class="dos-line">
+              <button class="dk" data-k="left" type="button">A</button>
+              <button class="dk" data-k="down" type="button">S</button>
+              <button class="dk" data-k="right" type="button">D</button>
+            </div>
+          </div>
+          <div class="dos-grid">
+            <button class="dk wide" data-k="use" type="button">开门</button>
+            <button class="dk fire" data-k="fire" type="button">开火</button>
           </div>
         </div>
-        <button class="fire" data-k="Space" type="button">开火</button>
       </div>
 
-      <p class="doom-tip">
-        手机：在画面上左右滑动转身，W 前进 / S 后退 / A 左移 / D 右移，右下角开火。<br>
-        电脑：按住鼠标在画面上拖动转身，键盘 WASD 移动，空格开火。
+      <p class="dos-tip">
+        手机：<b>在画面上左右滑动</b>转身，W 前进 / S 后退 / A 左移 / D 右移，右下角开火，中间那个开门（对着门按）。<br>
+        电脑：直接按 <b>方向键</b>（← → 转身，↑ ↓ 前后）、<b>Ctrl</b> 开火、<b>空格</b> 开门；也能用鼠标在画面上拖动转身。<br>
+        第一次进来 DOS 会解压游戏文件，稍等十几秒，画面停住时在画面上点一下再按回车。
       </p>
     </div>
   </main>
@@ -111,253 +101,98 @@
   <footer class="site">© <span id="y">2025</span> Astra Zhou</footer>
 
 </div>
+
+<script src="https://js-dos.com/6.22/current/js-dos.js"></script>
 <script>
 document.getElementById('y').textContent = new Date().getFullYear();
 
 (function () {
   'use strict';
-  var cv = document.getElementById('doom');
-  if (!cv || !cv.getContext) return;
-  var ctx = cv.getContext('2d');
-  var W = cv.width, H = cv.height;
+  var host = document.getElementById('dos');
+  var status = document.getElementById('status');
+  if (!host || typeof Dos !== 'function') {
+    if (status) status.innerHTML = '<b>DOS 模拟器没加载出来</b>（可能是网络问题），刷新重试一次。';
+    return;
+  }
 
-  /* 地图：1 是墙，. 是空地 */
-  var MAP = [
-    '1111111111111111',
-    '1..............1',
-    '1.111.11111.11.1',
-    '1.1.....1...1..1',
-    '1.1.111.1.111.11',
-    '1...1...1...1..1',
-    '111.1.111.1.1.11',
-    '1...1.1...1.1..1',
-    '1.111.1.111.11.1',
-    '1.....1.....1..1',
-    '1.111.11111.1.11',
-    '1.1.....1...1..1',
-    '1.1.111.1.1111.1',
-    '1...1...1......1',
-    '1.111.11111.11.1',
-    '1111111111111111'
-  ];
-  var MH = MAP.length, MW = MAP[0].length;
-  var FOV = Math.PI / 3;
-  var px = 1.5, py = 1.5, pa = Math.PI / 4;
-  var hp = 100;
-  var enemies = [];
   var keys = {};
-  var lastShot = 0;
 
-  function blocked(x, y) {
-    var mx = Math.floor(x), my = Math.floor(y);
-    if (mx < 0 || my < 0 || mx >= MW || my >= MH) return true;
-    return MAP[my].charAt(mx) === '1';
-  }
-
-  function spawnEnemies() {
-    var spots = [[13.5,1.5],[13.5,13.5],[1.5,13.5],[7.5,7.5],[10.5,3.5],[3.5,10.5]];
-    enemies = spots.map(function (s) { return { x: s[0], y: s[1], dead: false, t: 0 }; });
-  }
-
-  function reset() {
-    px = 1.5; py = 1.5; pa = Math.PI / 4; hp = 100;
-    spawnEnemies(); updateHud();
-  }
-
-  function updateHud() {
-    document.getElementById('hp').textContent = Math.max(0, Math.round(hp));
-    document.getElementById('hpbar').style.width = Math.max(0, hp) + '%';
-    document.getElementById('left').textContent = enemies.filter(function (e) { return !e.dead; }).length;
-  }
-
-  /* ---------- 射线求交（DDA） ---------- */
-  function cast(angle) {
-    var sin = Math.sin(angle), cos = Math.cos(angle);
-    var mapX = Math.floor(px), mapY = Math.floor(py);
-    var deltaX = Math.abs(1 / (cos || 1e-6));
-    var deltaY = Math.abs(1 / (sin || 1e-6));
-    var stepX, stepY, sideX, sideY;
-    if (cos < 0) { stepX = -1; sideX = (px - mapX) * deltaX; }
-    else { stepX = 1; sideX = (mapX + 1 - px) * deltaX; }
-    if (sin < 0) { stepY = -1; sideY = (py - mapY) * deltaY; }
-    else { stepY = 1; sideY = (mapY + 1 - py) * deltaY; }
-    var side = 0, hit = false, guard = 0;
-    while (!hit && guard++ < 200) {
-      if (sideX < sideY) { sideX += deltaX; mapX += stepX; side = 0; }
-      else { sideY += deltaY; mapY += stepY; side = 1; }
-      if (mapX < 0 || mapY < 0 || mapX >= MW || mapY >= MH) break;
-      if (MAP[mapY].charAt(mapX) === '1') hit = true;
-    }
-    var dist = side === 0 ? sideX - deltaX : sideY - deltaY;
-    return { d: Math.max(0.15, dist), side: side };
-  }
-
-  function shade(v) {
-    var g = Math.round(120 * v + 20);
-    return 'rgb(' + Math.round(g * 0.55) + ',' + g + ',' + Math.round(g * 0.22) + ')';
-  }
-
-  /* ---------- 渲染 ---------- */
-  function render() {
-    /* 天花板 / 地板 */
-    var grad1 = ctx.createLinearGradient(0, 0, 0, H / 2);
-    grad1.addColorStop(0, '#0a1108'); grad1.addColorStop(1, '#1a2810');
-    ctx.fillStyle = grad1; ctx.fillRect(0, 0, W, H / 2);
-    var grad2 = ctx.createLinearGradient(0, H / 2, 0, H);
-    grad2.addColorStop(0, '#26331a'); grad2.addColorStop(1, '#0d1408');
-    ctx.fillStyle = grad2; ctx.fillRect(0, H / 2, W, H / 2);
-
-    var buf = [];
-    for (var x = 0; x < W; x++) {
-      var ray = pa - FOV / 2 + (x / W) * FOV;
-      var r = cast(ray);
-      var corr = r.d * Math.cos(ray - pa);          /* 鱼眼校正 */
-      var lh = Math.min(H * 1.2, (H / corr) * 0.85);
-      var y0 = H / 2 - lh / 2;
-      var light = Math.max(0.12, 1 - corr / 11) * (r.side ? 0.68 : 1);
-      buf.push([x, y0, lh, shade(light)]);
-    }
-    for (var i = 0; i < buf.length; i++) {
-      ctx.fillStyle = buf[i][3];
-      ctx.fillRect(buf[i][0], buf[i][1], 1, buf[i][2]);
-    }
-
-    /* 敌人（按距离缩放，越近越大） */
-    var alive = enemies.filter(function (e) { return !e.dead; }).sort(function (a, b) {
-      return (Math.hypot(b.x - px, b.y - py)) - (Math.hypot(a.x - px, a.y - py));
-    });
-    alive.forEach(function (e) {
-      var dx = e.x - px, dy = e.y - py;
-      var dist = Math.hypot(dx, dy);
-      var ang = Math.atan2(dy, dx) - pa;
-      while (ang < -Math.PI) ang += Math.PI * 2;
-      while (ang > Math.PI) ang -= Math.PI * 2;
-      if (Math.abs(ang) > FOV / 2 + 0.25) return;
-      var sx = W / 2 + (ang / (FOV / 2)) * (W / 2);
-      var size = Math.min(H * 1.1, (H / dist) * 0.42);
-      var y = H / 2 - size / 2 + size * 0.18;
-      ctx.fillStyle = 'rgba(0,0,0,.45)';
-      ctx.fillRect(sx - size / 2 + 2, y + 2, size, size);
-      ctx.fillStyle = '#c2410c';
-      ctx.fillRect(sx - size / 2, y, size, size);
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillRect(sx - size / 4, y + size * 0.25, size * 0.5, size * 0.16);
-    });
-
-    /* 准星 */
-    ctx.fillStyle = 'rgba(234,244,215,.85)';
-    ctx.fillRect(W / 2 - 1, H / 2 - 7, 2, 5);
-    ctx.fillRect(W / 2 - 1, H / 2 + 2, 2, 5);
-    ctx.fillRect(W / 2 - 7, H / 2 - 1, 5, 2);
-    ctx.fillRect(W / 2 + 2, H / 2 - 1, 5, 2);
-
-    /* 枪口 */
-    ctx.fillStyle = hp > 0 ? 'rgba(163,230,53,.9)' : 'rgba(120,120,120,.7)';
-    ctx.fillRect(W / 2 - 8, H - 34, 16, 34);
-    ctx.fillRect(W / 2 - 3, H - 48, 6, 16);
-
-    if (hp <= 0) {
-      ctx.fillStyle = 'rgba(10,6,4,.72)';
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#f87171';
-      ctx.font = '700 30px -apple-system, "PingFang SC", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('你倒下了', W / 2, H / 2);
-      ctx.fillStyle = 'rgba(234,244,215,.8)';
-      ctx.font = '400 15px -apple-system, "PingFang SC", sans-serif';
-      ctx.fillText('点「重开」再来一次', W / 2, H / 2 + 30);
-    } else if (enemies.every(function (e) { return e.dead; })) {
-      ctx.fillStyle = 'rgba(10,20,4,.66)';
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#a3e635';
-      ctx.font = '700 30px -apple-system, "PingFang SC", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('清场了！', W / 2, H / 2);
-      ctx.fillStyle = 'rgba(234,244,215,.8)';
-      ctx.font = '400 15px -apple-system, "PingFang SC", sans-serif';
-      ctx.fillText('剩余生命 ' + Math.round(hp), W / 2, H / 2 + 30);
-    }
-  }
-
-  /* ---------- 移动与逻辑 ---------- */
-  function move(dt) {
-    var speed = 2.6 * dt, strafe = 2.0 * dt;
-    var nx = px, ny = py;
-    var sin = Math.sin(pa), cos = Math.cos(pa);
-    if (keys.KeyW) { nx += cos * speed; ny += sin * speed; }
-    if (keys.KeyS) { nx -= cos * speed; ny -= sin * speed; }
-    if (keys.KeyA) { nx += sin * strafe; ny -= cos * strafe; }
-    if (keys.KeyD) { nx -= sin * strafe; ny += cos * strafe; }
-    /* 分轴碰撞，贴着墙也能滑动 */
-    if (!blocked(nx, py)) px = nx;
-    if (!blocked(px, ny)) py = ny;
-
-    /* 敌人：靠近就咬人 */
-    var now = performance.now();
-    enemies.forEach(function (e) {
-      if (e.dead) return;
-      var dx = px - e.x, dy = py - e.y;
-      var d = Math.hypot(dx, dy);
-      if (d < 6) {
-        var step = 0.9 * dt;
-        var ex = e.x + (dx / d) * step, ey = e.y + (dy / d) * step;
-        if (!blocked(ex, e.y)) e.x = ex;
-        if (!blocked(e.x, ey)) e.y = ey;
-      }
-      if (d < 0.55 && now - (e.hitAt || 0) > 700) {
-        e.hitAt = now;
-        hp -= 12;
-        updateHud();
-      }
-    });
-
-    /* 开火 */
-    if (keys.Space && now - lastShot > 320) {
-      lastShot = now;
-      var target = null, best = 1e9;
-      enemies.forEach(function (e) {
-        if (e.dead) return;
-        var dx = e.x - px, dy = e.y - py;
-        var dist = Math.hypot(dx, dy);
-        var ang = Math.atan2(dy, dx) - pa;
-        while (ang < -Math.PI) ang += Math.PI * 2;
-        while (ang > Math.PI) ang -= Math.PI * 2;
-        if (Math.abs(ang) < 0.14 && dist < 9 && dist < best) { best = dist; target = e; }
+  function kd(code, down) {
+    /* 同时派发到 document 和 canvas，DOSBox 监听哪一个都能收到 */
+    var ev;
+    try {
+      ev = new KeyboardEvent(down ? 'keydown' : 'keyup', {
+        key: code === 17 ? 'Control' : code === 32 ? ' ' : String.fromCharCode(code),
+        keyCode: code, which: code, bubbles: true, cancelable: true
       });
-      if (target) { target.dead = true; updateHud(); }
-    }
+    } catch (e) { return; }
+    document.dispatchEvent(ev);
+    var c = host.querySelector('canvas');
+    if (c) c.dispatchEvent(ev);
   }
 
-  /* ---------- 输入 ---------- */
-  /* 画面滑动 = 转身 */
-  var dragX = null;
-  cv.addEventListener('touchstart', function (e) {
-    dragX = e.touches[0].clientX; e.preventDefault();
+  var MAP = { up: 38, down: 40, left: 37, right: 39, fire: 17, use: 32 };
+
+  Dos(host, {
+    wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
+    cycles: 'auto',
+    autolock: true,
+    scale: 'aspect'
+  }).ready(function (fs, main) {
+    status.innerHTML = '正在解压 DOOM 游戏文件…';
+    fs.extract('assets/games/doom19s.zip').then(function () {
+      status.innerHTML = '正在启动 DOOM…（如果画面停住，在画面上点一下、再按回车）';
+      main(['-c', 'INSTALL.BAT']);
+      /* 安装脚本跑完后自动尝试启动游戏 */
+      setTimeout(function () {
+        try { main(['-c', 'DOOM.EXE']); } catch (e) {}
+      }, 12000);
+      setTimeout(function () {
+        status.innerHTML = 'DOOM 已在运行。手机：<b>滑动画面转身</b> + 下方按钮；电脑：方向键 + Ctrl 开火 + 空格开门。';
+      }, 14000);
+    }).catch(function (err) {
+      status.innerHTML = '<b>游戏文件解压失败：</b>' + (err && err.message ? err.message : err) + '。刷新重试。';
+    });
+  }).catch(function (err) {
+    status.innerHTML = '<b>DOS 模拟器启动失败：</b>' + (err && err.message ? err.message : err) + '。刷新重试。';
+  });
+
+  /* 画面滑动 = 左右转向（按住左右方向键） */
+  var dragX = null, dragging = false;
+  function turn(dir) {
+    kd(39, false); kd(37, false);
+    if (dir > 0) kd(39, true); else if (dir < 0) kd(37, true);
+  }
+  host.addEventListener('touchstart', function (e) {
+    dragX = e.touches[0].clientX; dragging = true; e.preventDefault();
   }, { passive: false });
-  cv.addEventListener('touchmove', function (e) {
+  host.addEventListener('touchmove', function (e) {
     if (dragX === null) return;
-    var x = e.touches[0].clientX;
-    pa += (x - dragX) * 0.008;
-    dragX = x;
+    var x = e.touches[0].clientX, d = x - dragX;
+    if (Math.abs(d) > 12) { turn(d); dragX = x; }
     e.preventDefault();
   }, { passive: false });
-  cv.addEventListener('touchend', function () { dragX = null; });
-
-  var mouseDown = false, mouseX = 0;
-  cv.addEventListener('mousedown', function (e) { mouseDown = true; mouseX = e.clientX; e.preventDefault(); });
-  window.addEventListener('mousemove', function (e) {
-    if (!mouseDown) return;
-    pa += (e.clientX - mouseX) * 0.006;
-    mouseX = e.clientX;
+  host.addEventListener('touchend', function () {
+    dragX = null; dragging = false; kd(37, false); kd(39, false);
   });
-  window.addEventListener('mouseup', function () { mouseDown = false; });
+
+  var mDown = false, mX = 0;
+  host.addEventListener('mousedown', function (e) { mDown = true; mX = e.clientX; });
+  window.addEventListener('mousemove', function (e) {
+    if (!mDown) return;
+    var d = e.clientX - mX;
+    if (Math.abs(d) > 12) { turn(d); mX = e.clientX; }
+  });
+  window.addEventListener('mouseup', function () { mDown = false; kd(37, false); kd(39, false); });
 
   /* 虚拟按键 */
-  Array.prototype.forEach.call(document.querySelectorAll('[data-k]'), function (b) {
-    var k = b.getAttribute('data-k');
-    if (k === 'Space') b.removeAttribute('data-k');
-    var on = function (e) { e.preventDefault(); keys[k] = true; b.classList.add('on'); };
-    var off = function (e) { if (e) e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
+  var btns = [].slice.call(document.querySelectorAll('[data-k]'));
+  btns.forEach(function (b) {
+    var name = b.getAttribute('data-k');
+    var code = MAP[name];
+    if (!code) return;
+    var on = function (e) { e.preventDefault(); if (!keys[name]) { keys[name] = 1; kd(code, true); b.classList.add('on'); } };
+    var off = function (e) { if (e) e.preventDefault(); if (keys[name]) { keys[name] = 0; kd(code, false); b.classList.remove('on'); } };
     b.addEventListener('touchstart', on, { passive: false });
     b.addEventListener('touchend', off, { passive: false });
     b.addEventListener('touchcancel', off, { passive: false });
@@ -366,29 +201,10 @@ document.getElementById('y').textContent = new Date().getFullYear();
     b.addEventListener('mouseleave', off);
   });
 
-  /* 键盘 */
-  document.addEventListener('keydown', function (e) {
-    if (['KeyW','KeyA','KeyS','KeyD','Space'].indexOf(e.code) >= 0) { keys[e.code] = true; e.preventDefault(); }
-  });
-  document.addEventListener('keyup', function (e) {
-    if (['KeyW','KeyA','KeyS','KeyD','Space'].indexOf(e.code) >= 0) { keys[e.code] = false; e.preventDefault(); }
-  });
-
-  document.getElementById('reset').addEventListener('click', reset);
-
-  /* ---------- 主循环 ---------- */
-  var last = 0;
-  function loop(ts) {
-    if (!last) last = ts;
-    var dt = Math.min(0.05, (ts - last) / 1000);
-    last = ts;
-    if (hp > 0 && !enemies.every(function (e) { return e.dead; })) move(dt);
-    render();
-    requestAnimationFrame(loop);
-  }
-
-  reset();
-  requestAnimationFrame(loop);
+  /* 键盘直通（电脑上直接玩） */
+  window.addEventListener('keydown', function (e) {
+    if ([37,38,39,40,17,32].indexOf(e.keyCode) >= 0) e.preventDefault();
+  }, { passive: false });
 })();
 </script>
 </body>
