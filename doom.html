@@ -12,20 +12,19 @@
 <meta property="og:url" content="https://hosimiyashoyo.github.io/astrazhou/doom.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css">
 <style>
   .dos-wrap { margin: 1.3rem 0 0; }
   #dos {
-    display: block; width: 100%; height: auto;
-    aspect-ratio: 4 / 3;
+    display: block;
+    width: 100%;
+    height: auto;
     background: #000;
     border: 1px solid var(--glass-border);
     border-radius: 14px;
     box-shadow: inset 0 1px 0 var(--glass-hi), 0 10px 26px rgba(20, 40, 4, .22);
-    overflow: hidden;
     touch-action: none;
   }
-  #dos canvas { display: block; width: 100% !important; height: 100% !important; }
 
   .dos-status {
     margin-top: .7rem; padding: .7rem .9rem; border-radius: 10px;
@@ -69,7 +68,7 @@
     <p class="lead">1993 年原版共享版，跑在浏览器的 DOS 模拟器里。</p>
 
     <div class="dos-wrap">
-      <div id="dos"></div>
+      <canvas id="dos" width="640" height="400"></canvas>
 
       <div class="dos-status" id="status">正在加载 DOS 模拟器…（首次打开要下载约 6 MB 的游戏文件）</div>
 
@@ -108,7 +107,7 @@ document.getElementById('y').textContent = new Date().getFullYear();
 
 (function () {
   'use strict';
-  var host = document.getElementById('dos');
+  var host = document.getElementById('dos');   /* 这是 canvas 本身 */
   var status = document.getElementById('status');
   if (!host || typeof Dos !== 'function') {
     if (status) status.innerHTML = '<b>DOS 模拟器没加载出来</b>（可能是网络问题），刷新重试一次。';
@@ -127,8 +126,7 @@ document.getElementById('y').textContent = new Date().getFullYear();
       });
     } catch (e) { return; }
     document.dispatchEvent(ev);
-    var c = host.querySelector('canvas');
-    if (c) c.dispatchEvent(ev);
+    host.dispatchEvent(ev);
   }
 
   var MAP = { up: 38, down: 40, left: 37, right: 39, fire: 17, use: 32 };
