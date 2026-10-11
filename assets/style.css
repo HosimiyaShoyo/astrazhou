@@ -285,7 +285,7 @@ a {
 }
 .happy-mac svg {
   display: block;
-  width: 40px;
+  width: 46px;
   height: auto;
   /* 像素图：放大时保持硬边，别被平滑成模糊 */
   shape-rendering: crispEdges;
