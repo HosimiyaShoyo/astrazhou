@@ -161,19 +161,32 @@ body::before {
 header.site {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: .5rem 1.25rem;
   padding: 2rem 0 1.15rem;
   border-bottom: 1px solid var(--line);
 }
 
 header.site .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
   font-family: "Comic Neue", "Comic Sans MS", "Comic Sans", cursive;
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: .02em;
   color: var(--fg);
   text-decoration: none;
+}
+
+header.site .brand .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 1px 5px rgba(40, 68, 8, .28);
 }
 
 header.site nav { margin-left: auto; display: flex; gap: .35rem; }
