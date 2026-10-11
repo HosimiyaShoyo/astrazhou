@@ -276,6 +276,22 @@ a {
 .lead { color: var(--muted); line-height: 1.75; margin: 0 0 2.2rem; }
 
 /* ---------- 文章列表：一张张玻璃卡片 ---------- */
+/* ---------- 首页一言上方的 Macintosh 笑脸 ---------- */
+.happy-mac {
+  margin: 0 0 1.1rem;
+  color: var(--accent);
+  opacity: .92;
+  line-height: 0;
+}
+.happy-mac svg {
+  width: 46px;
+  height: 53px;
+  display: block;
+}
+@media (min-width: 620px) {
+  .happy-mac svg { width: 52px; height: 60px; }
+}
+
 /* ---------- 首页正文里的导航按钮 ---------- */
 .home-nav {
   display: grid;
