@@ -54,7 +54,7 @@
   }
 
   /* ---------- 图片兜底：CDN 抽风时自动换回源站 ---------- */
-  var CDN = 'https://cdn.jsdelivr.net/gh/HosimiyaShoyo/astrazhou@main/';
+  var CDN = 'https://gcore.jsdelivr.net/gh/HosimiyaShoyo/astrazhou@main/';
   var ORIGIN = 'https://hosimiyashoyo.github.io/astrazhou/';
 
   document.addEventListener('error', function (e) {

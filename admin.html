@@ -466,7 +466,7 @@
   /* ---------- 上传图片：先在浏览器里压好，再上传，地址走 CDN ---------- */
   var MAX_W = 1200;        /* 超过这个宽度就等比缩小 */
   var JPG_Q = 0.82;        /* 压缩质量 */
-  var IMG_BASE = 'https://cdn.jsdelivr.net/gh/' + OWNER + '/' + REPO + '@' + BRANCH + '/';
+  var IMG_BASE = 'https://gcore.jsdelivr.net/gh/' + OWNER + '/' + REPO + '@' + BRANCH + '/';
 
   function shrink(file, done, fail) {
     if (/image\/gif$/i.test(file.type)) { done(file, 'gif'); return; }  /* 动图不压 */
