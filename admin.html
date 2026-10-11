@@ -244,7 +244,8 @@
                  escapeHtml(img[1]) + '" style="max-width:100%;height:auto" decoding="async"></p>');
         continue;
       }
-      var naked = line.match(/^(https?:\/\/\S+\.(?:jpe?g|png|gif|webp|avif|svg))$/i);
+      /* 裸网址，或粘贴时被 () [] 包住的网址 */
+      var naked = line.match(/^[\(\[]?\s*(https?:\/\/\S+\.(?:jpe?g|png|gif|webp|avif|svg))\s*[\)\]]?$/i);
       if (naked) {
         flush();
         out.push('      <p><img src="' + escapeHtml(naked[1]) + '" alt="" style="max-width:100%;height:auto" decoding="async"></p>');
