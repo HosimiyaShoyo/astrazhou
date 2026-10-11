@@ -278,18 +278,21 @@ a {
 /* ---------- 文章列表：一张张玻璃卡片 ---------- */
 /* ---------- 首页一言上方的 Macintosh 笑脸 ---------- */
 .happy-mac {
-  margin: 0 0 1.1rem;
+  margin: 0 0 1.2rem;
   color: var(--accent);
-  opacity: .92;
+  opacity: .95;
   line-height: 0;
 }
 .happy-mac svg {
-  width: 46px;
-  height: 53px;
   display: block;
+  width: 56px;
+  height: auto;
+  /* 像素图：放大时保持硬边，别被平滑成模糊 */
+  shape-rendering: crispEdges;
+  image-rendering: pixelated;
 }
 @media (min-width: 620px) {
-  .happy-mac svg { width: 52px; height: 60px; }
+  .happy-mac svg { width: 64px; }
 }
 
 /* ---------- 首页正文里的导航按钮 ---------- */
