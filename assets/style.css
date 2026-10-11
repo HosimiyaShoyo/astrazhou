@@ -336,6 +336,14 @@ pre code { background: none; border: none; padding: 0; }
 
 hr { border: 0; border-top: 1px solid var(--line); margin: 2.5rem 0; }
 
+/* 文章末尾的拍摄器材等说明 */
+article p.exif {
+  margin: 2.2rem 0 0;
+  font-size: .84rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .back { display: inline-block; margin-top: 2.5rem; font-size: .9rem; }
 
 /* ---------- 页脚 ---------- */
