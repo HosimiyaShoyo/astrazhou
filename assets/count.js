@@ -48,10 +48,26 @@
   }
 
   function boot() {
+    initMenu();
     initLike();
     var key = document.body && document.body.getAttribute('data-hit');
     if (key) hit(key).then(fill, fill);
     else fill();
+  }
+
+  /* ---------- 右上角菜单：点外面 / 按 Esc / 点链接后自动收起 ---------- */
+  function initMenu() {
+    var m = document.querySelector('details.menu');
+    if (!m) return;
+    document.addEventListener('click', function (e) {
+      if (m.open && !m.contains(e.target)) m.open = false;
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') m.open = false;
+    });
+    Array.prototype.forEach.call(m.querySelectorAll('nav a'), function (a) {
+      a.addEventListener('click', function () { m.open = false; });
+    });
   }
 
   /* ---------- 点赞：点一次 +1，同一浏览器只算一次 ---------- */
