@@ -170,7 +170,8 @@ body::after {
   max-width: var(--max);
   margin: 2.4rem auto;
   padding: 0 clamp(1.15rem, 4.6vw, 2.9rem) .6rem;
-  overflow: visible;
+  /* 必须裁剪：否则 ::after 的流动光斑会溢出圆角，露出直角的边 */
+  overflow: hidden;
   /* 不吸顶了，所以这里可以放心用 backdrop-filter 做真玻璃 */
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -232,13 +233,12 @@ header.site .brand {
 }
 
 header.site .brand .avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  /* 小米 logo 那种「超椭圆」：方中带圆，不是正圆也不是普通圆角 */
+  border-radius: 30%;
   object-fit: cover;
-  flex: none;
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 1px 5px rgba(40, 68, 8, .28);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .45), 0 2px 6px rgba(20, 40, 10, .18);
 }
 
 /* ---------- 左上角「返回主页」 ---------- */
