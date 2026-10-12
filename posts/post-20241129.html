@@ -12,7 +12,7 @@
 <meta property="og:url" content="https://hosimiyashoyo.github.io/astrazhou/posts/post-20241129.html">
 <link rel="icon" type="image/png" href="../assets/favicon.png">
 <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-<link rel="stylesheet" href="../assets/style.css?v=1791818533">
+<link rel="stylesheet" href="../assets/style.css?v=1791818975">
 <script src="../assets/count.js" defer></script>
 <style>
     /* 小说分页阅读 */
@@ -167,20 +167,24 @@
       if (pages.length < 2) return;
       var pn = document.getElementById('pn'), pv = document.getElementById('pv'), nx = document.getElementById('nx');
       var i = 0;
-      function show(n) {
+      function show(n, jump) {
         i = Math.max(0, Math.min(pages.length - 1, n));
         pages.forEach(function (p, k) { if (k === i) p.removeAttribute('hidden'); else p.setAttribute('hidden', ''); });
         pn.textContent = (i + 1) + ' / ' + pages.length;
         pv.disabled = i === 0;
         nx.disabled = i === pages.length - 1;
-        var top = document.querySelector('article header');
-        if (top && top.scrollIntoView) top.scrollIntoView({ block: 'start' });
+        /* 只有真的翻页时才滚回正文开头。初次加载绝不能滚，
+           否则会把页面顶部的站点头（返回键/头像/站名）顶出屏幕 */
+        if (jump) {
+          var top = document.querySelector('article header');
+          if (top && top.scrollIntoView) top.scrollIntoView({ block: 'start' });
+        }
       }
-      pv.addEventListener('click', function () { show(i - 1); });
-      nx.addEventListener('click', function () { show(i + 1); });
+      pv.addEventListener('click', function () { show(i - 1, true); });
+      nx.addEventListener('click', function () { show(i + 1, true); });
       document.addEventListener('keydown', function (e) {
-        if (e.keyCode === 37) show(i - 1);
-        if (e.keyCode === 39) show(i + 1);
+        if (e.keyCode === 37) show(i - 1, true);
+        if (e.keyCode === 39) show(i + 1, true);
       });
 
       /* 手机左右滑动翻页：横向位移要明显大于纵向，才不会干扰上下滚动 */
@@ -201,8 +205,8 @@
           if (!sideways) return;
           var dx = e.changedTouches[0].clientX - sx;
           if (Math.abs(dx) < 45) return;
-          if (dx < 0) show(i + 1);    /* 向左滑 = 下一页 */
-          else show(i - 1);           /* 向右滑 = 上一页 */
+          if (dx < 0) show(i + 1, true);    /* 向左滑 = 下一页 */
+          else show(i - 1, true);           /* 向右滑 = 上一页 */
         }, { passive: true });
       }
 
