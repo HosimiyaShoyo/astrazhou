@@ -28,17 +28,18 @@
   --ease: cubic-bezier(.22, .61, .36, 1);
 
   /* 壁纸 */
-  /* Aero Aurora 壁纸：深空底 + 极光辉光 */
-  --wall-1: #16301a;
-  --wall-2: #0a1a0e;
-  --wall-3: #040b06;
-  --wall-glow: rgba(196, 255, 120, .40);
-  --wall-glow-2: rgba(120, 236, 255, .30);
-  --wall-glow-3: rgba(150, 255, 160, .26);
-  --aurora-1: rgba(222, 255, 170, .16);
-  --aurora-2: rgba(150, 242, 255, .13);
-  --aurora-3: rgba(190, 255, 140, .12);
-  --aurora-4: rgba(120, 220, 255, .09);
+  /* ---------- Windows Vista「Aurora」壁纸 ----------
+     深青绿底 + 中央一道亮绿绸缎 + 青色辉光 */
+  --wall-1: #0d332c;      /* 上部青绿 */
+  --wall-2: #051a17;      /* 中段深青 */
+  --wall-3: #010a09;      /* 底部近黑 */
+  --wall-glow: rgba(64, 255, 186, .34);    /* 主光：翠绿 */
+  --wall-glow-2: rgba(56, 200, 224, .26);  /* 副光：青蓝 */
+  --wall-glow-3: rgba(96, 255, 154, .24);  /* 底部绿光 */
+  --aurora-1: rgba(130, 255, 214, .20);    /* 主绸缎 */
+  --aurora-2: rgba(90, 226, 255, .14);     /* 青色副带 */
+  --aurora-3: rgba(150, 255, 190, .13);    /* 绿副带 */
+  --aurora-4: rgba(70, 190, 220, .09);     /* 远景淡青 */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -57,16 +58,16 @@
     --glass-shadow: 0 18px 46px rgba(0, 0, 0, .48), 0 1px 3px rgba(0, 0, 0, .28);
     --flow: rgba(163, 230, 53, .10);
 
-    --wall-1: #122414;
-    --wall-2: #08130a;
-    --wall-3: #030704;
-    --wall-glow: rgba(163, 230, 53, .24);
-    --wall-glow-2: rgba(120, 210, 255, .18);
-    --wall-glow-3: rgba(140, 230, 160, .16);
-    --aurora-1: rgba(200, 255, 150, .10);
-    --aurora-2: rgba(140, 230, 255, .09);
-    --aurora-3: rgba(170, 240, 130, .08);
-    --aurora-4: rgba(110, 200, 255, .06);
+    --wall-1: #0a2621;
+    --wall-2: #04120f;
+    --wall-3: #000806;
+    --wall-glow: rgba(64, 255, 186, .26);
+    --wall-glow-2: rgba(56, 200, 224, .20);
+    --wall-glow-3: rgba(96, 255, 154, .20);
+    --aurora-1: rgba(130, 255, 214, .15);
+    --aurora-2: rgba(90, 226, 255, .11);
+    --aurora-3: rgba(150, 255, 190, .10);
+    --aurora-4: rgba(70, 190, 220, .07);
   }
 }
 
@@ -92,11 +93,12 @@
 html {
   min-height: 100%;
   background-color: var(--wall-3);
-  /* Aero Aurora：上下暗角 + 中心泛光，模仿 Vista 壁纸的纵深 */
+  /* Aurora：中央一道纵向光柱，四周沉入深青 */
   background-image:
-    radial-gradient(120% 85% at 50% 112%, var(--wall-1) 0%, transparent 62%),
-    radial-gradient(100% 70% at 50% -18%, var(--wall-1) 0%, transparent 60%),
-    linear-gradient(168deg, var(--wall-1) 0%, var(--wall-2) 48%, var(--wall-3) 100%);
+    radial-gradient(58% 120% at 44% 48%, var(--wall-1) 0%, transparent 66%),
+    radial-gradient(120% 80% at 50% 118%, var(--wall-1) 0%, transparent 64%),
+    radial-gradient(110% 70% at 52% -20%, var(--wall-1) 0%, transparent 62%),
+    linear-gradient(172deg, var(--wall-1) 0%, var(--wall-2) 46%, var(--wall-3) 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
@@ -121,11 +123,16 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(50% 44% at 12% 4%, var(--wall-glow), transparent 68%),
-    radial-gradient(44% 40% at 92% 12%, var(--wall-glow-2), transparent 68%),
-    radial-gradient(52% 44% at 4% 60%, var(--wall-glow-3), transparent 70%),
-    radial-gradient(56% 46% at 94% 76%, var(--wall-glow-2), transparent 70%),
-    radial-gradient(78% 56% at 50% 108%, var(--wall-glow), transparent 72%);
+    /* 中央偏左的主光晕（Aurora 的亮区） */
+    radial-gradient(46% 62% at 40% 46%, var(--wall-glow), transparent 70%),
+    /* 右上青蓝辉光 */
+    radial-gradient(48% 42% at 88% 8%, var(--wall-glow-2), transparent 70%),
+    /* 左下绿光 */
+    radial-gradient(50% 44% at 6% 66%, var(--wall-glow-3), transparent 72%),
+    /* 右下淡青 */
+    radial-gradient(52% 44% at 96% 82%, var(--wall-glow-2), transparent 72%),
+    /* 底部托光 */
+    radial-gradient(84% 54% at 48% 110%, var(--wall-glow), transparent 74%);
 }
 
 /* ---------- Aero Aurora：斜向绸缎光带（Vista 壁纸的标志） ---------- */
@@ -136,11 +143,20 @@ body::after {
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(106deg, transparent 30%, var(--aurora-1) 42%, rgba(255, 255, 255, .03) 46%, var(--aurora-1) 50%, transparent 60%),
-    linear-gradient(96deg, transparent 40%, var(--aurora-2) 52%, transparent 64%),
-    linear-gradient(118deg, transparent 56%, var(--aurora-3) 66%, transparent 78%),
-    linear-gradient(88deg, transparent 68%, var(--aurora-4) 76%, transparent 86%);
-  transform: rotate(-3.5deg) scale(1.08);
+    /* 主绸缎：宽而亮的一道，带高光芯 */
+    linear-gradient(99deg,
+      transparent 28%,
+      var(--aurora-1) 40%,
+      rgba(230, 255, 250, .07) 45%,
+      var(--aurora-1) 50%,
+      transparent 62%),
+    /* 青色副带 */
+    linear-gradient(93deg, transparent 42%, var(--aurora-2) 54%, transparent 66%),
+    /* 绿色副带 */
+    linear-gradient(108deg, transparent 58%, var(--aurora-3) 69%, transparent 80%),
+    /* 远景淡青 */
+    linear-gradient(85deg, transparent 70%, var(--aurora-4) 79%, transparent 89%);
+  transform: rotate(-4deg) scale(1.1);
   mix-blend-mode: screen;
 }
 
