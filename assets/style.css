@@ -16,7 +16,7 @@
   --max: 46rem;
 
   /* 玻璃参数 */
-  --glass-bg: rgba(255, 255, 255, .44);
+  --glass-bg: rgba(255, 255, 255, .38);
   --glass-bg-2: rgba(255, 255, 255, .50);
   --glass-border: rgba(255, 255, 255, .60);
   --glass-hi: rgba(255, 255, 255, .78);
@@ -166,41 +166,25 @@ body::after {
   z-index: 1;
   max-width: var(--max);
   margin: 2.4rem auto;
-  padding: 0 0 .6rem;
+  padding: 0 clamp(1.15rem, 4.6vw, 2.9rem) .6rem;
   overflow: visible;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, .42);
+  /* 不吸顶了，所以这里可以放心用 backdrop-filter 做真玻璃 */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, .12),
-    0 24px 60px rgba(0, 0, 0, .30),
-    0 0 44px rgba(130, 255, 214, .10),
-    inset 0 1px 0 rgba(255, 255, 255, .75);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
 }
 
 /* Aero 顶部光泽 */
 .wrap::before {
   content: "";
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
+  left: 0; right: 0; top: 0;
+  height: 34%;
   pointer-events: none;
-  /* 液态玻璃：模糊背后的 Aurora 壁纸 */
-  -webkit-backdrop-filter: blur(30px) saturate(185%);
-  backdrop-filter: blur(30px) saturate(185%);
-  /* Vista/Win7 窗口的做法：内容区偏实，文字才清楚；玻璃感靠高光边缘体现 */
-  background:
-    linear-gradient(180deg,
-      rgba(255, 255, 255, .90) 0%,
-      rgba(250, 255, 245, .84) 14%,
-      rgba(246, 255, 240, .83) 86%,
-      rgba(255, 255, 255, .88) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .95),
-    inset 0 -1px 0 rgba(255, 255, 255, .55),
-    inset 1px 0 0 rgba(255, 255, 255, .70),
-    inset -1px 0 0 rgba(255, 255, 255, .70);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 76%);
 }
 
 /* 液态玻璃：缓慢流动的高光 */
@@ -228,19 +212,8 @@ header.site {
   flex-wrap: wrap;
   align-items: center;
   gap: .5rem 1.25rem;
-  padding: 1.2rem clamp(1.15rem, 4.6vw, 2.9rem) 1rem;
+  padding: 2rem 0 1.15rem;
   border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  /* 与卡片内容区同色（略亮一档），吸顶时不会出现色差 */
-  background: linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(250, 255, 246, .88));
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  backdrop-filter: blur(30px) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .98),
-    0 1px 0 rgba(255, 255, 255, .35),
-    0 6px 18px rgba(20, 40, 10, .06);
 }
 
 header.site .brand {
@@ -334,7 +307,7 @@ header.site nav a[aria-current="page"] {
 
 /* ---------- 正文 ---------- */
 main {
-  padding: 2.8rem clamp(1.15rem, 4.6vw, 2.9rem) 3.8rem;
+  padding: 2.8rem 0 3.8rem;
 }
 
 .lead { color: var(--muted); line-height: 1.75; margin: 0 0 2.2rem; }
@@ -602,8 +575,10 @@ article p.exif {
 
 /* ---------- 页脚 ---------- */
 footer.site {
-  padding: .2rem clamp(1.15rem, 4.6vw, 2.9rem) .4rem;
+  padding: .2rem 0 .4rem;
   border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .88rem;
 }
 
 footer.site a { color: var(--muted); }
