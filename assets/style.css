@@ -7,9 +7,9 @@
   color-scheme: light dark;
 
   /* 文字与线条 */
-  --fg: #1b2410;
-  --muted: #5c6b45;
-  --line: rgba(77, 124, 15, .20);
+  --fg: #141c0b;
+  --muted: #43502c;
+  --line: rgba(77, 124, 15, .26);
   --accent: #4d7c0f;
   --bg: #ffffff;
   --code-bg: rgba(255, 255, 255, .5);
@@ -17,7 +17,7 @@
 
   /* 玻璃参数 */
   --glass-bg: rgba(255, 255, 255, .44);
-  --glass-bg-2: rgba(255, 255, 255, .26);
+  --glass-bg-2: rgba(255, 255, 255, .50);
   --glass-border: rgba(255, 255, 255, .60);
   --glass-hi: rgba(255, 255, 255, .78);
   --glass-shadow: 0 18px 46px rgba(38, 62, 8, .20), 0 1px 3px rgba(38, 62, 8, .07);
@@ -44,9 +44,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fg: #eaf4d7;
-    --muted: #a4b78a;
-    --line: rgba(190, 242, 100, .18);
+    --fg: #f2fae0;
+    --muted: #c2d4a6;
+    --line: rgba(190, 242, 100, .24);
     --accent: #a3e635;
     --bg: rgba(14, 20, 10, .92);
     --code-bg: rgba(255, 255, 255, .07);
@@ -166,21 +166,16 @@ body::after {
   z-index: 1;
   max-width: var(--max);
   margin: 2.4rem auto;
-  padding: 0 clamp(1.15rem, 4.6vw, 2.9rem) .6rem;
-  /* 不能是 hidden，否则子元素的 sticky 会失效；圆角由装饰层自己裁 */
+  padding: 0 0 .6rem;
   overflow: visible;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  /* Aero 玻璃：外发光 + 内高光，边缘像被光描过 */
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, .10),
-    0 24px 60px rgba(0, 0, 0, .30),
-    0 0 44px rgba(190, 255, 130, .10),
-    inset 0 1px 0 var(--glass-hi);
-  /* 注意：这里不能加 backdrop-filter —— 它会创建新的 containing block，
-     使内部 header 的 position: sticky 失效，所以玻璃层放在 ::before 上。 */
   background: transparent;
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: var(--radius);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .12),
+    0 24px 60px rgba(0, 0, 0, .30),
+    0 0 44px rgba(130, 255, 214, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .75);
 }
 
 /* Aero 顶部光泽 */
@@ -191,21 +186,21 @@ body::after {
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  /* 液态玻璃：强模糊 + 高饱和，透出背后的 Aurora 壁纸 */
-  -webkit-backdrop-filter: blur(30px) saturate(190%);
-  backdrop-filter: blur(30px) saturate(190%);
+  /* 液态玻璃：模糊背后的 Aurora 壁纸 */
+  -webkit-backdrop-filter: blur(30px) saturate(185%);
+  backdrop-filter: blur(30px) saturate(185%);
+  /* Vista/Win7 窗口的做法：内容区偏实，文字才清楚；玻璃感靠高光边缘体现 */
   background:
     linear-gradient(180deg,
-      rgba(255, 255, 255, .40) 0%,
-      rgba(255, 255, 255, .14) 18%,
-      rgba(255, 255, 255, .07) 50%,
-      rgba(255, 255, 255, .12) 88%,
-      rgba(255, 255, 255, .28) 100%);
+      rgba(255, 255, 255, .90) 0%,
+      rgba(250, 255, 245, .84) 14%,
+      rgba(246, 255, 240, .83) 86%,
+      rgba(255, 255, 255, .88) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .68),
-    inset 0 -1px 0 rgba(255, 255, 255, .26),
-    inset 1px 0 0 rgba(255, 255, 255, .32),
-    inset -1px 0 0 rgba(255, 255, 255, .32);
+    inset 0 1px 0 rgba(255, 255, 255, .95),
+    inset 0 -1px 0 rgba(255, 255, 255, .55),
+    inset 1px 0 0 rgba(255, 255, 255, .70),
+    inset -1px 0 0 rgba(255, 255, 255, .70);
 }
 
 /* 液态玻璃：缓慢流动的高光 */
@@ -233,18 +228,19 @@ header.site {
   flex-wrap: wrap;
   align-items: center;
   gap: .5rem 1.25rem;
-  padding: 1.2rem 0 1rem;
+  padding: 1.2rem clamp(1.15rem, 4.6vw, 2.9rem) 1rem;
   border-bottom: 1px solid var(--line);
-  /* 纯 CSS 吸顶（.wrap 已经去掉了 backdrop-filter，所以这里能生效） */
   position: sticky;
   top: 0;
   z-index: 40;
-  /* 颜色必须和 .wrap 一致，否则吸顶后会糊出一块白 */
-  /* 与卡片同款液态玻璃 */
-  background: linear-gradient(180deg, rgba(255, 255, 255, .38), rgba(255, 255, 255, .14));
-  -webkit-backdrop-filter: blur(30px) saturate(190%);
-  backdrop-filter: blur(30px) saturate(190%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .58);
+  /* 与卡片内容区同色（略亮一档），吸顶时不会出现色差 */
+  background: linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(250, 255, 246, .88));
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .98),
+    0 1px 0 rgba(255, 255, 255, .35),
+    0 6px 18px rgba(20, 40, 10, .06);
 }
 
 header.site .brand {
@@ -337,19 +333,8 @@ header.site nav a[aria-current="page"] {
 }
 
 /* ---------- 正文 ---------- */
-main { padding: 2.8rem 0 3.8rem; }
-
-h1 { font-size: 1.62rem; line-height: 1.3; letter-spacing: -.012em; margin: 0 0 1.15rem; }
-
-/* 首页「一言」：字号与「文章」栏标题（h2）一致 */
-h1.quote-title { font-size: 1.2rem; margin-bottom: .75rem; }
-h2 { font-size: 1.2rem; letter-spacing: -.008em; margin: 2.7rem 0 1rem; }
-h3 { font-size: 1.03rem; margin: 1.8rem 0 .6rem; }
-
-a {
-  color: var(--accent);
-  text-underline-offset: 2px;
-  text-decoration-thickness: 1px;
+main {
+  padding: 2.8rem clamp(1.15rem, 4.6vw, 2.9rem) 3.8rem;
 }
 
 .lead { color: var(--muted); line-height: 1.75; margin: 0 0 2.2rem; }
@@ -617,10 +602,8 @@ article p.exif {
 
 /* ---------- 页脚 ---------- */
 footer.site {
-  padding: 1.4rem 0 2.2rem;
+  padding: .2rem clamp(1.15rem, 4.6vw, 2.9rem) .4rem;
   border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: .85rem;
 }
 
 footer.site a { color: var(--muted); }
