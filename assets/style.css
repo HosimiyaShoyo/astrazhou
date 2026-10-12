@@ -180,7 +180,7 @@ body::after {
     inset 0 1px 0 var(--glass-hi);
   /* 注意：这里不能加 backdrop-filter —— 它会创建新的 containing block，
      使内部 header 的 position: sticky 失效。背景调实一点来弥补通透感。 */
-  background: rgba(250, 255, 244, .58);
+  background: rgba(250, 255, 244, .62);
 }
 
 /* Aero 顶部光泽 */
@@ -224,9 +224,10 @@ header.site {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(246, 252, 232, .88);
-  -webkit-backdrop-filter: var(--blur-2);
-  backdrop-filter: var(--blur-2);
+  /* 颜色必须和 .wrap 一致，否则吸顶后会糊出一块白 */
+  background: rgba(250, 255, 244, .62);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
 }
 
 header.site .brand {
