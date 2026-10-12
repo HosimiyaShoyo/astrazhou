@@ -120,7 +120,8 @@ body::before {
   max-width: var(--max);
   margin: 2.4rem auto;
   padding: 0 clamp(1.15rem, 4.6vw, 2.9rem) .6rem;
-  overflow: hidden;
+  /* 不能是 hidden，否则子元素的 sticky 会失效；圆角由装饰层自己裁 */
+  overflow: visible;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
@@ -164,8 +165,15 @@ header.site {
   flex-wrap: wrap;
   align-items: center;
   gap: .5rem 1.25rem;
-  padding: 2rem 0 1.15rem;
+  padding: 1.2rem 0 1rem;
   border-bottom: 1px solid var(--line);
+  /* 滚动时吸在顶部：返回键和站名始终可见 */
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
 }
 
 header.site .brand {
