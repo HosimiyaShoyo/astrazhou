@@ -48,6 +48,7 @@
     .pager button:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
     .pager button:disabled { opacity: .4; cursor: default; }
     #pn { font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .pager-tip { font-size: .8rem; color: var(--muted); text-align: center; margin: .8rem 0 0; }
     /* 没有 JS 时，所有页都显示，不会丢内容 */
   </style>
 </head>
@@ -150,6 +151,7 @@
       <span id="pn">1 / 5</span>
       <button type="button" id="nx">下一页 →</button>
     </nav>
+    <p class="pager-tip">手机可以左右滑动翻页</p>
 
     <a class="back" href="../index.html">← 返回首页</a>
   </article>
@@ -180,6 +182,30 @@
         if (e.keyCode === 37) show(i - 1);
         if (e.keyCode === 39) show(i + 1);
       });
+
+      /* 手机左右滑动翻页：横向位移要明显大于纵向，才不会干扰上下滚动 */
+      var reader = document.querySelector('.reader');
+      if (reader) {
+        var sx = 0, sy = 0, sideways = false;
+        reader.addEventListener('touchstart', function (e) {
+          sx = e.touches[0].clientX;
+          sy = e.touches[0].clientY;
+          sideways = false;
+        }, { passive: true });
+        reader.addEventListener('touchmove', function (e) {
+          var dx = e.touches[0].clientX - sx;
+          var dy = e.touches[0].clientY - sy;
+          if (Math.abs(dx) > 25 && Math.abs(dx) > Math.abs(dy) * 1.6) sideways = true;
+        }, { passive: true });
+        reader.addEventListener('touchend', function (e) {
+          if (!sideways) return;
+          var dx = e.changedTouches[0].clientX - sx;
+          if (Math.abs(dx) < 45) return;
+          if (dx < 0) show(i + 1);    /* 向左滑 = 下一页 */
+          else show(i - 1);           /* 向右滑 = 上一页 */
+        }, { passive: true });
+      }
+
       show(0);
     })();
   </script>
