@@ -167,13 +167,29 @@ header.site {
   gap: .5rem 1.25rem;
   padding: 1.2rem 0 1rem;
   border-bottom: 1px solid var(--line);
-  /* 滚动时吸在顶部：返回键和站名始终可见 */
-  position: sticky;
+}
+
+/* 滚过顶部后由 JS 加上 .stuck：用 fixed 吸顶（不受父元素 backdrop-filter 干扰） */
+header.site.stuck {
+  position: fixed;
   top: 0;
-  z-index: 30;
+  left: 0;
+  right: 0;
+  max-width: var(--max);
+  margin: 0 auto;
+  z-index: 40;
+  padding: 1rem clamp(1.15rem, 4.6vw, 2.9rem) .95rem;
   background: var(--glass-bg);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: 0 10px 30px rgba(38, 62, 8, .16), inset 0 1px 0 var(--glass-hi);
   -webkit-backdrop-filter: var(--blur);
   backdrop-filter: var(--blur);
+  animation: stuckIn .22s ease-out;
+}
+@keyframes stuckIn {
+  from { transform: translateY(-100%); opacity: .4; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 header.site .brand {
