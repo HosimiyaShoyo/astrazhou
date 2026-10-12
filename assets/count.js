@@ -96,32 +96,3 @@
   else boot();
 })();
 
-
-/* ==================== 顶栏吸顶 ==================== */
-(function () {
-  var h = document.querySelector('header.site');
-  if (!h || !window.addEventListener) return;
-
-  /* 造一个占位块，吸顶时把原来的位置撑住，避免内容跳动 */
-  var ph = document.createElement('div');
-  ph.style.cssText = 'height:0;overflow:hidden';
-  h.parentNode.insertBefore(ph, h);
-
-  var stuck = false;
-  function update() {
-    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    var limit = ph.getBoundingClientRect().top + y;
-    if (!stuck && y > limit) {
-      ph.style.height = h.offsetHeight + 'px';
-      h.className = h.className.replace(/\s*stuck/, '') + ' stuck';
-      stuck = true;
-    } else if (stuck && y <= limit) {
-      h.className = h.className.replace(/\s*stuck/, '');
-      ph.style.height = '0px';
-      stuck = false;
-    }
-  }
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update, { passive: true });
-  update();
-})();
