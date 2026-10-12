@@ -29,6 +29,14 @@
       letter-spacing: .02em;
     }
     article h1 { letter-spacing: .02em; }
+    /* 点赞那块（含数字和 emoji）用系统字体，不吃瘦金体 */
+    article p.like-wrap {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 1rem;
+      line-height: 1.7;
+      letter-spacing: normal;
+      margin: 2.2rem 0 0;
+    }
   </style>
 </head>
 <body data-hit="post-post-20261012">
@@ -55,9 +63,10 @@
       <p>欢欣的时刻，哀愁的时刻，痛苦的时刻啊！<br>都是我的回忆呢！与你有关的。<br>它们成了蝶，红色的兴，黑色的悲，<br>都在身旁舞着呢！挥之不去的。</p>
       <p>只能说，爱很短，忘很长。<br>这是地上的你所带来的最后痛苦，<br>这是天上的我所写下的最后的诗。</p>
 
-      <p class="like-wrap"><button class="like" type="button" data-like="like-post-post-20261012">👍 点赞 <span class="like-n">—</span></button></p>
 
       <a class="back" href="../index.html">← 返回首页</a>
+
+      <p class="like-wrap"><button class="like" type="button" data-like="like-post-post-20261012">👍 点赞 <span class="like-n">—</span></button></p>
     </article>
   </main>
 
