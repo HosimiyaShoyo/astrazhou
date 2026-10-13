@@ -50,5 +50,24 @@
 
 </div>
 <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+<script>
+/* 打开站内页面时自动带时间戳，避开浏览器与 CDN 的 10 分钟缓存。
+   这样你每次点“文章”看到的都是最新列表，不会再有“刚发的文章看不到”。 */
+(function () {
+  document.addEventListener('click', function (e) {
+    var el = e.target;
+    while (el && el.tagName !== 'A') el = el.parentNode;
+    if (!el || !el.getAttribute) return;
+    var href = el.getAttribute('href');
+    if (!href) return;
+    if (/^(https?:|mailto:|tel:|#|\/\/)/.test(href)) return;   /* 外链、锚点不管 */
+    if (!/\.html($|\?)/.test(href)) return;                     /* 只处理页面链接 */
+    if (/[?&]_=/.test(href)) return;                             /* 已经带过就别重复 */
+    var sep = href.indexOf('?') >= 0 ? '&' : '?';
+    e.preventDefault();
+    location.href = href + sep + '_=' + Date.now();
+  }, true);
+})();
+</script>
 </body>
 </html>
