@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>死神 VS 火影 · Astra Zhou</title>
+<meta name="description" content="经典 Flash 格斗游戏《死神 VS 火影》，用 Ruffle 在浏览器里直接玩。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="死神 VS 火影 · Astra Zhou">
+<meta property="og:description" content="经典 Flash 格斗游戏，浏览器直接玩。">
+<meta property="og:image" content="https://hosimiyashoyo.github.io/astrazhou/assets/og-cover.jpg">
+<meta property="og:url" content="https://hosimiyashoyo.github.io/astrazhou/bvn.html">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/style.css?v=1792065953">
+<style>
+  .flash-wrap { margin: 1.3rem 0 0; }
+  #flash {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    background: #000;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 32px rgba(20, 40, 10, .20);
+    overflow: hidden;
+    touch-action: none;
+  }
+  #flash ruffle-player, #flash ruffle-embed, #flash canvas { width: 100% !important; height: 100% !important; display: block; }
+
+  .flash-status {
+    margin-top: .7rem; padding: .7rem .9rem; border-radius: var(--radius-md);
+    font-size: .88rem; line-height: 1.7;
+    background: var(--glass-bg-2); border: 1px solid var(--glass-border); color: var(--muted);
+  }
+  .flash-status b { color: var(--fg); }
+
+  .pad { margin-top: 1rem; user-select: none; -webkit-user-select: none; }
+  .pad-row { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+  .pad-grid { display: grid; gap: .4rem; justify-items: center; }
+  .pad-line { display: flex; gap: .4rem; }
+  .pk {
+    font: inherit; font-size: .95rem; font-weight: 700;
+    width: 3.1rem; height: 3.1rem; border-radius: var(--radius-md);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--fg); background: var(--glass-bg-2);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-hi), 0 6px 16px rgba(40, 68, 8, .14);
+    -webkit-backdrop-filter: var(--blur-2); backdrop-filter: var(--blur-2);
+    cursor: pointer; touch-action: none;
+    transition: color .15s, border-color .15s, transform .15s;
+  }
+  .pk.on, .pk:active { color: var(--accent); border-color: var(--accent); transform: scale(.95); }
+  .pk.wide { width: 4.3rem; }
+  .pad-title { font-size: .78rem; color: var(--muted); margin: 0 0 .4rem; text-align: center; }
+  .flash-tip { font-size: .82rem; color: var(--muted); line-height: 1.8; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <a class="back-home" href="index.html" aria-label="返回主页">←</a>
+    <a class="brand" href="index.html"><img class="avatar" src="assets/avatar.jpg" alt="" width="30" height="30">Astra Zhou’s Blog</a>
+    <img class="brand-mac" src="assets/mac-smile.png" alt="" style="width:20px;height:auto;flex:none;margin-left:.45rem;opacity:.9">
+  </header>
+
+  <main>
+    <h1>死神 VS 火影</h1>
+    <p class="lead">经典 Flash 格斗游戏，靠 Ruffle 在浏览器里运行（Flash 早已停止支持，这是开源模拟器）。</p>
+
+    <div class="flash-wrap">
+      <div id="flash"></div>
+      <div class="flash-status" id="status">正在加载 Flash 模拟器…</div>
+
+      <div class="pad">
+        <div class="pad-row">
+          <div>
+            <p class="pad-title">移动</p>
+            <div class="pad-grid">
+              <button class="pk" data-k="KeyW" type="button">W</button>
+              <div class="pad-line">
+                <button class="pk" data-k="KeyA" type="button">A</button>
+                <button class="pk" data-k="KeyS" type="button">S</button>
+                <button class="pk" data-k="KeyD" type="button">D</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="pad-title">攻击</p>
+            <div class="pad-grid">
+              <div class="pad-line">
+                <button class="pk wide" data-k="KeyU" type="button">助攻</button>
+                <button class="pk wide" data-k="KeyI" type="button">换人</button>
+              </div>
+              <div class="pad-line">
+                <button class="pk wide" data-k="KeyJ" type="button">普攻</button>
+                <button class="pk wide" data-k="KeyK" type="button">技能</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="flash-tip">
+        手机：用下面的虚拟按键。电脑：键盘 <b>WASD</b> 移动，<b>J</b> 普攻、<b>K</b> 技能、<b>U</b> 助攻、<b>I</b> 换人。<br>
+        首次打开要下载游戏本体，会比较慢，请耐心等进度走完。
+      </p>
+    </div>
+  </main>
+
+  <footer class="site">© <span id="y">2025</span> Astra Zhou</footer>
+
+</div>
+
+<script src="https://gcore.jsdelivr.net/npm/@ruffle-rs/ruffle@0.7.1"></script>
+<script>
+document.getElementById('y').textContent = new Date().getFullYear();
+
+(function () {
+  'use strict';
+  var host = document.getElementById('flash');
+  var status = document.getElementById('status');
+  var SWF = 'assets/games/bvn.swf';
+
+  function say(html) { if (status) status.innerHTML = html; }
+
+  if (!window.RufflePlayer) {
+    say('<b>Flash 模拟器没加载出来</b>（可能是网络问题），刷新重试。');
+    return;
+  }
+
+  window.RufflePlayer.config = {
+    autoplay: 'on',
+    unmuteOverlay: 'hidden',
+    letterbox: 'on',
+    scale: 'showAll',
+    quality: 'medium',
+    warnOnUnsupportedContent: false,
+    showSwfDownload: false,
+    contextMenu: 'off',
+    allowScriptAccess: false
+  };
+
+  say('正在加载 Flash 模拟器…');
+  var ruffle = window.RufflePlayer.newest();
+  var player = ruffle.createPlayer();
+  player.style.width = '100%';
+  player.style.height = '100%';
+  host.appendChild(player);
+
+  say('正在下载游戏本体（约 55 MB，首次较慢）…');
+  player.load(SWF).then(function () {
+    say('游戏已加载。<b>手机上</b>用下面的虚拟按键，<b>电脑上</b>用键盘 WASD + J/K/U/I。');
+  }).catch(function (err) {
+    say('<b>游戏加载失败：</b>' + (err && err.message ? err.message : err) +
+        '<br>可能是游戏文件还没上传完成，或者网络中断，刷新重试。');
+  });
+
+  /* 虚拟按键 → 注入键盘事件给 Ruffle 的 canvas */
+  function canvas() { return host.querySelector('canvas'); }
+  function fire(code, down) {
+    var key = { KeyW:'w', KeyA:'a', KeyS:'s', KeyD:'d', KeyJ:'j', KeyK:'k', KeyU:'u', KeyI:'i' }[code] || '';
+    var ev;
+    try {
+      ev = new KeyboardEvent(down ? 'keydown' : 'keyup', {
+        key: key, code: code,
+        keyCode: key.toUpperCase().charCodeAt(0),
+        which: key.toUpperCase().charCodeAt(0),
+        bubbles: true, cancelable: true
+      });
+    } catch (e) { return; }
+    var c = canvas();
+    if (c) c.dispatchEvent(ev);
+    document.dispatchEvent(ev);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-k]'), function (b) {
+    var code = b.getAttribute('data-k');
+    var on = function (e) { e.preventDefault(); b.classList.add('on'); fire(code, true); };
+    var off = function (e) { if (e) e.preventDefault(); b.classList.remove('on'); fire(code, false); };
+    b.addEventListener('touchstart', on, { passive: false });
+    b.addEventListener('touchend', off, { passive: false });
+    b.addEventListener('touchcancel', off, { passive: false });
+    b.addEventListener('mousedown', on);
+    b.addEventListener('mouseup', off);
+    b.addEventListener('mouseleave', off);
+  });
+
+  /* 电脑键盘也要能聚焦到游戏上 */
+  host.addEventListener('click', function () {
+    var c = canvas();
+    if (c && c.focus) c.focus();
+  });
+})();
+</script>
+</body>
+</html>
