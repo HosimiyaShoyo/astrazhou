@@ -4,44 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>超级马里奥 · Astra Zhou</title>
-<meta name="description" content="Astra Zhou 的小游戏：横版卷轴平台跳跃，手机和电脑都能玩。">
+<meta name="description" content="原版《超级马里奥兄弟》NES 游戏，浏览器里直接玩。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="超级马里奥 · Astra Zhou">
-<meta property="og:description" content="Astra Zhou 的小游戏：横版卷轴平台跳跃。">
+<meta property="og:description" content="原版《超级马里奥兄弟》NES 游戏，浏览器里直接玩。">
 <meta property="og:image" content="https://hosimiyashoyo.github.io/astrazhou/assets/og-cover.jpg">
 <meta property="og:url" content="https://hosimiyashoyo.github.io/astrazhou/mario.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1792066523">
+<link rel="stylesheet" href="assets/style.css?v=">
 <style>
-  .m-wrap { margin: 1.3rem 0 0; }
-  #mario {
-    display: block; width: 100%; height: auto;
-    background: #5c94fc;
+  .nes-wrap { margin: 1.3rem 0 0; }
+  #game {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #000;
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     box-shadow: 0 12px 32px rgba(20, 40, 10, .18);
-    image-rendering: pixelated;
-    touch-action: none;
+    overflow: hidden;
   }
-  .m-hud { display: flex; gap: 1.1rem; flex-wrap: wrap; margin-top: .7rem; font-size: .9rem; color: var(--muted); }
-  .m-hud b { color: var(--fg); font-variant-numeric: tabular-nums; }
-  .m-pad { margin-top: 1rem; user-select: none; -webkit-user-select: none; }
-  .m-pad-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .mk {
-    font: inherit; font-size: 1.05rem; font-weight: 700;
-    width: 3.3rem; height: 3.3rem; border-radius: var(--radius-md);
-    display: inline-flex; align-items: center; justify-content: center;
-    color: var(--fg); background: var(--glass-bg-2);
-    border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-hi), 0 6px 16px rgba(40, 68, 8, .14);
+  #game canvas { display: block; width: 100% !important; height: 100% !important; }
+  .ver {
+    display: flex; flex-wrap: wrap; gap: .45rem;
+    margin: 0 0 1rem;
+  }
+  .ver button {
+    font: inherit; font-size: .88rem; padding: .42rem .95rem;
+    border-radius: 999px; color: var(--muted);
+    background: var(--glass-bg-2); border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-hi);
     -webkit-backdrop-filter: var(--blur-2); backdrop-filter: var(--blur-2);
-    cursor: pointer; touch-action: none;
-    transition: color .15s, border-color .15s, transform .15s;
+    cursor: pointer; transition: color .2s, border-color .2s;
   }
-  .mk.on, .mk:active { color: var(--accent); border-color: var(--accent); transform: scale(.95); }
-  .mk.jump { width: 5.2rem; border-radius: 999px; }
-  .m-tip { font-size: .82rem; color: var(--muted); line-height: 1.8; margin-top: 1rem; }
+  .ver button.on, .ver button:hover { color: var(--accent); border-color: var(--accent); }
+  .nes-tip { font-size: .82rem; color: var(--muted); line-height: 1.8; margin-top: 1rem; }
 </style>
 </head>
 <body>
@@ -55,32 +52,20 @@
 
   <main>
     <h1>超级马里奥</h1>
-    <p class="lead">横版卷轴平台跳跃 —— 顶问号砖、躲蘑菇怪、吃金币、冲到旗杆。</p>
+    <p class="lead">原版 NES《超级马里奥兄弟》，跑在开源模拟器 EmulatorJS 上。</p>
 
-    <div class="m-wrap">
-      <canvas id="mario" width="480" height="270"></canvas>
+    <nav class="ver" id="ver">
+      <button type="button" data-rom="s" class="on">超级马里奥兄弟</button>
+      <button type="button" data-rom="l">Lost Levels</button>
+      <button type="button" data-rom="2">超级马里奥 2</button>
+      <button type="button" data-rom="3">超级马里奥 3</button>
+    </nav>
 
-      <div class="m-hud">
-        <span>分数 <b id="score">0</b></span>
-        <span>金币 <b id="coins">0</b></span>
-        <span>生命 <b id="lives">3</b></span>
-        <span>进度 <b id="prog">0%</b></span>
-        <button class="mk" id="reset" type="button" style="width:auto;padding:0 .9rem;height:2.2rem;font-size:.9rem">重开</button>
-      </div>
-
-      <div class="m-pad">
-        <div class="m-pad-row">
-          <div style="display:flex;gap:.5rem">
-            <button class="mk" data-k="left" type="button">◀</button>
-            <button class="mk" data-k="right" type="button">▶</button>
-          </div>
-          <button class="mk jump" data-k="jump" type="button">跳</button>
-        </div>
-      </div>
-
-      <p class="m-tip">
-        手机：用下面的 ◀ ▶ 移动、右边「跳」。<br>
-        电脑：<b>← →</b> 或 <b>A D</b> 移动，<b>空格</b> / <b>↑</b> 跳。
+    <div class="nes-wrap">
+      <div id="game"></div>
+      <p class="nes-tip">
+        手机上模拟器自带虚拟手柄（左下方向、右下 A/B）。<br>
+        电脑用键盘方向键 + <b>Z</b>（B 键）/ <b>X</b>（A 键），<b>回车</b>开始。
       </p>
     </div>
   </main>
@@ -88,402 +73,48 @@
   <footer class="site">© <span id="y">2025</span> Astra Zhou</footer>
 
 </div>
+
 <script>
 document.getElementById('y').textContent = new Date().getFullYear();
 
 (function () {
-  'use strict';
-  var cv = document.getElementById('mario');
-  if (!cv || !cv.getContext) return;
-  var ctx = cv.getContext('2d');
-  var W = cv.width, H = cv.height;
-  var TILE = 18;                     /* 每格像素 */
+  var ROMS = {
+    s: 'assets/games/super-mario-bros.nes',
+    l: 'assets/games/super-mario-bros-lost-levels.nes',
+    '2': 'assets/games/super-mario-bros-2.nes',
+    '3': 'assets/games/super-mario-bros-3.nes'
+  };
 
-  /* ---------------- 关卡：用代码拼出来，方便调整 ---------------- */
-  var COLS = 220, ROWS = 15;
-  var SOLID = 'X', BRICK = 'B', QBLOCK = '?', PIPE = 'P', COIN = 'o', GOOMBA = 'g', FLAG = 'F', USED = 'u';
+  function boot(rom) {
+    var host = document.getElementById('game');
+    host.innerHTML = '';
+    /* EmulatorJS 用全局变量配置 */
+    window.EJS_player = '#game';
+    window.EJS_core = 'nes';
+    window.EJS_gameUrl = ROMS[rom] || ROMS.s;
+    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+    window.EJS_startOnLoaded = true;
+    window.EJS_color = '#4d7c0f';
+    window.EJS_backgroundColor = '#0a0f06';
+    window.EJS_lang = 'zh-CN';
+    /* 每次切换都重新注入 loader */
+    var old = document.getElementById('ejs-loader');
+    if (old) old.parentNode.removeChild(old);
+    var s = document.createElement('script');
+    s.id = 'ejs-loader';
+    s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+    document.body.appendChild(s);
+  }
 
-  function buildLevel() {
-    var m = [];
-    for (var y = 0; y < ROWS; y++) {
-      var row = [];
-      for (var x = 0; x < COLS; x++) row.push('.');
-      m.push(row);
-    }
-    function set(x, y, c) { if (x >= 0 && x < COLS && y >= 0 && y < ROWS) m[y][x] = c; }
-    function rect(x0, y0, x1, y1, c) { for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) set(x, y, c); }
-
-    /* 地面（中间留两个坑） */
-    rect(0, 13, 68, 14, SOLID);
-    rect(72, 13, 108, 14, SOLID);
-    rect(112, 13, COLS - 1, 14, SOLID);
-
-    /* 第一段：问号砖 + 砖块 */
-    set(16, 9, QBLOCK);
-    set(20, 9, BRICK); set(21, 9, QBLOCK); set(22, 9, BRICK);
-    set(21, 5, QBLOCK);
-    set(24, 9, BRICK); set(25, 9, BRICK);
-
-    /* 管子 */
-    rect(30, 11, 31, 12, PIPE);
-    rect(38, 10, 39, 12, PIPE);
-    rect(46, 11, 47, 12, PIPE);
-
-    /* 空中砖块阵 */
-    rect(52, 9, 56, 9, BRICK);
-    set(54, 9, QBLOCK);
-    set(60, 9, QBLOCK);
-    rect(62, 6, 66, 6, BRICK);
-
-    /* 金币 */
-    [10, 11, 12, 13, 26, 27, 28, 42, 43, 44, 45, 55, 63, 64, 65, 80, 81, 82, 95, 96, 97, 120, 121, 122].forEach(function (x, i) {
-      set(x, 11 - (i % 2), COIN);
+  Array.prototype.forEach.call(document.querySelectorAll('#ver button'), function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('#ver button'), function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      boot(b.getAttribute('data-rom'));
     });
-    rect(74, 10, 78, 10, COIN);
-    rect(88, 8, 92, 8, BRICK);
-    set(90, 8, QBLOCK);
-
-    /* 第二个坑之后 */
-    rect(115, 9, 119, 9, BRICK);
-    set(117, 9, QBLOCK);
-    rect(126, 11, 127, 12, PIPE);
-    rect(134, 9, 138, 9, BRICK);
-    set(136, 9, QBLOCK);
-
-    /* 台阶（终点前的金字塔） */
-    for (var i = 0; i < 5; i++) rect(150 + i, 12 - i, 150 + i, 12, SOLID);
-    for (var j = 0; j < 5; j++) rect(160 + j, 8 + j, 160 + j, 12, SOLID);
-
-    /* 第三段砖块 */
-    rect(170, 9, 175, 9, BRICK);
-    set(172, 9, QBLOCK);
-    set(180, 9, QBLOCK);
-    rect(184, 6, 188, 6, BRICK);
-
-    /* 旗杆 */
-    set(200, 12, FLAG); set(200, 11, FLAG); set(200, 10, FLAG);
-    set(200, 9, FLAG); set(200, 8, FLAG); set(200, 7, FLAG);
-
-    /* 敌人 */
-    [18, 22, 34, 42, 50, 58, 66, 76, 84, 92, 100, 118, 130, 142, 158, 168, 176, 186, 194].forEach(function (x) {
-      set(x, 12, GOOMBA);
-    });
-    return m;
-  }
-
-  var map = buildLevel();
-  var player, enemies, coins, particles, camX, score, coinCount, lives, won, dead, respawnTimer, t0;
-
-  function isSolid(c) { return c === SOLID || c === BRICK || c === QBLOCK || c === PIPE || c === USED; }
-  function tileAt(x, y) {
-    var tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
-    if (ty < 0 || ty >= ROWS) return '.';
-    if (tx < 0) return SOLID;
-    if (tx >= COLS) return '.';
-    return map[ty][tx];
-  }
-  function setTile(tx, ty, c) { if (ty >= 0 && ty < ROWS && tx >= 0 && tx < COLS) map[ty][tx] = c; }
-
-  function reset(full) {
-    player = { x: 2 * TILE, y: 10 * TILE, vx: 0, vy: 0, w: TILE * 0.75, h: TILE * 1.6, onGround: false, face: 1, big: false };
-    enemies = [];
-    coins = [];
-    particles = [];
-    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) {
-      if (map[y][x] === GOOMBA) { enemies.push({ x: x * TILE + 3, y: y * TILE + TILE * 0.3, vx: -0.45, w: TILE * 0.8, h: TILE * 0.9, dead: 0 }); map[y][x] = '.'; }
-    }
-    coinCount = 0; won = false; dead = false; respawnTimer = 0;
-    if (full) { score = 0; lives = 3; map = buildLevel(); }
-    camX = 0;
-    hud();
-  }
-
-  function hud() {
-    document.getElementById('score').textContent = score;
-    document.getElementById('coins').textContent = coinCount;
-    document.getElementById('lives').textContent = lives;
-    var prog = Math.max(0, Math.min(100, Math.round(player.x / ((COLS - 8) * TILE) * 100)));
-    document.getElementById('prog').textContent = prog + '%';
-  }
-
-  function solidAt(px, py) {
-    /* 查四个角 */
-    return isSolid(tileAt(px, py)) || isSolid(tileAt(px + player.w - 1, py)) ||
-           isSolid(tileAt(px, py + player.h - 1)) || isSolid(tileAt(px + player.w - 1, py + player.h - 1));
-  }
-
-  var keys = {};
-  function step(dt) {
-    if (dead) {
-      respawnTimer -= dt;
-      if (respawnTimer <= 0) {
-        if (lives > 0) reset(false);
-        else { reset(true); }
-      }
-      return;
-    }
-    if (won) return;
-
-    var accel = 480, maxRun = 145, fric = 700, grav = 1500, jumpV = 430;
-    /* 水平 */
-    if (keys.left && !keys.right) { player.vx -= accel * dt; player.face = -1; }
-    else if (keys.right && !keys.left) { player.vx += accel * dt; player.face = 1; }
-    else {
-      if (player.vx > 0) player.vx = Math.max(0, player.vx - fric * dt);
-      else if (player.vx < 0) player.vx = Math.min(0, player.vx + fric * dt);
-    }
-    if (player.vx > maxRun) player.vx = maxRun;
-    if (player.vx < -maxRun) player.vx = -maxRun;
-
-    /* 跳 */
-    if (keys.jump && player.onGround) { player.vy = -jumpV; player.onGround = false; }
-    if (!keys.jump && player.vy < -140) player.vy = -140;   /* 松手就减速，手感更跟手 */
-
-    /* 重力 */
-    player.vy += grav * dt;
-    if (player.vy > 900) player.vy = 900;
-
-    /* 分轴移动 + 碰撞 */
-    var nx = player.x + player.vx * dt;
-    if (!solidAt(nx, player.y)) player.x = nx; else player.vx = 0;
-
-    var ny = player.y + player.vy * dt;
-    if (!solidAt(player.x, ny)) {
-      player.y = ny;
-      player.onGround = false;
-    } else {
-      if (player.vy > 0) {
-        player.onGround = true;
-        /* 撞到问号砖 → 变已用 + 出金币 */
-        var feet = player.y + player.h;
-        var ty = Math.floor((feet + 2) / TILE), txL = Math.floor((player.x + 2) / TILE), txR = Math.floor((player.x + player.w - 3) / TILE);
-        for (var tx = txL; tx <= txR; tx++) {
-          if (map[ty] && (map[ty][tx] === QBLOCK)) {
-            setTile(tx, ty, USED); score += 200; coinCount++;
-            particles.push({ x: tx * TILE + TILE / 2, y: ty * TILE, vy: -220, life: 0.7, kind: 'coin' });
-          }
-        }
-      }
-      player.vy = 0;
-    }
-
-    /* 头顶顶砖 */
-    if (player.vy < 0) {
-      var headY = Math.floor((player.y - 2) / TILE);
-      var hxL = Math.floor((player.x + 2) / TILE), hxR = Math.floor((player.x + player.w - 3) / TILE);
-      for (var hx = hxL; hx <= hxR; hx++) {
-        if (map[headY] && map[headY][hx] === QBLOCK) {
-          setTile(hx, headY, USED); score += 200; coinCount++;
-          particles.push({ x: hx * TILE + TILE / 2, y: headY * TILE + TILE, vy: -200, life: 0.7, kind: 'coin' });
-        } else if (map[headY] && map[headY][hx] === BRICK) {
-          setTile(hx, headY, '.'); score += 50;
-          particles.push({ x: hx * TILE + TILE / 2, y: headY * TILE + TILE / 2, vy: -160, life: 0.5, kind: 'brick' });
-        }
-      }
-    }
-
-    /* 吃金币 */
-    var tx0 = Math.floor(player.x / TILE), tx1 = Math.floor((player.x + player.w) / TILE);
-    var ty0 = Math.floor(player.y / TILE), ty1 = Math.floor((player.y + player.h) / TILE);
-    for (var x = tx0; x <= tx1; x++) for (var y = ty0; y <= ty1; y++) {
-      if (map[y] && map[y][x] === COIN) { map[y][x] = '.'; coinCount++; score += 100; }
-      if (map[y] && map[y][x] === FLAG) { won = true; score += 1000; hud(); return; }
-    }
-
-    /* 掉进坑 */
-    if (player.y > H + 60) { die(); return; }
-
-    /* 敌人 */
-    enemies.forEach(function (e) {
-      if (e.dead > 0) { e.dead -= dt; return; }
-      if (Math.abs(e.x - player.x) > W) return;       /* 屏幕外的先不动 */
-      e.x += e.vx * dt;
-      /* 撞墙/悬崖折返 */
-      var ahead = e.vx > 0 ? e.x + e.w + 1 : e.x - 1;
-      if (isSolid(tileAt(ahead, e.y + e.h / 2)) || !isSolid(tileAt(ahead, e.y + e.h + 4))) e.vx = -e.vx;
-      /* 与玩家碰撞 */
-      if (e.x < player.x + player.w && e.x + e.w > player.x &&
-          e.y < player.y + player.h && e.y + e.h > player.y) {
-        if (player.vy > 60 && player.y + player.h - e.y < 14) {   /* 踩死 */
-          e.dead = 0.6; e.vx = 0; score += 100; player.vy = -260;
-        } else { die(); }
-      }
-    });
-    enemies = enemies.filter(function (e) { return !(e.dead > 0 && e.dead < 0.01); });
-
-    /* 粒子 */
-    particles.forEach(function (p) { p.y += p.vy * dt; p.vy += 900 * dt; p.life -= dt; });
-    particles = particles.filter(function (p) { return p.life > 0; });
-
-    /* 相机 */
-    var target = player.x - W * 0.38;
-    camX += (target - camX) * Math.min(1, dt * 8);
-    if (camX < 0) camX = 0;
-    if (camX > COLS * TILE - W) camX = COLS * TILE - W;
-
-    hud();
-  }
-
-  function die() {
-    if (dead) return;
-    dead = true; lives--; respawnTimer = 1.0;
-    hud();
-  }
-
-  /* ---------------- 绘制 ---------------- */
-  function draw() {
-    /* 天空 */
-    var sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, '#5c94fc'); sky.addColorStop(1, '#9fd0ff');
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-
-    /* 云 */
-    ctx.fillStyle = 'rgba(255,255,255,.85)';
-    for (var i = 0; i < 12; i++) {
-      var cx = (i * 260 - camX * 0.35) % (COLS * TILE);
-      if (cx < -120) cx += COLS * TILE;
-      var cy = 22 + (i % 3) * 26;
-      if (cx > -100 && cx < W + 100) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, 12, 0, 6.3); ctx.arc(cx + 14, cy + 3, 9, 0, 6.3); ctx.arc(cx - 14, cy + 3, 8, 0, 6.3);
-        ctx.fill();
-      }
-    }
-
-    var x0 = Math.max(0, Math.floor(camX / TILE) - 1), x1 = Math.min(COLS - 1, Math.ceil((camX + W) / TILE) + 1);
-
-    /* 地面与方块 */
-    for (var x = x0; x <= x1; x++) {
-      for (var y = 0; y < ROWS; y++) {
-        var c = map[y][x];
-        if (c === '.') continue;
-        var px = Math.round(x * TILE - camX), py = y * TILE;
-        if (c === SOLID) {
-          ctx.fillStyle = '#c86a2a'; ctx.fillRect(px, py, TILE, TILE);
-          ctx.fillStyle = '#8a4416'; ctx.fillRect(px, py + TILE - 4, TILE, 4);
-          ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(px, py, TILE, 3);
-        } else if (c === BRICK) {
-          ctx.fillStyle = '#b5651d'; ctx.fillRect(px, py, TILE, TILE);
-          ctx.fillStyle = 'rgba(0,0,0,.28)';
-          ctx.fillRect(px, py + TILE / 2 - 1, TILE, 2); ctx.fillRect(px + TILE / 2 - 1, py, 2, TILE / 2);
-          ctx.fillRect(px + TILE / 4 - 1, py + TILE / 2, 2, TILE / 2); ctx.fillRect(px + TILE * 0.75 - 1, py + TILE / 2, 2, TILE / 2);
-        } else if (c === QBLOCK) {
-          ctx.fillStyle = '#e8a72c'; ctx.fillRect(px, py, TILE, TILE);
-          ctx.fillStyle = '#8a5a00'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
-          ctx.fillText('?', px + TILE / 2, py + TILE - 4);
-        } else if (c === USED) {
-          ctx.fillStyle = '#8a6a3a'; ctx.fillRect(px, py, TILE, TILE);
-        } else if (c === PIPE) {
-          ctx.fillStyle = '#2ea44f'; ctx.fillRect(px, py, TILE, TILE);
-          ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(px + 2, py, 3, TILE);
-          ctx.fillStyle = '#1d7a36'; ctx.fillRect(px + TILE - 4, py, 4, TILE);
-        } else if (c === COIN) {
-          var bob = Math.sin(performance.now() / 220 + x) * 1.5;
-          ctx.fillStyle = '#ffd84d';
-          ctx.beginPath(); ctx.ellipse(px + TILE / 2, py + TILE / 2 + bob, 4.5, 6, 0, 0, 6.3); ctx.fill();
-          ctx.fillStyle = '#c99a12';
-          ctx.beginPath(); ctx.ellipse(px + TILE / 2, py + TILE / 2 + bob, 2, 3.5, 0, 0, 6.3); ctx.fill();
-        } else if (c === FLAG) {
-          ctx.fillStyle = '#d8d8d8'; ctx.fillRect(px + TILE / 2 - 1, py, 3, TILE);
-          if (y === 7) { ctx.fillStyle = '#e33'; ctx.beginPath(); ctx.moveTo(px + TILE / 2 + 2, py + 2); ctx.lineTo(px + TILE / 2 + 16, py + 8); ctx.lineTo(px + TILE / 2 + 2, py + 14); ctx.fill(); }
-        }
-      }
-    }
-
-    /* 粒子 */
-    particles.forEach(function (p) {
-      ctx.fillStyle = p.kind === 'coin' ? '#ffd84d' : '#b5651d';
-      ctx.fillRect(Math.round(p.x - camX) - 3, Math.round(p.y) - 3, 6, 6);
-    });
-
-    /* 敌人 */
-    enemies.forEach(function (e) {
-      var px = Math.round(e.x - camX), py = Math.round(e.y);
-      if (px < -40 || px > W + 40) return;
-      if (e.dead > 0) { ctx.fillStyle = '#7a4a1a'; ctx.fillRect(px, py + e.h - 6, e.w, 6); return; }
-      var wob = Math.sin(performance.now() / 140) * 1.5;
-      ctx.fillStyle = '#8b4513';
-      ctx.beginPath(); ctx.ellipse(px + e.w / 2, py + e.h / 2, e.w / 2, e.h / 2, 0, 0, 6.3); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.fillRect(px + 3, py + 4, 4, 5); ctx.fillRect(px + e.w - 7, py + 4, 4, 5);
-      ctx.fillStyle = '#000'; ctx.fillRect(px + 4, py + 6, 2, 3); ctx.fillRect(px + e.w - 6, py + 6, 2, 3);
-      ctx.fillStyle = '#5a2d0c'; ctx.fillRect(px + 1 + wob, py + e.h - 3, 5, 3); ctx.fillRect(px + e.w - 6 - wob, py + e.h - 3, 5, 3);
-    });
-
-    /* 玩家（马里奥） */
-    var px2 = Math.round(player.x - camX), py2 = Math.round(player.y);
-    var pw = player.w, ph = player.h;
-    ctx.fillStyle = '#e63946';                                   /* 帽子 */
-    ctx.fillRect(px2 - 1, py2, pw + 2, ph * 0.22);
-    ctx.fillStyle = '#f7c59f';                                   /* 脸 */
-    ctx.fillRect(px2, py2 + ph * 0.2, pw, ph * 0.26);
-    ctx.fillStyle = '#000';                                      /* 眼睛 */
-    ctx.fillRect(px2 + (player.face > 0 ? pw - 5 : 3), py2 + ph * 0.27, 2, 3);
-    ctx.fillStyle = '#2b6cb0';                                   /* 背带裤 */
-    ctx.fillRect(px2, py2 + ph * 0.46, pw, ph * 0.34);
-    ctx.fillStyle = '#e63946';                                   /* 手 */
-    ctx.fillRect(px2 - 2, py2 + ph * 0.48, 3, ph * 0.18);
-    ctx.fillRect(px2 + pw - 1, py2 + ph * 0.48, 3, ph * 0.18);
-    ctx.fillStyle = '#5a2d0c';                                   /* 鞋 */
-    ctx.fillRect(px2 - 1, py2 + ph - 4, pw * 0.55, 4);
-    ctx.fillRect(px2 + pw * 0.45, py2 + ph - 4, pw * 0.6, 4);
-
-    /* 结算 */
-    if (won) {
-      ctx.fillStyle = 'rgba(0,0,0,.52)'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#ffd84d'; ctx.font = 'bold 30px -apple-system, "PingFang SC", sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('通关！', W / 2, H / 2 - 6);
-      ctx.fillStyle = '#fff'; ctx.font = '15px -apple-system, "PingFang SC", sans-serif';
-      ctx.fillText('分数 ' + score + ' · 金币 ' + coinCount, W / 2, H / 2 + 22);
-    } else if (dead && lives <= 0) {
-      ctx.fillStyle = 'rgba(0,0,0,.52)'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#ff8080'; ctx.font = 'bold 30px -apple-system, "PingFang SC", sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('游戏结束', W / 2, H / 2 - 6);
-      ctx.fillStyle = '#fff'; ctx.font = '15px -apple-system, "PingFang SC", sans-serif';
-      ctx.fillText('点「重开」再来一次', W / 2, H / 2 + 22);
-    } else if (dead) {
-      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 22px -apple-system, "PingFang SC", sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('还剩 ' + lives + ' 条命', W / 2, H / 2);
-    }
-  }
-
-  /* ---------------- 输入 ---------------- */
-  var MAPK = { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Space' };
-  Array.prototype.forEach.call(document.querySelectorAll('[data-k]'), function (b) {
-    var k = b.getAttribute('data-k');
-    var on = function (e) { e.preventDefault(); keys[k] = true; b.classList.add('on'); };
-    var off = function (e) { if (e) e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
-    b.addEventListener('touchstart', on, { passive: false });
-    b.addEventListener('touchend', off, { passive: false });
-    b.addEventListener('touchcancel', off, { passive: false });
-    b.addEventListener('mousedown', on);
-    b.addEventListener('mouseup', off);
-    b.addEventListener('mouseleave', off);
   });
-  document.addEventListener('keydown', function (e) {
-    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
-    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
-    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { keys.jump = true; e.preventDefault(); }
-  });
-  document.addEventListener('keyup', function (e) {
-    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
-    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
-    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.jump = false;
-  });
-  document.getElementById('reset').addEventListener('click', function () { reset(true); });
 
-  /* ---------------- 主循环 ---------------- */
-  var last = 0;
-  function loop(ts) {
-    if (!last) last = ts;
-    var dt = Math.min(0.033, (ts - last) / 1000);
-    last = ts;
-    step(dt);
-    draw();
-    requestAnimationFrame(loop);
-  }
-  reset(true);
-  requestAnimationFrame(loop);
+  boot('s');
 })();
 </script>
 </body>
