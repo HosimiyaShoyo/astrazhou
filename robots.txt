@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+# 微信站长认证文件
+Allow: /ea1112cd4aafd65cd4fe971cb106529a.txt
+
+Sitemap: https://astrazhou.is-cool.dev/sitemap.xml
