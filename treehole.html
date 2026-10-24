@@ -14,7 +14,7 @@
 <meta name="twitter:image" content="https://astrazhou.is-cool.dev/assets/og-cover.jpg">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1791818975">
+<link rel="stylesheet" href="assets/style.css?v=1792804567">
 <script src="assets/count.js" defer></script>
 <style>
   [hidden] { display: none !important; }
@@ -65,12 +65,15 @@
       我会慢慢看，也会认真回。
     </div>
 
-    <form class="form" action="https://formsubmit.co/zyx3067354436@foxmail.com" method="POST">
-      <input type="hidden" name="_subject" value="【树洞】新留言">
+    <form class="form" id="treeForm" action="https://formsubmit.co/zyx3067354436@foxmail.com" method="POST">
+      <!-- FormSubmit 配置 -->
+      <input type="hidden" name="_subject" value="【树洞】新留言 · astrazhou.is-cool.dev">
       <input type="hidden" name="_next" value="https://astrazhou.is-cool.dev/treehole.html?sent=1">
       <input type="hidden" name="_captcha" value="false">
       <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_honey" value="">
       <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+      <input type="hidden" name="_replyto" id="replyto" value="">
 
       <label for="nick">怎么称呼你（可以不填）</label>
       <input type="text" id="nick" name="称呼" maxlength="40" placeholder="匿名也可以">
@@ -87,7 +90,7 @@
       <label for="contact">想让我私下回你，就留个联系方式（选填）</label>
       <input type="text" id="contact" name="联系方式" maxlength="80" placeholder="邮箱 / 微信 / QQ 都行">
 
-      <button type="submit">投进树洞</button>
+      <button type="submit" id="submitBtn">投进树洞</button>
       <p class="hint" style="margin:.9rem 0 0">提交后会跳回这一页，不会有其他人看到你写了什么。</p>
     </form>
   </main>
@@ -97,17 +100,25 @@
 </div>
 <script>
 (function () {
-  document.getElementById('y').textContent = new Date().getFullYear();
-  if (location.search.indexOf('sent=1') !== -1) {
-    document.getElementById('sent').hidden = false;
-    window.scrollTo(0, 0);
-  }
-  var form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', function () {
-      if (window.AstraCount) window.AstraCount.hit('treehole-count');
-    });
-  }
+  var f = document.getElementById('treeForm');
+  if (!f) return;
+  var btn = document.getElementById('submitBtn');
+  var contact = document.getElementById('contact');
+  var replyto = document.getElementById('replyto');
+
+  f.addEventListener('submit', function () {
+    /* 把留言者的联系方式填进 _replyto，这样我收到邮件点"回复"就能直接回到他那儿 */
+    if (contact && replyto) {
+      var v = (contact.value || '').trim();
+      replyto.value = /@/.test(v) ? v : '';
+    }
+    /* 防止连点重复提交 */
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '投递中…';
+      setTimeout(function () { btn.disabled = false; btn.textContent = '投进树洞'; }, 8000);
+    }
+  });
 })();
 </script>
 <script>
