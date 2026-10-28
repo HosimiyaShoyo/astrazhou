@@ -16,26 +16,77 @@
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
-  function getOnce(key) {
-      var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
-      var timer = ctl ? setTimeout(function () { ctl.abort(); }, 6000) : null;
-      var opt = ctl ? { cache: 'no-store', signal: ctl.signal } : { cache: 'no-store' };
-      return fetch(API + 'get/' + NS + '/' + encodeURIComponent(key), opt)
-        .then(function (r) { if (timer) clearTimeout(timer); return r.json(); })
-        .then(function (d) {
-          if (timer) clearTimeout(timer);
-          if (typeof d.value === 'number') return d.value;
-          if (d.error === 'Key not found') return 0;
-          return null;
-        })
-        .catch(function () { if (timer) clearTimeout(timer); return null; });
-    }
-    /* 免费服务偶发 500/超时 —— 失败隔 700ms 再试一次 */
-    function get(key) {
-      return getOnce(key).then(function (v) {
-        if (v !== null) return v;
-        return new Promise(function (res) { setTimeout(function () { res(getOnce(key)); }, 700); });
+  function get(key) {
+    return fetch(API + 'get/' + NS + '/' + encodeURIComponent(key), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (typeof d.value === 'number') return d.value;
+        if (d.error === 'Key not found') return 0;   /* 还没人看过 = 0，而不是读取失败 */
+        return null;
+      })
+      .catch(function () { return null; });
+  }
+
+  function hit(key) {
+    return fetch(API + 'hit/' + NS + '/' + encodeURIComponent(key), { keepalive: true })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (typeof d.value === 'number') return d.value;
+        if (d.error === 'Key not found') return 0;   /* 还没人看过 = 0，而不是读取失败 */
+        return null;
+      })
+      .catch(function () { return null; });
+  }
+
+  function fill() {
+    var els = document.querySelectorAll('[data-count]');
+    Array.prototype.forEach.call(els, function (el) {
+      get(el.getAttribute('data-count')).then(function (v) {
+        el.textContent = (v === null) ? '—' : fmt(v);
       });
+    });
+  }
+
+  function boot() {
+    initLike();
+    var key = document.body && document.body.getAttribute('data-hit');
+    if (key) hit(key).then(fill, fill);
+    else fill();
+  }
+
+  /* ---------- 点赞：点一次 +1，同一浏览器只算一次 ---------- */
+  function initLike() {
+    var btns = document.querySelectorAll('[data-like]');
+    Array.prototype.forEach.call(btns, function (btn) {
+      var key = btn.getAttribute('data-like');
+      var out = btn.querySelector('.like-n');
+      var flag = 'astra_like_' + key;
+      var liked = false;
+      try { liked = localStorage.getItem(flag) === '1'; } catch (e) {}
+      if (liked) btn.classList.add('liked');
+
+      get(key).then(function (v) { if (out) out.textContent = fmt(v === null ? 0 : v); });
+
+      btn.addEventListener('click', function () {
+        if (btn.classList.contains('liked')) return;
+        btn.classList.add('liked');
+        try { localStorage.setItem(flag, '1'); } catch (e) {}
+        hit(key).then(function (v) { if (out && v !== null) out.textContent = fmt(v); });
+      });
+    });
+  }
+
+  /* ---------- 图片兜底：CDN 抽风时自动换回源站 ---------- */
+  var CDN = 'https://gcore.jsdelivr.net/gh/HosimiyaShoyo/astrazhou@main/';
+  var ORIGIN = 'https://astrazhou.is-cool.dev/';
+
+  document.addEventListener('error', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'IMG' || el.getAttribute('data-fallback')) return;
+    var s = el.getAttribute('src') || '';
+    if (s.indexOf(CDN) === 0) {
+      el.setAttribute('data-fallback', '1');
+      el.setAttribute('src', ORIGIN + s.slice(CDN.length));
     }
   }, true);
 
