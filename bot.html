@@ -13,35 +13,125 @@
 <meta property="og:url" content="https://astrazhou.is-cool.dev/bot.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1794374463">
-<link rel="stylesheet" href="assets/bot/bot.css?v=1794374463">
-
+<link rel="stylesheet" href="assets/style.css?v=1794374559">
+<link rel="stylesheet" href="assets/bot/bot.css?v=1794374559">
 <style>
-  /* ===== 博客页头 + 智能体布局适配 ===== */
-  html, body {
-    height: auto;
-    min-height: 100dvh;
-  }
-  body {
-    display: flex;
-    flex-direction: column;
-    background: var(--bg, #f4f7fb);
-  }
-  body > header.bot-header {
-    flex: none;
-  }
-  /* 原来的 .shell 是 100dvh 整屏高，改成占满剩余空间 */
-  body > .shell {
-    flex: 1 1 auto;
-    min-height: 0;
-    height: auto;
-  }
-  /* 页头容器给个统一的左右留白，和博客其它页一致 */
-  header.bot-header {
-    padding-left: clamp(1rem, 4vw, 2rem);
-    padding-right: clamp(1rem, 4vw, 2rem);
-  }
+/* ==========================================================
+   薄荷绿液态玻璃主题 —— 覆盖 bot.css 里原来的浅蓝白配色
+   只改变量 + 少量硬编码色，不动任何布局与逻辑
+   ========================================================== */
+:root {
+  --ink: #141c0b;
+  --ink-soft: #43502c;
+  --ink-faint: #6d7a55;
+  --line: rgba(77, 124, 15, .24);
+  --bg: transparent;                       /* 让博客的 Aurora 壁纸透出来 */
+  --surface: var(--glass-bg-2, rgba(255,255,255,.50));
+  --brand: #4d7c0f;
+  --brand-deep: #3a5f0b;
+  --brand-soft: rgba(255, 255, 255, .46);
+  --radius: var(--radius-md, 14px);
+  --shadow: 0 18px 46px rgba(38, 62, 8, .18), 0 1px 3px rgba(38, 62, 8, .07);
+}
+
+/* 让整个页面用博客的 Aurora 壁纸 */
+html, body {
+  height: auto;
+  min-height: 100dvh;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+body > header.bot-header { flex: none; }
+body > .shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+/* 页头留白与博客统一 */
+header.bot-header {
+  padding-left: clamp(1rem, 4vw, 2rem);
+  padding-right: clamp(1rem, 4vw, 2rem);
+}
+
+/* ---------- 顶栏 / 卡片：液态玻璃 ---------- */
+.shell .topbar {
+  background: var(--glass-bg, rgba(255,255,255,.38));
+  -webkit-backdrop-filter: var(--blur, blur(20px) saturate(160%));
+  backdrop-filter: var(--blur, blur(20px) saturate(160%));
+  border-bottom: 1px solid var(--glass-border, rgba(255,255,255,.60));
+  box-shadow: 0 1px 0 var(--glass-hi, rgba(255,255,255,.78)) inset;
+}
+.shell .mark { color: var(--accent, #4d7c0f); }
+
+/* 输入区玻璃 */
+.shell .composer,
+.shell .form,
+.shell .inputbar {
+  background: var(--glass-bg-2, rgba(255,255,255,.50));
+  -webkit-backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
+  backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
+  border: 1px solid var(--glass-border, rgba(255,255,255,.60));
+  box-shadow: inset 0 1px 0 var(--glass-hi, rgba(255,255,255,.78)), 0 8px 22px rgba(38,62,8,.10);
+}
+
+/* chip / 快捷问题：玻璃小胶囊 */
+.shell .chip,
+.shell .suggest button,
+.shell .pill {
+  background: var(--glass-bg-2, rgba(255,255,255,.50));
+  -webkit-backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
+  backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
+  border: 1px solid var(--glass-border, rgba(255,255,255,.60));
+  color: var(--muted, #43502c);
+}
+.shell .chip:hover,
+.shell .suggest button:hover {
+  color: var(--accent, #4d7c0f);
+  border-color: var(--accent, #4d7c0f);
+}
+
+/* 按钮统一用博客的橄榄绿 */
+.shell button,
+.shell .send,
+.shell .icon-btn {
+  color: var(--fg, #141c0b);
+}
+.shell .send,
+.shell button[type="submit"] {
+  background: var(--accent, #4d7c0f);
+  color: #fff;
+}
+
+/* 用户气泡 / 助手气泡 */
+.shell .msg.user .bubble {
+  background: rgba(77, 124, 15, .14);
+  color: var(--fg, #141c0b);
+  border: 1px solid rgba(77, 124, 15, .22);
+}
+.shell .msg.bot .bubble {
+  background: var(--glass-bg-2, rgba(255,255,255,.50));
+  -webkit-backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
+  backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
+  border: 1px solid var(--glass-border, rgba(255,255,255,.60));
+  color: var(--fg, #141c0b);
+}
+
+/* 把残留的深蓝品牌色纠正成橄榄绿 */
+.shell a { color: var(--accent, #4d7c0f); }
+.shell .linklike { color: var(--accent, #4d7c0f); }
+
+/* 滚动条淡一点 */
+.shell ::-webkit-scrollbar-thumb {
+  background: rgba(77, 124, 15, .22);
+  border-radius: 999px;
+}
 </style>
+
+
 
 </head>
 <body>
@@ -159,8 +249,8 @@
 </template>
 
 
-<script src="assets/bot/kb.js?v=1794374463"></script>
-<script src="assets/bot/keys.js?v=1794374463"></script>
-<script src="assets/bot/engine.js?v=1794374463"></script>
+<script src="assets/bot/kb.js?v=1794374559"></script>
+<script src="assets/bot/keys.js?v=1794374559"></script>
+<script src="assets/bot/engine.js?v=1794374559"></script>
 </body>
 </html>

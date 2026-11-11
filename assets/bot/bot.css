@@ -3,19 +3,19 @@
    结构：外壳 shell = 顶栏 + 聊天区 + 输入区，聊天区自己滚动。 */
 
 :root {
-  --ink: #16202c;
-  --ink-soft: #4a5a6d;
-  --ink-faint: #8a97a8;
-  --line: #e3e8ef;
-  --bg: #f5f7fa;
-  --surface: #ffffff;
-  --brand: #1b4d8f;
-  --brand-deep: #123c72;
-  --brand-soft: #eaf1fa;
+  --ink: #141c0b;
+  --ink-soft: #43502c;
+  --ink-faint: #6d7a55;
+  --line: rgba(77,124,15,.24);
+  --bg: transparent;
+  --surface: rgba(255,255,255,.50);
+  --brand: #4d7c0f;
+  --brand-deep: #3a5f0b;
+  --brand-soft: rgba(255,255,255,.46);
   --warn: #b45309;
   --warn-bg: #fdf6ec;
   --radius: 16px;
-  --shadow: 0 1px 2px rgba(22, 32, 44, 0.04), 0 8px 24px rgba(22, 32, 44, 0.06);
+  --shadow: 0 1px 2px rgba(38, 62, 8, .05), 0 8px 24px rgba(38, 62, 8, .07);
   --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
     "Segoe UI", Roboto, sans-serif;
 }
@@ -132,7 +132,7 @@ select.chip {
 .icon-btn:hover {
   background: var(--brand-soft);
   color: var(--brand);
-  border-color: #cdddec;
+  border-color: rgba(255,255,255,.46);
 }
 
 /* ---------------- 聊天区 ---------------- */
@@ -187,7 +187,7 @@ select.chip {
 
 .suggest-btn:hover {
   color: var(--brand);
-  border-color: #bcd2e8;
+  border-color: rgba(255,255,255,.44);
   background: var(--brand-soft);
 }
 
@@ -223,7 +223,7 @@ select.chip {
   height: 30px;
   border-radius: 9px;
   background: var(--brand-soft);
-  border: 1px solid #d7e4f2;
+  border: 1px solid rgba(255,255,255,.52);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,7 +292,7 @@ select.chip {
 }
 
 .bubble code {
-  background: rgba(27, 77, 143, 0.08);
+  background: rgba(77, 124, 15, .10);
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 0.92em;
@@ -370,7 +370,7 @@ select.chip {
 .slider {
   position: absolute;
   inset: 0;
-  background: #cfd8e3;
+  background: rgba(77,124,15,.26);
   border-radius: 999px;
   transition: background 0.2s;
 }
@@ -408,8 +408,8 @@ select.chip {
 }
 
 .input-row:focus-within {
-  border-color: #a9c6e4;
-  box-shadow: 0 0 0 3px rgba(27, 77, 143, 0.08);
+  border-color: rgba(255,255,255,.40);
+  box-shadow: 0 0 0 3px rgba(77, 124, 15, .10);
 }
 
 #input {
@@ -454,7 +454,7 @@ select.chip {
 }
 
 .send-btn:disabled {
-  background: #b9c6d6;
+  background: rgba(77,124,15,.30);
   cursor: not-allowed;
 }
 
@@ -480,7 +480,7 @@ select.chip {
   display: flex;
   flex-direction: column;
   z-index: 20;
-  box-shadow: -12px 0 32px rgba(22, 32, 44, 0.08);
+  box-shadow: -12px 0 32px rgba(38, 62, 8, .08);
 }
 
 .drawer.open {
@@ -517,7 +517,7 @@ select.chip {
   border-radius: 12px;
   padding: 10px 12px;
   margin-bottom: 10px;
-  background: #fbfcfe;
+  background: rgba(255,255,255,.50);
 }
 
 .src h4 {
@@ -554,7 +554,7 @@ select.chip {
 .scrim {
   position: fixed;
   inset: 0;
-  background: rgba(22, 32, 44, 0.28);
+  background: rgba(38, 62, 8, .26);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s;
