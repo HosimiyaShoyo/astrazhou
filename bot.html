@@ -13,8 +13,8 @@
 <meta property="og:url" content="https://astrazhou.is-cool.dev/bot.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1794375511">
-<link rel="stylesheet" href="assets/bot/bot.css?v=1794375511">
+<link rel="stylesheet" href="assets/style.css?v=1794375591">
+<link rel="stylesheet" href="assets/bot/bot.css?v=1794375591">
 <style>
 /* ==========================================================
    薄荷绿主题 v2 —— 重点解决"文字看不清"
@@ -192,18 +192,26 @@ header.bot-header .brand-mac { opacity: .95; }
 
 
   /* 校徽图片：圆形、自适应父容器 */
+  /* 校徽：容器定死尺寸，避免 width:100% 失控 */
   .shell .mark {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: visible;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
   }
   .shell .mark .school-logo {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
     border-radius: 50%;
+  }
+  /* 窄屏稍微缩小，避免和下拉框抢位置 */
+  @media (max-width: 420px) {
+    .shell .mark,
+    .shell .mark .school-logo { width: 34px; height: 34px; }
   }
 </style>
 
@@ -316,8 +324,8 @@ header.bot-header .brand-mac { opacity: .95; }
 </template>
 
 
-<script src="assets/bot/kb.js?v=1794375511"></script>
-<script src="assets/bot/keys.js?v=1794375511"></script>
-<script src="assets/bot/engine.js?v=1794375511"></script>
+<script src="assets/bot/kb.js?v=1794375591"></script>
+<script src="assets/bot/keys.js?v=1794375591"></script>
+<script src="assets/bot/engine.js?v=1794375591"></script>
 </body>
 </html>
