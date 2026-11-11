@@ -22,7 +22,7 @@ const PROVIDERS = {
   deepseek: {
     label: 'DeepSeek',
     base: 'https://api.deepseek.com',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
+    models: ['deepseek-chat'],   /* 去掉 reasoner：思考 token 也按输出计费，贵 4-8 倍 */
     headers: {},
   },
   openrouter: {
@@ -38,9 +38,9 @@ const PROVIDERS = {
   },
 };
 
-const TOP_K = 8;
-const CHUNK_MAX = 1400;
-const MAX_TURNS = 8;
+const TOP_K = 4;        /* 原 8：每次少带 4 段资料 */
+const CHUNK_MAX = 700;  /* 原 1400：每段砍一半 */
+const MAX_TURNS = 3;    /* 原 8：历史只留 3 轮 */
 
 // ---------------------------------------------------------------------------
 // 检索：中文 2-gram 倒排，够用且能解释
@@ -433,7 +433,7 @@ async function callModel(pid, model, messages, onDelta) {
   const res = await fetch(`${p.base}/chat/completions`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ model, messages, stream: true, temperature: 0.3, max_tokens: 1200 }),
+    body: JSON.stringify({ model, messages, stream: true, temperature: 0.3, max_tokens: 500 }),
   });
 
   if (!res.ok) {
