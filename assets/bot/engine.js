@@ -664,7 +664,7 @@ function initModels() {
         pid === 'deepseek'
           ? '填 DeepSeek API Key（platform.deepseek.com 后台创建，sk- 开头）'
           : '填 OpenRouter API Key（openrouter.ai/keys 免费领，sk-or- 开头）';
-      const next = prompt(hint, getKey(pid));
+      const next = prompt(hint, '');   /* 默认值必须留空 —— 填 getKey(pid) 会把当前 key 显示给所有人看 */
       if (next !== null && next.trim()) {
         saveKey(pid, next.trim());
         alert(`已把 ${p.label} 的 Key 存在这台电脑的浏览器里。`);
