@@ -13,10 +13,45 @@
 <meta property="og:url" content="https://astrazhou.is-cool.dev/bot.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1794374206">
-<link rel="stylesheet" href="assets/bot/bot.css?v=1794374206">
+<link rel="stylesheet" href="assets/style.css?v=1794374463">
+<link rel="stylesheet" href="assets/bot/bot.css?v=1794374463">
+
+<style>
+  /* ===== 博客页头 + 智能体布局适配 ===== */
+  html, body {
+    height: auto;
+    min-height: 100dvh;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg, #f4f7fb);
+  }
+  body > header.bot-header {
+    flex: none;
+  }
+  /* 原来的 .shell 是 100dvh 整屏高，改成占满剩余空间 */
+  body > .shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+  }
+  /* 页头容器给个统一的左右留白，和博客其它页一致 */
+  header.bot-header {
+    padding-left: clamp(1rem, 4vw, 2rem);
+    padding-right: clamp(1rem, 4vw, 2rem);
+  }
+</style>
+
 </head>
 <body>
+<header class="site bot-header">
+<a class="back-home" href="index.html" aria-label="返回主页">←</a>
+<a class="brand" href="index.html"><img class="avatar" src="assets/avatar.jpg" alt="" width="30" height="30">Astra Zhou’s Blog</a>
+<img class="brand-mac" src="assets/mac-smile.png" alt="" style="width:20px;height:auto;flex:none;margin-left:.45rem;opacity:.9">
+</header>
+
+
 
 <div class="shell" id="shell">
 
@@ -124,8 +159,8 @@
 </template>
 
 
-<script src="assets/bot/kb.js?v=1794374206"></script>
-<script src="assets/bot/keys.js?v=1794374206"></script>
-<script src="assets/bot/engine.js?v=1794374206"></script>
+<script src="assets/bot/kb.js?v=1794374463"></script>
+<script src="assets/bot/keys.js?v=1794374463"></script>
+<script src="assets/bot/engine.js?v=1794374463"></script>
 </body>
 </html>
