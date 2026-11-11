@@ -13,123 +13,144 @@
 <meta property="og:url" content="https://astrazhou.is-cool.dev/bot.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1794374817">
-<link rel="stylesheet" href="assets/bot/bot.css?v=1794374817">
+<link rel="stylesheet" href="assets/style.css?v=1794374871">
+<link rel="stylesheet" href="assets/bot/bot.css?v=1794374871">
 <style>
 /* ==========================================================
-   薄荷绿液态玻璃主题 —— 覆盖 bot.css 里原来的浅蓝白配色
-   只改变量 + 少量硬编码色，不动任何布局与逻辑
+   薄荷绿主题 v2 —— 重点解决"文字看不清"
+   思路：玻璃半透明只用在容器边缘，文字实际承载层用接近不透明的白
    ========================================================== */
 :root {
-  --ink: #141c0b;
-  --ink-soft: #43502c;
-  --ink-faint: #6d7a55;
-  --line: rgba(77, 124, 15, .24);
-  --bg: transparent;                       /* 让博客的 Aurora 壁纸透出来 */
-  --surface: var(--glass-bg-2, rgba(255,255,255,.50));
+  --ink: #0b1204;                 /* 正文更深，压住背景 */
+  --ink-soft: #35421f;
+  --ink-faint: #5c6a44;
+  --line: rgba(77, 124, 15, .26);
+  --bg: transparent;
+  --surface: rgba(255, 255, 255, .82);
   --brand: #4d7c0f;
   --brand-deep: #3a5f0b;
-  --brand-soft: rgba(255, 255, 255, .46);
+  --brand-soft: rgba(255, 255, 255, .78);
   --radius: var(--radius-md, 14px);
-  --shadow: 0 18px 46px rgba(38, 62, 8, .18), 0 1px 3px rgba(38, 62, 8, .07);
+  --shadow: 0 18px 46px rgba(38, 62, 8, .22), 0 1px 3px rgba(38, 62, 8, .09);
 }
 
-/* 让整个页面用博客的 Aurora 壁纸 */
-html, body {
-  height: auto;
-  min-height: 100dvh;
-}
+html, body { height: auto; min-height: 100dvh; }
 body {
   display: flex;
   flex-direction: column;
   background: transparent;
+  color: #0b1204;
 }
 body > header.bot-header { flex: none; }
+
+/* 整个对话区包一层高不透明度的玻璃，保证文字有干净的浅底 */
 body > .shell {
   flex: 1 1 auto;
   min-height: 0;
   height: auto;
+  background: rgba(255, 255, 255, .78);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, .70);
+  border-radius: var(--radius, 14px);
+  box-shadow: 0 18px 46px rgba(38, 62, 8, .20), inset 0 1px 0 rgba(255,255,255,.85);
+  margin-bottom: 1rem;
+  overflow: hidden;
 }
-
-/* 页头留白与博客统一 */
 header.bot-header {
   padding-left: clamp(1rem, 4vw, 2rem);
   padding-right: clamp(1rem, 4vw, 2rem);
 }
 
-/* ---------- 顶栏 / 卡片：液态玻璃 ---------- */
+/* 顶栏：中等透明，仍有玻璃感 */
 .shell .topbar {
-  background: var(--glass-bg, rgba(255,255,255,.38));
-  -webkit-backdrop-filter: var(--blur, blur(20px) saturate(160%));
-  backdrop-filter: var(--blur, blur(20px) saturate(160%));
-  border-bottom: 1px solid var(--glass-border, rgba(255,255,255,.60));
-  box-shadow: 0 1px 0 var(--glass-hi, rgba(255,255,255,.78)) inset;
+  background: rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border-bottom: 1px solid rgba(77, 124, 15, .20);
 }
-.shell .mark { color: var(--accent, #4d7c0f); }
+.shell .mark { color: #4d7c0f; }
+.shell .brand-text h1 { color: #0b1204; }
+.shell .brand-text .sub { color: #43502c; }
 
-/* 输入区玻璃 */
-.shell .composer,
-.shell .form,
-.shell .inputbar {
-  background: var(--glass-bg-2, rgba(255,255,255,.50));
-  -webkit-backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
-  backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
-  border: 1px solid var(--glass-border, rgba(255,255,255,.60));
-  box-shadow: inset 0 1px 0 var(--glass-hi, rgba(255,255,255,.78)), 0 8px 22px rgba(38,62,8,.10);
+/* ===== 消息气泡：这是对比度问题的核心 ===== */
+/* 助手气泡：接近纯白，深色字 */
+.shell .msg.bot .bubble,
+.shell .bubble {
+  background: rgba(255, 255, 255, .94);
+  color: #0b1204;
+  border: 1px solid rgba(77, 124, 15, .18);
+  box-shadow: 0 2px 10px rgba(38, 62, 8, .08);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
+/* 用户气泡：实心橄榄绿 + 白字，一眼分清 */
+.shell .msg.user .bubble {
+  background: #4d7c0f;
+  color: #ffffff;
+  border: 1px solid #3a5f0b;
+  box-shadow: 0 2px 10px rgba(58, 95, 11, .22);
+}
+.shell .msg.user .bubble * { color: #ffffff; }
 
-/* chip / 快捷问题：玻璃小胶囊 */
+/* 开场区文字 */
+.shell .intro h2 { color: #0b1204; }
+.shell .intro-lead { color: #35421f; }
+
+/* 快捷问题胶囊：白底深字，hover 变绿边 */
 .shell .chip,
 .shell .suggest button,
 .shell .pill {
-  background: var(--glass-bg-2, rgba(255,255,255,.50));
-  -webkit-backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
-  backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
-  border: 1px solid var(--glass-border, rgba(255,255,255,.60));
-  color: var(--muted, #43502c);
+  background: rgba(255, 255, 255, .90);
+  color: #24300f;
+  border: 1px solid rgba(77, 124, 15, .30);
+  box-shadow: 0 1px 4px rgba(38, 62, 8, .08);
 }
 .shell .chip:hover,
 .shell .suggest button:hover {
-  color: var(--accent, #4d7c0f);
-  border-color: var(--accent, #4d7c0f);
+  color: #3a5f0b;
+  border-color: #4d7c0f;
+  background: #fff;
 }
 
-/* 按钮统一用博客的橄榄绿 */
-.shell button,
-.shell .send,
-.shell .icon-btn {
-  color: var(--fg, #141c0b);
+/* 输入框：白底，明显边框 */
+.shell textarea,
+.shell input[type="text"],
+.shell input[type="search"],
+.shell .composer,
+.shell .form,
+.shell .inputbar {
+  background: rgba(255, 255, 255, .92) !important;
+  color: #0b1204 !important;
+  border: 1px solid rgba(77, 124, 15, .28);
+  box-shadow: inset 0 1px 2px rgba(38, 62, 8, .06);
 }
+.shell textarea::placeholder,
+.shell input::placeholder { color: #7b8a63; }
+
+/* 发送按钮：实心绿 */
 .shell .send,
 .shell button[type="submit"] {
-  background: var(--accent, #4d7c0f);
+  background: #4d7c0f;
   color: #fff;
+  border: none;
 }
+.shell button { color: #24300f; }
+.shell .icon-btn { color: #35421f; }
+.shell .icon-btn:hover { color: #4d7c0f; }
+.shell a, .shell .linklike { color: #3a5f0b; }
 
-/* 用户气泡 / 助手气泡 */
-.shell .msg.user .bubble {
-  background: rgba(77, 124, 15, .14);
-  color: var(--fg, #141c0b);
-  border: 1px solid rgba(77, 124, 15, .22);
-}
-.shell .msg.bot .bubble {
-  background: var(--glass-bg-2, rgba(255,255,255,.50));
-  -webkit-backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
-  backdrop-filter: var(--blur-2, blur(10px) saturate(150%));
-  border: 1px solid var(--glass-border, rgba(255,255,255,.60));
-  color: var(--fg, #141c0b);
-}
+/* 让正文继承深色 */
+.shell, .shell p, .shell div, .shell span, .shell li { color: inherit; }
+.shell { color: #0b1204; }
 
-/* 把残留的深蓝品牌色纠正成橄榄绿 */
-.shell a { color: var(--accent, #4d7c0f); }
-.shell .linklike { color: var(--accent, #4d7c0f); }
-
-/* 滚动条淡一点 */
+/* 滚动条 */
 .shell ::-webkit-scrollbar-thumb {
-  background: rgba(77, 124, 15, .22);
+  background: rgba(77, 124, 15, .26);
   border-radius: 999px;
 }
 </style>
+
 
 
 
@@ -249,8 +270,8 @@ header.bot-header {
 </template>
 
 
-<script src="assets/bot/kb.js?v=1794374817"></script>
-<script src="assets/bot/keys.js?v=1794374817"></script>
-<script src="assets/bot/engine.js?v=1794374817"></script>
+<script src="assets/bot/kb.js?v=1794374871"></script>
+<script src="assets/bot/keys.js?v=1794374871"></script>
+<script src="assets/bot/engine.js?v=1794374871"></script>
 </body>
 </html>
