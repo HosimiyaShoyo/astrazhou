@@ -13,8 +13,8 @@
 <meta property="og:url" content="https://astrazhou.is-cool.dev/bot.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1794375591">
-<link rel="stylesheet" href="assets/bot/bot.css?v=1794375591">
+<link rel="stylesheet" href="assets/style.css?v=1794375642">
+<link rel="stylesheet" href="assets/bot/bot.css?v=1794375642">
 <style>
 /* ==========================================================
    薄荷绿主题 v2 —— 重点解决"文字看不清"
@@ -213,6 +213,18 @@ header.bot-header .brand-mac { opacity: .95; }
     .shell .mark,
     .shell .mark .school-logo { width: 34px; height: 34px; }
   }
+
+  /* 引擎切换提示：淡黄底 + 深字，滚到哪都看得见 */
+  .shell .disclaimer.engine-tip {
+    margin-top: .35rem;
+    padding: .45rem .7rem;
+    border-radius: var(--radius-sm, 9px);
+    background: rgba(232, 167, 44, .14);
+    border: 1px solid rgba(232, 167, 44, .38);
+    color: #5b3f06;
+    line-height: 1.6;
+  }
+  .shell .disclaimer.engine-tip strong { color: #8a5a00; }
 </style>
 
 
@@ -297,6 +309,7 @@ header.bot-header .brand-mac { opacity: .95; }
       </button>
     </form>
     <p class="disclaimer">回答由 AI 生成，涉及学分、时间、金额等具体信息请以学校官方通知为准。</p>
+    <p class="disclaimer engine-tip"><strong>OpenRouter 模型报错时</strong>（免费池每日额度用尽），请点上方下拉框切换到 <strong>DeepSeek</strong>。</p>
   </footer>
 
 </div>
@@ -324,8 +337,8 @@ header.bot-header .brand-mac { opacity: .95; }
 </template>
 
 
-<script src="assets/bot/kb.js?v=1794375591"></script>
-<script src="assets/bot/keys.js?v=1794375591"></script>
-<script src="assets/bot/engine.js?v=1794375591"></script>
+<script src="assets/bot/kb.js?v=1794375642"></script>
+<script src="assets/bot/keys.js?v=1794375642"></script>
+<script src="assets/bot/engine.js?v=1794375642"></script>
 </body>
 </html>
