@@ -26,7 +26,7 @@ const PROVIDERS = {
     headers: {},
   },
   openrouter: {
-    label: 'OpenRouter 免费池',
+    label: 'OpenRouter（免费版）',
     base: 'https://openrouter.ai/api/v1',
     models: [
       'nvidia/nemotron-3-ultra-550b-a55b:free',
@@ -328,7 +328,7 @@ function saveKey(pid, key) {
 /** 当前选哪一家：'deepseek' | 'openrouter' */
 function getChoice() {
   const saved = localStorage.getItem('cjlu_provider');
-  return PROVIDERS[saved] ? saved : 'deepseek';
+  return PROVIDERS[saved] ? saved : 'openrouter';
 }
 
 function setChoice(pid) {
