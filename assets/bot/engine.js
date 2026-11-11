@@ -11,6 +11,9 @@
 // 占位符：打包时替换成真实数据
 const KB = window.__KB__;
 
+/* 打包时预置的 Key（由 keys.js 还原后挂在 window 上），localStorage 里的优先 */
+const DEFAULT_KEYS = window.__KEYS__ || {};
+
 /**
  * 能直连的模型服务。两家都验证过允许浏览器跨域（DeepSeek 会回显任意 Origin，
  * OpenRouter 返回 *），所以这个 HTML 不需要任何后端。
