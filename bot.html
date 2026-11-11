@@ -13,8 +13,8 @@
 <meta property="og:url" content="https://astrazhou.is-cool.dev/bot.html">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1794374999">
-<link rel="stylesheet" href="assets/bot/bot.css?v=1794374999">
+<link rel="stylesheet" href="assets/style.css?v=1794375138">
+<link rel="stylesheet" href="assets/bot/bot.css?v=1794375138">
 <style>
 /* ==========================================================
    薄荷绿主题 v2 —— 重点解决"文字看不清"
@@ -149,6 +149,47 @@ header.bot-header {
   background: rgba(77, 124, 15, .26);
   border-radius: 999px;
 }
+
+/* ========== 修复：标题竖排 + 页头文字看不见 ========== */
+/* 1) 标题一行显示，不许被挤成竖排 */
+.shell .brand,
+.shell .brand-text,
+.shell .brand-text h1,
+.shell .brand-text .sub,
+.shell .topbar .brand-text h1 {
+  white-space: nowrap;
+}
+.shell .brand-text { min-width: 0; flex: 1 1 auto; }
+.shell .brand-text h1 {
+  font-size: clamp(15px, 4.2vw, 19px);   /* 手机上略缩，放得下 */
+  letter-spacing: 0;
+}
+
+/* 2) 页头文字改成浅色 —— 它在深色 Aurora 背景上，不在白卡里 */
+header.bot-header,
+header.bot-header .brand,
+header.bot-header .brand .avatar {
+  color: #eafff5;
+}
+header.bot-header .back-home {
+  color: #dff5e9;
+  background: rgba(255, 255, 255, .16);
+  border-color: rgba(255, 255, 255, .34);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 4px 14px rgba(0, 0, 0, .18);
+}
+header.bot-header .back-home:hover {
+  color: #ffffff;
+  border-color: #6ee7b7;
+}
+header.bot-header .brand-mac { opacity: .95; }
+
+/* 3) 顶栏里的图标按钮也保证可见 */
+.shell .icon-btn {
+  color: #35421f;
+  background: rgba(255, 255, 255, .85);
+  border: 1px solid rgba(77, 124, 15, .28);
+}
+
 </style>
 
 
@@ -270,8 +311,8 @@ header.bot-header {
 </template>
 
 
-<script src="assets/bot/kb.js?v=1794374999"></script>
-<script src="assets/bot/keys.js?v=1794374999"></script>
-<script src="assets/bot/engine.js?v=1794374999"></script>
+<script src="assets/bot/kb.js?v=1794375138"></script>
+<script src="assets/bot/keys.js?v=1794375138"></script>
+<script src="assets/bot/engine.js?v=1794375138"></script>
 </body>
 </html>
