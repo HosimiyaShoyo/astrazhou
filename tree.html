@@ -22,103 +22,103 @@ body{
   background:radial-gradient(130% 75% at 50% 105%,#3A4B7E 0%,#1F2B4D 45%,#101B36 100%);
   position:relative;
 }
-/* ===== 星空 & 雪 ===== */
-#sky{position:fixed;inset:0;pointer-events:none;z-index:0}
-#snow{position:fixed;inset:0;pointer-events:none;z-index:1}
-.star{position:absolute;background:#fff;border-radius:50%;animation:tw 3s ease-in-out infinite}
-@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+#sky,#snow{position:fixed;inset:0;pointer-events:none}
+#sky{z-index:0}#snow{z-index:1}
 
-/* ===== 顶部 ===== */
+/* SVG 雪花（漂浮装饰） */
+.flake{position:fixed;z-index:1;pointer-events:none;opacity:.35;animation:drift linear infinite}
+@keyframes drift{
+  0%{transform:translateY(-10vh) rotate(0deg)}
+  100%{transform:translateY(110vh) rotate(360deg)}
+}
+
 .top{position:relative;z-index:5;width:100%;max-width:520px;padding:14px 16px 0;display:flex;align-items:center;gap:10px}
 .back{width:38px;height:38px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.22);color:#fff;text-decoration:none;font-size:18px}
 .back:active{transform:scale(.94)}
 .title{font-size:15px;line-height:1.3;-webkit-text-stroke:3px #23222B;paint-order:stroke fill;color:#FFD34D}
 
-/* ===== 场景区（树）===== */
-.stage{position:relative;z-index:3;flex:1;width:100%;max-width:520px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px}
+.stage{position:relative;z-index:3;flex:1;width:100%;max-width:520px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;min-height:0}
 
-.tree{position:relative;width:min(78vw,320px);display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
-.tiers{display:flex;flex-direction:column;align-items:center;width:100%}
-.tier{
-  width:100%;height:0;
-  border-left-style:solid;border-left-color:transparent;
-  border-right-style:solid;border-right-color:transparent;
-  border-bottom-style:solid;
-  margin-top:-14px;
-  position:relative;
-  transition:transform .45s cubic-bezier(.22,.61,.36,1), filter .45s, border-bottom-color .45s;
-}
-.tier:nth-child(odd){--c1:#1E7A55;--c2:#175E42}
-.tier:nth-child(even){--c1:#248F63;--c2:#1B6E4E}
-.tier.lit{border-bottom-color:var(--c1);filter:drop-shadow(0 0 14px rgba(127,209,174,.85))}
-.tier.dim{border-bottom-color:#2A3D5C;filter:none;opacity:.55}
-.tier:first-child{margin-top:0}
-/* 树顶星星 */
-.star-top{font-size:34px;line-height:1;margin-bottom:-8px;filter:drop-shadow(0 0 12px #FFD34D);transition:transform .5s,filter .5s}
-.star-top.on{transform:scale(1.35) rotate(12deg);filter:drop-shadow(0 0 22px #FFD34D)}
+/* ===== 圣诞树（SVG 容器 + 绝对定位的层级） ===== */
+.tree-wrap{position:relative;width:min(76vw,300px);height:100%;min-height:180px;display:flex;align-items:flex-end;justify-content:center}
+#treeSvg{width:100%;height:100%;overflow:visible;display:block}
+
+/* 每一层是一个 <g>，答对后加 .lit */
+.tier-g{transition:opacity .45s, filter .45s}
+.tier-g .foliage{transition:fill .45s}
+.tier-g.dim{opacity:.42}
+.tier-g.dim .foliage{fill:#2A3D5C}
+.tier-g.lit{filter:drop-shadow(0 0 10px rgba(127,209,174,.9))}
+.tier-g.lit .foliage{fill:#248F63}
+.tier-g.lit:nth-child(odd) .foliage{fill:#1E7A55}
+
+/* 装饰球：默认暗，点亮后亮 */
+.orn{transition:opacity .5s, fill .5s}
+.tier-g.dim .orn{opacity:.15}
+.tier-g.lit .orn{opacity:1}
+
 /* 树干 */
-.trunk{width:16%;height:22px;background:linear-gradient(#5B3A22,#3E2716);border-radius:3px}
-/* 小人（爬树者） */
-.climber{position:absolute;left:50%;bottom:0;font-size:26px;transform:translate(-50%,0);transition:bottom .5s cubic-bezier(.34,1.56,.64,1);z-index:4;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+.trunk-svg{fill:#5B3A22}
 
-/* ===== 底部答题卡 ===== */
-.panel{
-  position:relative;z-index:6;width:100%;max-width:520px;padding:0 14px 18px;
-}
-.card{
-  background:rgba(255,255,255,.97);color:#1F2B4D;border-radius:22px;
-  padding:16px 16px 14px;box-shadow:0 12px 34px rgba(0,0,0,.42);
-  border:3px solid #23222B;
-}
+/* 树顶星 */
+#starTop{transition:transform .55s cubic-bezier(.34,1.56,.64,1), filter .55s;transform-origin:center}
+#starTop.on{transform:scale(1.45) rotate(15deg);filter:drop-shadow(0 0 18px #FFD34D)}
+
+/* 爬树小人 */
+.climber{position:absolute;left:50%;bottom:0;font-size:24px;transform:translate(-50%,0);
+  transition:bottom .55s cubic-bezier(.34,1.56,.64,1);z-index:4;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55))}
+
+/* 落雪（CSS 生成的 SVG 雪花） */
+.snow-layer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+
+/* ===== 答题卡 ===== */
+.panel{position:relative;z-index:6;width:100%;max-width:520px;padding:0 14px 16px;flex:none}
+.card{background:rgba(255,255,255,.97);color:#1F2B4D;border-radius:22px;padding:15px 15px 13px;
+  box-shadow:0 12px 34px rgba(0,0,0,.42);border:3px solid #23222B}
 .qnum{font-size:12px;color:#6C7BA6;letter-spacing:.08em}
-.qtext{font-size:17px;line-height:1.45;margin:6px 0 12px;font-weight:800;color:#1F2B4D}
-.opts{display:flex;flex-direction:column;gap:8px}
-.opt{
-  font:inherit;font-size:15px;text-align:left;padding:12px 14px;border-radius:14px;
+.qtext{font-size:16.5px;line-height:1.45;margin:6px 0 11px;font-weight:800;color:#1F2B4D}
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{font:inherit;font-size:14.5px;text-align:left;padding:11px 13px;border-radius:13px;
   background:#F1F4FB;border:2px solid #D9E1F2;color:#1F2B4D;cursor:pointer;
-  transition:transform .12s,background .2s,border-color .2s;font-weight:700;
-}
+  transition:transform .12s,background .2s,border-color .2s;font-weight:700}
 .opt:active{transform:scale(.98)}
 .opt:hover{border-color:#7FA6E8}
 .opt.ok{background:#D8F3E4;border-color:#2BA96C;color:#0E5C38}
 .opt.no{background:#FDDCDC;border-color:#E8423F;color:#8C1D1B}
-.opt[disabled]{cursor:default;opacity:.75}
+.opt[disabled]{cursor:default;opacity:.72}
 .opt.ok[disabled],.opt.no[disabled]{opacity:1}
-.tip{margin-top:10px;font-size:13px;color:#6C7BA6;line-height:1.5;min-height:1em}
+.tip{margin-top:9px;font-size:12.5px;color:#6C7BA6;line-height:1.5;min-height:1em}
 
-/* ===== 结果页 ===== */
-.result{text-align:center;padding:8px 0 4px}
-.result h2{margin:0 0 6px;font-size:22px;color:#1F2B4D}
-.result .score{font-size:42px;color:#E8423F;line-height:1.1;margin:4px 0}
-.result p{margin:6px 0 0;font-size:14px;color:#5B6A93;line-height:1.6}
-.btn{
-  display:inline-block;margin-top:14px;padding:12px 26px;border-radius:999px;border:none;
-  font:inherit;font-size:15px;font-weight:800;color:#23222B;background:#FFD34D;
-  box-shadow:0 5px 0 #C9A000;cursor:pointer;
-}
+.result{text-align:center;padding:6px 0 2px}
+.result h2{margin:0 0 4px;font-size:21px;color:#1F2B4D}
+.result .score{font-size:40px;color:#E8423F;line-height:1.1;margin:2px 0}
+.result p{margin:5px 0 0;font-size:13.5px;color:#5B6A93;line-height:1.6}
+.btn{display:inline-block;margin-top:12px;padding:11px 24px;border-radius:999px;border:none;
+  font:inherit;font-size:14.5px;font-weight:800;color:#23222B;background:#FFD34D;
+  box-shadow:0 5px 0 #C9A000;cursor:pointer}
 .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #C9A000}
 .btn.ghost{background:#E7EDF9;color:#1F2B4D;box-shadow:0 5px 0 #C3CFE6;margin-left:8px}
 
-/* ===== 开场页 ===== */
-.boot{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+.boot{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   background:radial-gradient(120% 70% at 50% 100%,#3A4B7E,#1F2B4D 60%,#101B36);text-align:center;padding:0 22px;transition:opacity .45s}
 .boot.hide{opacity:0;pointer-events:none}
-.boot-top{font-size:clamp(19px,5.5vw,25px);color:#fff;-webkit-text-stroke:6px #23222B;paint-order:stroke fill;rotate:-3deg}
-.boot-main{font-size:clamp(38px,12vw,56px);color:#FFD34D;-webkit-text-stroke:9px #23222B;paint-order:stroke fill;line-height:1.05}
-.boot-sub{font-size:14px;color:#A9B8DC;max-width:20em;line-height:1.7;font-weight:600}
+.boot-top{font-size:clamp(18px,5.2vw,24px);color:#fff;-webkit-text-stroke:6px #23222B;paint-order:stroke fill;rotate:-3deg}
+.boot-main{font-size:clamp(34px,11vw,52px);color:#FFD34D;-webkit-text-stroke:9px #23222B;paint-order:stroke fill;line-height:1.05}
+.boot-sub{font-size:13.5px;color:#A9B8DC;max-width:20em;line-height:1.7;font-weight:600}
 .dots{display:flex;gap:8px}
-.dots span{width:12px;height:12px;border-radius:50%;background:#FFD34D;animation:bd .9s ease-in-out infinite}
+.dots span{width:11px;height:11px;border-radius:50%;background:#FFD34D;animation:bd .9s ease-in-out infinite}
 .dots span:nth-child(2){background:#E8423F;animation-delay:.16s}
 .dots span:nth-child(3){background:#7FD1AE;animation-delay:.32s}
-@keyframes bd{0%,60%,100%{transform:none}30%{transform:translateY(-8px)}}
-@media (prefers-reduced-motion:reduce){.dots span,.star{animation:none}}
+@keyframes bd{0%,60%,100%{transform:none}30%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion:reduce){.dots span,.flake{animation:none}}
 </style>
 </head>
 <body>
 
 <canvas id="sky"></canvas>
 <canvas id="snow"></canvas>
+<div class="snow-layer" id="snowLayer"></div>
 
 <div class="top">
   <a class="back" href="index.html" aria-label="返回主页">←</a>
@@ -126,24 +126,31 @@ body{
 </div>
 
 <div class="stage">
-  <div class="tree" id="tree">
-    <div class="star-top" id="starTop">⭐</div>
-    <div class="tiers" id="tiers"></div>
-    <div class="trunk"></div>
+  <div class="tree-wrap" id="treeWrap">
+    <!-- ===== 圣诞树 SVG ===== -->
+    <svg id="treeSvg" viewBox="0 0 200 260" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <!-- 树顶层组（由 JS 生成：每层一个 <g class="tier-g">） -->
+      <g id="tiers"></g>
+      <!-- 树干 -->
+      <rect class="trunk-svg" x="90" y="238" width="20" height="20" rx="3"/>
+      <!-- 树顶星 -->
+      <g id="starTop">
+        <path d="M100 2 L106 18 L124 18 L110 28 L115 45 L100 35 L85 45 L90 28 L76 18 L94 18 Z"
+              fill="#FFD34D" stroke="#C9A000" stroke-width="1.5" stroke-linejoin="round"/>
+      </g>
+    </svg>
     <div class="climber" id="climber">🧗</div>
   </div>
 </div>
 
-<div class="panel">
-  <div class="card" id="card"></div>
-</div>
+<div class="panel"><div class="card" id="card"></div></div>
 
 <div class="boot" id="boot">
   <div class="boot-top">我的圣诞树上</div>
   <div class="boot-main">你在哪儿？</div>
-  <div class="boot-sub" id="bootSub">10 道关于 Astra 的题<br>猜中他的答案，一路爬到他的树顶 ✨</div>
+  <div class="boot-sub">10 道关于 Astra 的题<br>猜中他的答案，一路爬到他的树顶 ✨</div>
   <div class="dots"><span></span><span></span><span></span></div>
-  <button class="btn" id="startBtn" style="margin-top:6px">开始爬树</button>
+  <button class="btn" id="startBtn" style="margin-top:4px">开始爬树</button>
 </div>
 
 <script>
@@ -151,144 +158,133 @@ body{
   'use strict';
 
   /* ==========================================================
-     ① 题目 —— 全部可改。把 q 改成你的题、opts 改成选项、
-        ans 填正确选项的下标（从 0 开始）
+     ① 题目（可改）
      ========================================================== */
   var QUESTIONS = [
-    { q: 'Astra 的博客用的是什么配色？', opts: ['大红大紫', '薄荷绿液态玻璃', '纯黑', '赛博朋克霓虹'], ans: 1,
-      tip: '点开他的博客一眼就知道 🍃' },
-    { q: 'Astra 在读的学校是？', opts: ['浙江大学', '中国计量大学', '杭州电子科技大学', '浙江工业大学'], ans: 1,
-      tip: '「精思国计，细量民生」' },
-    { q: '他文章里的诗用了哪种字体？', opts: ['黑体', '楷体', '瘦金体', '甲骨文'], ans: 2,
-      tip: '那种笔画细如发丝的宋徽宗字体' },
-    { q: '他的博客里没有下面哪个小游戏？', opts: ['PONG', 'DOOM', '超级马里奥', '俄罗斯方块'], ans: 3,
-      tip: '去「小游戏」页面数一数' },
-    { q: 'Astra 的博客域名后缀是？', opts: ['.com', '.cn', '.is-cool.dev', '.io'], ans: 2,
-      tip: '一个免费子域名' },
-    { q: '他写过的短篇小说的主角是？', opts: ['一只松鼠', '一条鲸鱼', '一只猫', '一匹马'], ans: 0,
-      tip: '《月光下的松鼠》🐿️' },
-    { q: '他的博客没有下面哪个板块？', opts: ['文章', '树洞', '相册', '关于'], ans: 2,
-      tip: '首页四个按钮里找' },
-    { q: 'Astra 的校训是？', opts: ['求是创新', '精思国计 细量民生', '厚德载物', '博学笃行'], ans: 1,
-      tip: '计量人的八个字' },
-    { q: '他博客里的浏览量是哪个服务统计的？', opts: ['Google Analytics', 'abacus', '百度统计', '自己写的后端'], ans: 1,
-      tip: '一个免费的计数小站' },
-    { q: '给 Astra 留言的「树洞」用的什么方案？', opts: ['评论区插件', '邮件表单转发', '微信小程序', '没有树洞'], ans: 1,
-      tip: '填完直接进他邮箱 📮' }
+    { q: 'Astra 的博客用的是什么配色？', opts: ['大红大紫', '薄荷绿液态玻璃', '纯黑', '赛博朋克霓虹'], ans: 1, tip: '点开他的博客一眼就知道 🍃' },
+    { q: 'Astra 在读的学校是？', opts: ['浙江大学', '中国计量大学', '杭州电子科技大学', '浙江工业大学'], ans: 1, tip: '「精思国计，细量民生」' },
+    { q: '他文章里的诗用了哪种字体？', opts: ['黑体', '楷体', '瘦金体', '甲骨文'], ans: 2, tip: '宋徽宗那种细如发丝的字体' },
+    { q: '他的博客里没有下面哪个小游戏？', opts: ['PONG', 'DOOM', '超级马里奥', '俄罗斯方块'], ans: 3, tip: '去「小游戏」页面数一数' },
+    { q: 'Astra 的博客域名后缀是？', opts: ['.com', '.cn', '.is-cool.dev', '.io'], ans: 2, tip: '一个免费子域名' },
+    { q: '他写过的短篇小说的主角是？', opts: ['一只松鼠', '一条鲸鱼', '一只猫', '一匹马'], ans: 0, tip: '《月光下的松鼠》🐿️' },
+    { q: '他的博客没有下面哪个板块？', opts: ['文章', '树洞', '相册', '关于'], ans: 2, tip: '首页导航里找' },
+    { q: 'Astra 学校的校训是？', opts: ['求是创新', '精思国计 细量民生', '厚德载物', '博学笃行'], ans: 1, tip: '计量人的八个字' },
+    { q: '他博客的浏览量用哪个服务统计？', opts: ['Google Analytics', 'abacus', '百度统计', '自己写的后端'], ans: 1, tip: '一个免费的计数小站' },
+    { q: '给 Astra 留言的「树洞」用什么方案？', opts: ['评论区插件', '邮件表单转发', '微信小程序', '没有树洞'], ans: 1, tip: '填完直接进他邮箱 📮' }
   ];
-
   var TOTAL = QUESTIONS.length;
 
-  /* ==========================================================
-     ② 状态
-     ========================================================== */
   var idx = 0, correct = 0, answered = false;
-
   var $ = function (id) { return document.getElementById(id); };
   var cardEl = $('card'), tiersEl = $('tiers'), climberEl = $('climber');
-  var starTopEl = $('starTop'), bootEl = $('boot'), titleEl = $('title');
+  var starTopEl = $('starTop'), bootEl = $('boot'), titleEl = $('title'), treeWrap = $('treeWrap');
 
   /* ==========================================================
-     ③ 建树：TOTAL 层三角
+     ② 用 SVG 建树：TOTAL 层三角形 + 装饰球
      ========================================================== */
   function buildTree() {
     tiersEl.innerHTML = '';
-    for (var i = TOTAL - 1; i >= 0; i--) {
-      var t = document.createElement('div');
-      t.className = 'tier dim';
-      // 越往上越窄
-      var p = (TOTAL - 1 - i) / Math.max(1, TOTAL - 1);  // 0(底) → 1(顶)
-      var w = 100 - p * 62;
-      var h = Math.max(20, 34 - p * 10);
-      t.style.borderLeftWidth = (w / 2) + '%';
-      t.style.borderRightWidth = (w / 2) + '%';
-      t.style.borderBottomWidth = h + 'px';
-      t.dataset.i = i;
-      tiersEl.appendChild(t);
+    var NS = 'http://www.w3.org/2000/svg';
+    var LAYERS = TOTAL;
+    // 顶(0) → 底(LAYERS-1)
+    for (var i = 0; i < LAYERS; i++) {
+      var g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'tier-g dim');
+      g.dataset.i = i;
+
+      // 第 i 层：y 从 top 到底；越往下越宽
+      var topY = 42 + i * 20;
+      var halfW = 18 + i * 8.2;      // 18 → 92
+      var h = 30;
+      var cx = 100;
+
+      // 三角形（雪花边效果不了，用直线 + 圆角）
+      var tri = document.createElementNS(NS, 'polygon');
+      tri.setAttribute('class', 'foliage');
+      tri.setAttribute('points',
+        cx + ',' + topY + ' ' +
+        (cx - halfW) + ',' + (topY + h) + ' ' +
+        (cx + halfW) + ',' + (topY + h));
+      tri.setAttribute('fill', '#248F63');
+      tri.setAttribute('stroke', '#1B6E4E');
+      tri.setAttribute('stroke-width', '1');
+      tri.setAttribute('stroke-linejoin', 'round');
+      g.appendChild(tri);
+
+      // 装饰球：每层 2~3 个
+      var ornColors = ['#E8423F', '#FFD34D', '#7FD1AE', '#F08A5D'];
+      var cnt = 2 + (i % 2);
+      for (var k = 0; k < cnt; k++) {
+        var c = document.createElementNS(NS, 'circle');
+        var px = cx + (k - (cnt - 1) / 2) * (halfW * 0.9);
+        var py = topY + h * (0.55 + (k % 2) * 0.25);
+        c.setAttribute('class', 'orn');
+        c.setAttribute('cx', px.toFixed(1));
+        c.setAttribute('cy', py.toFixed(1));
+        c.setAttribute('r', '3.2');
+        c.setAttribute('fill', ornColors[(i + k) % ornColors.length]);
+        g.appendChild(c);
+      }
+      tiersEl.appendChild(g);
     }
   }
 
-  /* 点亮第 n 层（从底部数），并移动小人 */
+  /* 点亮 n 层 */
   function climb(n) {
-    var tiers = tiersEl.children;
-    // 从底部往上数 n 层点亮
-    for (var k = 0; k < tiers.length; k++) {
-      var bottomIdx = tiers.length - 1 - k;   // 底部是最后一个元素
-      tiers[bottomIdx].classList.toggle('lit', k < n);
-      tiers[bottomIdx].classList.toggle('dim', k >= n);
+    var gs = tiersEl.children;
+    for (var i = 0; i < gs.length; i++) {
+      var lit = i >= (TOTAL - n);   // 从底部点起
+      gs[i].classList.toggle('lit', lit);
+      gs[i].classList.toggle('dim', !lit);
     }
-    var tree = $('tree');
-    var treeH = tree.clientHeight;
+    var wrapH = treeWrap.clientHeight;
     var ratio = n / TOTAL;
-    climberEl.style.bottom = Math.round(ratio * (treeH - 40)) + 'px';
+    climberEl.style.bottom = Math.round(ratio * (wrapH - 46)) + 'px';
     starTopEl.classList.toggle('on', n >= TOTAL);
     titleEl.textContent = n >= TOTAL ? '你爬到树顶了 🎉' : 'Astra 的圣诞树 ' + n + '/' + TOTAL;
   }
 
   /* ==========================================================
-     ④ 答题
+     ③ 答题
      ========================================================== */
   function render() {
     answered = false;
     if (idx >= TOTAL) return renderResult();
     var q = QUESTIONS[idx];
-    var html = '<div class="qnum">第 ' + (idx + 1) + ' / ' + TOTAL + ' 题</div>';
-    html += '<div class="qtext">' + esc(q.q) + '</div><div class="opts">';
-    q.opts.forEach(function (o, i) {
-      html += '<button class="opt" data-i="' + i + '">' + esc(o) + '</button>';
-    });
-    html += '</div><div class="tip" id="tip"></div>';
-    cardEl.innerHTML = html;
-
-    var btns = cardEl.querySelectorAll('.opt');
-    Array.prototype.forEach.call(btns, function (b) {
-      b.addEventListener('click', function () { pick(parseInt(b.getAttribute('data-i'), 10)); });
+    var h = '<div class="qnum">第 ' + (idx + 1) + ' / ' + TOTAL + ' 题</div>';
+    h += '<div class="qtext">' + esc(q.q) + '</div><div class="opts">';
+    q.opts.forEach(function (o, i) { h += '<button class="opt" data-i="' + i + '">' + esc(o) + '</button>'; });
+    h += '</div><div class="tip" id="tip"></div>';
+    cardEl.innerHTML = h;
+    Array.prototype.forEach.call(cardEl.querySelectorAll('.opt'), function (b) {
+      b.addEventListener('click', function () { pick(+b.dataset.i); });
     });
   }
 
   function pick(i) {
     if (answered) return;
     answered = true;
-    var q = QUESTIONS[idx];
-    var btns = cardEl.querySelectorAll('.opt');
-    var ok = (i === q.ans);
-
+    var q = QUESTIONS[idx], btns = cardEl.querySelectorAll('.opt'), ok = (i === q.ans);
     Array.prototype.forEach.call(btns, function (b, k) {
       b.disabled = true;
       if (k === q.ans) b.classList.add('ok');
       else if (k === i) b.classList.add('no');
     });
-
     var tip = $('tip');
     if (ok) {
-      correct++;
-      climb(correct);
+      correct++; climb(correct);
       tip.textContent = '✅ 答对了！往上爬一层' + (q.tip ? '　· ' + q.tip : '');
     } else {
       tip.textContent = '❌ 答错了，正确答案是「' + q.opts[q.ans] + '」' + (q.tip ? '　· ' + q.tip : '');
     }
-
-    setTimeout(function () {
-      idx++;
-      render();
-    }, ok ? 950 : 1500);
+    setTimeout(function () { idx++; render(); }, ok ? 900 : 1400);
   }
 
-  /* ==========================================================
-     ⑤ 结果
-     ========================================================== */
   function renderResult() {
     var tier = correct === TOTAL ? '🏆 登顶！' : (correct >= 7 ? '🌟 快到了' : (correct >= 4 ? '🌿 爬到一半' : '🌱 刚起步'));
-    var word = correct === TOTAL ? '你比我本人还了解我。' :
-               (correct >= 7 ? '很了解我了，剩下几道我认输。' :
-               (correct >= 4 ? '还算熟，下次多聊两句。' : '看来我们还不算太熟 😄'));
-    cardEl.innerHTML =
-      '<div class="result">' +
-      '<h2>' + tier + '</h2>' +
-      '<div class="score">' + correct + ' / ' + TOTAL + '</div>' +
-      '<p>' + word + '</p>' +
-      '<button class="btn" id="again">再爬一次</button>' +
-      '</div>';
+    var word = correct === TOTAL ? '你比我本人还了解我。' : (correct >= 7 ? '很了解我了，剩下几道我认输。' : (correct >= 4 ? '还算熟，下次多聊两句。' : '看来我们还不算太熟 😄'));
+    cardEl.innerHTML = '<div class="result"><h2>' + tier + '</h2><div class="score">' + correct + ' / ' + TOTAL +
+      '</div><p>' + word + '</p><button class="btn" id="again">再爬一次</button></div>';
     $('again').addEventListener('click', restart);
     climberEl.textContent = correct === TOTAL ? '🎅' : '🧗';
   }
@@ -296,8 +292,7 @@ body{
   function restart() {
     idx = 0; correct = 0; answered = false;
     climberEl.textContent = '🧗';
-    climb(0);
-    render();
+    climb(0); render();
   }
 
   function esc(s) {
@@ -307,7 +302,7 @@ body{
   }
 
   /* ==========================================================
-     ⑥ 星空 + 雪
+     ④ 星空 + 落雪（Canvas）
      ========================================================== */
   var sky = $('sky'), snow = $('snow');
   var sctx = sky.getContext('2d'), wctx = snow.getContext('2d');
@@ -316,73 +311,86 @@ body{
   function resize() {
     var dpr = Math.min(2, window.devicePixelRatio || 1);
     [sky, snow].forEach(function (c) {
-      c.width = innerWidth * dpr;
-      c.height = innerHeight * dpr;
-      c.style.width = innerWidth + 'px';
-      c.style.height = innerHeight + 'px';
+      c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+      c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
       c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
     });
     stars = [];
-    for (var i = 0; i < 70; i++) {
-      stars.push({ x: Math.random() * innerWidth, y: Math.random() * innerHeight * 0.7,
-        r: Math.random() * 1.6 + 0.4, p: Math.random() * Math.PI * 2, s: Math.random() * 0.02 + 0.008 });
-    }
+    for (var i = 0; i < 70; i++) stars.push({ x: Math.random()*innerWidth, y: Math.random()*innerHeight*0.65,
+      r: Math.random()*1.6+0.4, p: Math.random()*6.283, s: Math.random()*0.02+0.008 });
     flakes = [];
-    for (var j = 0; j < 60; j++) {
-      flakes.push({ x: Math.random() * innerWidth, y: Math.random() * innerHeight,
-        r: Math.random() * 2.2 + 0.8, vy: Math.random() * 0.6 + 0.25, vx: (Math.random() - 0.5) * 0.3,
-        a: Math.random() * 0.5 + 0.35 });
-    }
+    for (var j = 0; j < 55; j++) flakes.push({ x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+      r: Math.random()*2+0.7, vy: Math.random()*0.55+0.22, vx: (Math.random()-0.5)*0.28, a: Math.random()*0.5+0.3 });
   }
 
   function loop() {
-    sctx.clearRect(0, 0, innerWidth, innerHeight);
-    for (var i = 0; i < stars.length; i++) {
-      var s = stars[i];
-      s.p += s.s;
-      sctx.globalAlpha = 0.3 + Math.abs(Math.sin(s.p)) * 0.7;
-      sctx.fillStyle = '#fff';
-      sctx.beginPath();
-      sctx.arc(s.x, s.y, s.r, 0, 6.283);
-      sctx.fill();
-    }
-    sctx.globalAlpha = 1;
+    sctx.clearRect(0,0,innerWidth,innerHeight);
+    for (var i=0;i<stars.length;i++){var s=stars[i];s.p+=s.s;
+      sctx.globalAlpha=0.3+Math.abs(Math.sin(s.p))*0.7;sctx.fillStyle='#fff';
+      sctx.beginPath();sctx.arc(s.x,s.y,s.r,0,6.283);sctx.fill();}
+    sctx.globalAlpha=1;
 
-    wctx.clearRect(0, 0, innerWidth, innerHeight);
-    for (var j = 0; j < flakes.length; j++) {
-      var f = flakes[j];
-      f.y += f.vy; f.x += f.vx;
-      if (f.y > innerHeight + 5) { f.y = -5; f.x = Math.random() * innerWidth; }
-      if (f.x < -5) f.x = innerWidth + 5;
-      if (f.x > innerWidth + 5) f.x = -5;
-      wctx.globalAlpha = f.a;
-      wctx.fillStyle = '#fff';
-      wctx.beginPath();
-      wctx.arc(f.x, f.y, f.r, 0, 6.283);
-      wctx.fill();
-    }
-    wctx.globalAlpha = 1;
+    wctx.clearRect(0,0,innerWidth,innerHeight);
+    for (var j=0;j<flakes.length;j++){var f=flakes[j];f.y+=f.vy;f.x+=f.vx;
+      if(f.y>innerHeight+5){f.y=-5;f.x=Math.random()*innerWidth;}
+      if(f.x<-5)f.x=innerWidth+5;if(f.x>innerWidth+5)f.x=-5;
+      wctx.globalAlpha=f.a;wctx.fillStyle='#fff';
+      wctx.beginPath();wctx.arc(f.x,f.y,f.r,0,6.283);wctx.fill();}
+    wctx.globalAlpha=1;
     requestAnimationFrame(loop);
   }
 
   /* ==========================================================
-     ⑦ 启动
+     ⑤ 漂浮的 SVG 雪花（六角结晶，纯矢量）
+     ========================================================== */
+  function snowflakeSvg(size, color) {
+    // 六角雪花路径
+    var arms = '';
+    for (var i = 0; i < 6; i++) {
+      var a = (i * 60) * Math.PI / 180;
+      var x2 = 50 + Math.cos(a) * 44, y2 = 50 + Math.sin(a) * 44;
+      var bx = 50 + Math.cos(a) * 26, by = 50 + Math.sin(a) * 26;
+      var l1 = a - 0.5, r1 = a + 0.5;
+      var sx = 50 + Math.cos(a) * 26, sy = 50 + Math.sin(a) * 26;
+      arms += '<line x1="50" y1="50" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
+      arms += '<line x1="' + bx.toFixed(1) + '" y1="' + by.toFixed(1) + '" x2="' + (bx + Math.cos(l1)*14).toFixed(1) + '" y2="' + (by + Math.sin(l1)*14).toFixed(1) + '"/>';
+      arms += '<line x1="' + bx.toFixed(1) + '" y1="' + by.toFixed(1) + '" x2="' + (bx + Math.cos(r1)*14).toFixed(1) + '" y2="' + (by + Math.sin(r1)*14).toFixed(1) + '"/>';
+    }
+    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round">' + arms + '</svg>';
+  }
+
+  function spawnFlakes() {
+    var layer = $('snowLayer');
+    var n = 9;
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement('div');
+      d.className = 'flake';
+      var size = 14 + Math.random() * 26;
+      d.style.left = (Math.random() * 100) + 'vw';
+      d.style.animationDuration = (14 + Math.random() * 16) + 's';
+      d.style.animationDelay = (-Math.random() * 25) + 's';
+      d.style.opacity = (0.12 + Math.random() * 0.22).toFixed(2);
+      d.innerHTML = snowflakeSvg(size, '#DDEBFF');
+      layer.appendChild(d);
+    }
+  }
+
+  /* ==========================================================
+     ⑥ 启动
      ========================================================== */
   buildTree();
   climb(0);
   resize();
-  addEventListener('resize', function () { resize(); climb(correct); });
+  spawnFlakes();
   requestAnimationFrame(loop);
+  addEventListener('resize', function () { resize(); climb(correct); });
 
   $('startBtn').addEventListener('click', function () {
     bootEl.classList.add('hide');
-    setTimeout(function () { render(); }, 260);
+    setTimeout(render, 240);
   });
 
-  /* 桌面端直接进入（开场页也可以留着等点击） */
   render();
-  cardEl.style.visibility = 'hidden';
-  setTimeout(function () { cardEl.style.visibility = 'visible'; }, 10);
 })();
 </script>
 </body>
