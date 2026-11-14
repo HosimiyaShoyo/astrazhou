@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>默契度大挑战 · Astra Zhou</title>
+<meta name="description" content="10 道关于我的题，看你能猜中几道。考完就能看到我们的默契度。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="默契度大挑战 · Astra Zhou">
+<meta property="og:description" content="10 道关于我的题，看你能猜中几道。">
+<meta property="og:image" content="https://astrazhou.is-cool.dev/assets/og-cover.jpg">
+<meta property="og:url" content="https://astrazhou.is-cool.dev/match.html">
+<meta name="theme-color" content="#0d332c">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css?v=1794638517">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:auto;min-height:100%}
+body{
+  margin:0;min-height:100dvh;display:flex;flex-direction:column;
+  background:transparent;color:var(--fg,#141c0b);
+  font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+.m-wrap{position:relative;z-index:1;width:100%;max-width:520px;margin:0 auto;padding:1.1rem 1rem 2.2rem}
+.m-card{
+  background:var(--glass-bg-2,rgba(255,255,255,.62));
+  -webkit-backdrop-filter:var(--blur,blur(20px) saturate(160%));
+  backdrop-filter:var(--blur,blur(20px) saturate(160%));
+  border:1px solid var(--glass-border,rgba(255,255,255,.6));
+  border-radius:var(--radius,22px);
+  box-shadow:var(--glass-shadow,0 18px 46px rgba(38,62,8,.2)),inset 0 1px 0 var(--glass-hi,rgba(255,255,255,.78));
+  padding:1.3rem 1.15rem 1.2rem;
+  margin-top:1rem;
+}
+h1{margin:0 0 .3rem;font-size:1.35rem;letter-spacing:.01em}
+.sub{margin:0;color:var(--muted,#43502c);font-size:.9rem;line-height:1.6}
+.prog{display:flex;align-items:center;gap:.55rem;margin:1.1rem 0 .2rem;font-size:.8rem;color:var(--muted,#43502c)}
+.bar{flex:1;height:6px;border-radius:99px;background:rgba(77,124,15,.16);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:var(--accent,#4d7c0f);transition:width .35s cubic-bezier(.22,.61,.36,1)}
+.q{margin:1.05rem 0 0;font-size:1.08rem;font-weight:650;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:.5rem;margin-top:.9rem}
+.opt{
+  font:inherit;font-size:.96rem;text-align:left;padding:.78rem .95rem;border-radius:var(--radius-md,14px);
+  background:rgba(255,255,255,.72);border:1px solid rgba(77,124,15,.22);color:var(--fg,#141c0b);
+  cursor:pointer;transition:transform .12s,border-color .2s,background .2s;-webkit-tap-highlight-color:transparent;
+}
+.opt:hover{border-color:var(--accent,#4d7c0f);background:#fff}
+.opt:active{transform:scale(.985)}
+.opt.sel{border-color:var(--accent,#4d7c0f);background:rgba(77,124,15,.12);font-weight:650}
+.opt.ok{border-color:#2BA96C;background:rgba(43,169,108,.14)}
+.opt.no{border-color:#E8423F;background:rgba(232,66,63,.12)}
+.opt[disabled]{cursor:default}
+.row{display:flex;gap:.6rem;margin-top:1.1rem;flex-wrap:wrap}
+.btn{
+  font:inherit;font-size:.95rem;font-weight:650;padding:.72rem 1.35rem;border-radius:999px;border:none;
+  background:var(--accent,#4d7c0f);color:#fff;cursor:pointer;transition:transform .12s,opacity .2s;
+}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.ghost{background:rgba(255,255,255,.7);color:var(--fg,#141c0b);border:1px solid rgba(77,124,15,.26)}
+.hint{font-size:.8rem;color:var(--muted,#43502c);margin:.7rem 0 0;line-height:1.7}
+
+/* 结果 */
+.score-wrap{text-align:center;padding:.4rem 0 .2rem}
+.pct{font-size:3.4rem;line-height:1.05;font-weight:800;color:var(--accent,#4d7c0f);letter-spacing:-.02em}
+.pct span{font-size:1.3rem;font-weight:650;opacity:.6}
+.level{font-size:1.05rem;font-weight:700;margin:.35rem 0 .1rem}
+.level-desc{color:var(--muted,#43502c);font-size:.9rem;line-height:1.7;margin:.3rem 0 0}
+.review{margin-top:1.3rem;border-top:1px dashed rgba(77,124,15,.3);padding-top:.9rem}
+.review h3{margin:0 0 .6rem;font-size:.92rem;color:var(--muted,#43502c);font-weight:700}
+.rv{display:flex;gap:.5rem;padding:.5rem 0;border-bottom:1px solid rgba(77,124,15,.1);font-size:.86rem;line-height:1.55}
+.rv:last-child{border-bottom:none}
+.rv .mark{flex:none;font-size:1rem;line-height:1.4}
+.rv .txt{flex:1;min-width:0}
+.rv .txt b{font-weight:650}
+.rv .txt .ans{color:var(--muted,#43502c);font-size:.82rem;display:block;margin-top:.1rem}
+.share-box{
+  margin-top:1rem;padding:.85rem .9rem;border-radius:var(--radius-md,14px);
+  background:rgba(77,124,15,.09);border:1px dashed rgba(77,124,15,.35);
+}
+.share-box p{margin:0 0 .55rem;font-size:.82rem;color:var(--muted,#43502c)}
+.share-url{
+  width:100%;font:inherit;font-size:.78rem;padding:.55rem .65rem;border-radius:10px;
+  border:1px solid rgba(77,124,15,.24);background:rgba(255,255,255,.9);color:var(--fg,#141c0b);
+  word-break:break-all;resize:none;height:3.6rem;line-height:1.5;
+}
+.copy-tip{font-size:.78rem;color:#2BA96C;margin-top:.4rem;height:1em;transition:opacity .3s}
+
+/* 开场 */
+.boot .logo{font-size:2.6rem;line-height:1}
+.boot h2{margin:.6rem 0 .4rem;font-size:1.5rem}
+.boot p{margin:0;color:var(--muted,#43502c);font-size:.92rem;line-height:1.75}
+.mode-pick{display:flex;flex-direction:column;gap:.6rem;margin-top:1.3rem}
+.mode-btn{
+  font:inherit;text-align:left;padding:.95rem 1.05rem;border-radius:var(--radius-md,14px);
+  background:rgba(255,255,255,.72);border:1px solid rgba(77,124,15,.24);cursor:pointer;
+  transition:border-color .2s,transform .12s;
+}
+.mode-btn:hover{border-color:var(--accent,#4d7c0f)}
+.mode-btn:active{transform:scale(.99)}
+.mode-btn b{display:block;font-size:1rem;margin-bottom:.18rem}
+.mode-btn small{color:var(--muted,#43502c);font-size:.82rem;line-height:1.6;display:block}
+</style>
+</head>
+<body>
+<div class="m-wrap" id="app">
+
+  <!-- ===== 开场：选模式 ===== -->
+  <div class="m-card boot" id="boot">
+    <div class="logo">🤝</div>
+    <h2>默契度大挑战</h2>
+    <p>10 道题，看看朋友能猜中我多少。<br>选一个开始：</p>
+    <div class="mode-pick">
+      <button class="mode-btn" id="btn-create">
+        <b>我来出题</b>
+        <small>回答 10 道关于自己的题，生成链接发给朋友</small>
+      </button>
+      <button class="mode-btn" id="btn-answer" hidden>
+        <b>接受挑战</b>
+        <small>猜出题人的答案，看看你们多默契</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== 答题区 ===== -->
+  <div class="m-card" id="quiz" hidden>
+    <h1 id="quizTitle">默契度大挑战</h1>
+    <p class="sub" id="quizSub">猜猜我的答案 👀</p>
+    <div class="prog">
+      <span id="progText">第 1 / 10 题</span>
+      <span class="bar"><i id="barFill"></i></span>
+    </div>
+    <div class="q" id="qText"></div>
+    <div class="opts" id="opts"></div>
+    <div class="row">
+      <button class="btn" id="nextBtn" disabled>下一题</button>
+      <button class="btn ghost" id="quitBtn">重新开始</button>
+    </div>
+  </div>
+
+  <!-- ===== 结果区 ===== -->
+  <div class="m-card" id="result" hidden></div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==========================================================
+     题库：40 道，每题 4 个选项。随意增删改。
+     ========================================================== */
+  var BANK = [
+    { q: '我周末最可能在干嘛？', o: ['宅着看剧/打游戏', '出门散步骑车', '和朋友约饭', '睡到自然醒然后干活'] },
+    { q: '我最受不了的食物是？', o: ['香菜', '甜到齁的蛋糕', '生的海鲜', '肥肉'] },
+    { q: '我的手机里，最常用的 App 是哪类？', o: ['社交聊天', '视频/B站', '阅读/知识', '工具/效率'] },
+    { q: '如果只能选一个，我更想要？', o: ['很多钱', '很多时间', '被理解', '健康'] },
+    { q: '我熬夜到凌晨三点，最可能是因为？', o: ['写代码/做东西', '刷视频停不下来', '看书看进去了', '和人聊天'] },
+    { q: '我更喜欢什么样的天气？', o: ['大晴天', '下雨天', '阴天', '雪天'] },
+    { q: '面对一堆快递，我会？', o: ['立刻拆完', '堆着慢慢拆', '先摆好拍照', '拆完箱子整理好'] },
+    { q: '我喝奶茶会点什么甜度？', o: ['全糖', '七分', '半糖', '三分或无糖'] },
+    { q: '我最喜欢的季节是？', o: ['春', '夏', '秋', '冬'] },
+    { q: '遇到问题，我第一反应是？', o: ['自己先搜一下', '直接问人', '先放一放', '凭感觉试试'] },
+    { q: '我更愿意在什么样的地方生活？', o: ['大城市热闹', '小城市安稳', '海边/山野', '哪都行，看人'] },
+    { q: '我买东西最看重？', o: ['便宜', '好看', '实用耐用', '品牌/口碑'] },
+    { q: '我的桌面大概是？', o: ['干干净净什么都没有', '堆满了东西', '分类整齐但东西多', '看心情'] },
+    { q: '如果要长途旅行，我会选？', o: ['坐飞机快点到', '坐高铁看风景', '自驾自由', '火车慢慢晃'] },
+    { q: '我更喜欢哪种音乐？', o: ['安静的民谣/纯音乐', '摇滚/电音', '说唱', '流行歌单循环'] },
+    { q: '和朋友出去，我通常是？', o: ['安排行程的那个', '跟着走的那个', '负责拍照的', '负责找吃的'] },
+    { q: '我最不擅长的事是？', o: ['当众讲话', '拒绝别人', '早睡', '记人名'] },
+    { q: '收到别人的消息，我会？', o: ['立刻回', '想好了再回', '看到了忘记回', '看心情'] },
+    { q: '我更怕？', o: ['孤独', '平庸', '失去自由', '让人失望'] },
+    { q: '我喜欢的花是？', o: ['桂花', '向日葵', '玫瑰', '樱花'] },
+    { q: '我写东西的时候？', o: ['一口气写完', '写一点放一放', '先列大纲', '想到哪写到哪'] },
+    { q: '我更愿意把时间花在？', o: ['学新东西', '打磨已有的事', '陪人', '自己待着'] },
+    { q: '我最喜欢的数字是？', o: ['7', '3', '1', '没有偏好'] },
+    { q: '看电影我更受不了？', o: ['烂尾', '太慢', '太吵', '强行煽情'] },
+    { q: '我的作息是？', o: ['早睡早起', '晚睡晚起', '不规律', '看情况'] },
+    { q: '如果中了一笔钱，我会先？', o: ['存起来', '买一直想要的东西', '旅行', '给家人'] },
+    { q: '我更愿意在什么时间工作/学习？', o: ['清晨', '下午', '深夜', '随时都行'] },
+    { q: '我更喜欢哪种交流方式？', o: ['打字', '语音', '打电话', '见面说'] },
+    { q: '我桌上/身边一定会有的东西？', o: ['水杯', '耳机', '笔记本', '手机充电线'] },
+    { q: '我对陌生人的第一印象看重？', o: ['说话方式', '穿着打扮', '眼神', '做事态度'] },
+    { q: '我更能接受哪种失败？', o: ['努力了但没成', '根本就没试', '被人拖累', '运气不好'] },
+    { q: '我最想去的地方是？', o: ['日本', '欧洲', '新疆/西藏', '海边小岛'] },
+    { q: '我平时关注的资讯偏？', o: ['科技/数码', '社会新闻', '文艺/文化', '基本不看'] },
+    { q: '我更喜欢哪种运动？', o: ['跑步/走路', '球类', '游泳', '不太运动'] },
+    { q: '遇到不公平的事，我会？', o: ['当场说出来', '事后想办法', '忍了但记着', '算了不重要'] },
+    { q: '我更喜欢哪种房间？', o: ['东西少但精致', '满满都是生活痕迹', '有大量绿植', '极简到空旷'] },
+    { q: '我更愿意当？', o: ['领导者', '技术核心', '自由创作者', '幕后支持'] },
+    { q: '我最难做到的是？', o: ['早睡', '不拖延', '少玩手机', '控制情绪'] },
+    { q: '我觉得人和人之间最重要的是？', o: ['真诚', '边界感', '共同话题', '能一起扛事'] },
+    { q: '我给自己的性格打？', o: ['偏内向', '偏外向', '中间但看场合', '很难说'] }
+  ];
+
+  var TOTAL = 10;   /* 每次抽 10 题 */
+
+  /* ==========================================================
+     工具：URL 编解码
+     ========================================================== */
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* 种子 → 伪随机（mulberry32） */
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  /* 根据种子抽 TOTAL 道题，返回题号数组 */
+  function pickIdx(seed) {
+    var r = rng(seed);
+    var pool = BANK.map(function (_, i) { return i; });
+    // Fisher-Yates 洗牌
+    for (var i = pool.length - 1; i > 0; i--) {
+      var j = Math.floor(r() * (i + 1));
+      var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+    }
+    return pool.slice(0, TOTAL);
+  }
+
+  /* 答案数组 → 紧凑字符串（base36，每位 0-3） */
+  function encAnswers(arr) {
+    return arr.map(function (n) { return n.toString(36); }).join('');
+  }
+  function decAnswers(s) {
+    return String(s || '').split('').map(function (c) { return parseInt(c, 36); });
+  }
+
+  /* ==========================================================
+     状态
+     ========================================================== */
+  var mode = 'create';          // create | answer
+  var seed = 0;
+  var idxList = [];             // 抽到的题号
+  var myAnswers = [];           // 出题人（create）或答题者（answer）的选择
+  var targetAnswers = null;     // 出题人答案（answer 模式）
+  var cur = 0;                  // 当前题序
+  var pending = null;           // 当前题暂选
+
+  /* ==========================================================
+     启动：读 URL
+     ========================================================== */
+  function boot() {
+    var p = new URLSearchParams(location.search);
+    var s = p.get('s'), a = p.get('a');
+
+    if (s && a) {
+      /* ===== 接受挑战 ===== */
+      mode = 'answer';
+      seed = parseInt(s, 36) || 1;
+      idxList = pickIdx(seed);
+      targetAnswers = decAnswers(a);
+      myAnswers = new Array(TOTAL).fill(null);
+      $('boot').hidden = true;
+      $('quizTitle').textContent = '默契度大挑战';
+      $('quizSub').textContent = '猜猜对方的答案 👀';
+      startQuiz();
+    } else {
+      /* ===== 出题 ===== */
+      mode = 'create';
+      $('btn-create').addEventListener('click', function () {
+        seed = Math.floor(Math.random() * 1e9);
+        idxList = pickIdx(seed);
+        myAnswers = new Array(TOTAL).fill(null);
+        $('boot').hidden = true;
+        $('quizTitle').textContent = '先回答一下';
+        $('quizSub').textContent = '这 10 道题，选你自己的答案';
+        startQuiz();
+      });
+      $('btn-answer').hidden = true;
+    }
+  }
+
+  /* ==========================================================
+     答题流程
+     ========================================================== */
+  function startQuiz() {
+    cur = 0;
+    $('quiz').hidden = false;
+    $('result').hidden = true;
+    renderQ();
+  }
+
+  function renderQ() {
+    pending = null;
+    var qi = idxList[cur];
+    var item = BANK[qi];
+    $('progText').textContent = '第 ' + (cur + 1) + ' / ' + TOTAL + ' 题';
+    $('barFill').style.width = ((cur) / TOTAL * 100) + '%';
+    $('qText').textContent = item.q;
+
+    var box = $('opts');
+    box.innerHTML = '';
+    item.o.forEach(function (text, i) {
+      var b = document.createElement('button');
+      b.className = 'opt';
+      b.type = 'button';
+      b.textContent = text;
+      if (myAnswers[cur] === i) b.classList.add('sel');
+      b.addEventListener('click', function () {
+        // 取消其他选中
+        Array.prototype.forEach.call(box.children, function (x) { x.classList.remove('sel'); });
+        b.classList.add('sel');
+        pending = i;
+        $('nextBtn').disabled = false;
+      });
+      box.appendChild(b);
+    });
+
+    $('nextBtn').disabled = (myAnswers[cur] === null);
+    $('nextBtn').textContent = (cur === TOTAL - 1) ? (mode === 'create' ? '完成，生成链接' : '完成，看默契度') : '下一题';
+  }
+
+  $('nextBtn').addEventListener('click', function () {
+    if (pending !== null) myAnswers[cur] = pending;
+    if (myAnswers[cur] === null) return;
+    if (cur < TOTAL - 1) { cur++; renderQ(); return; }
+    /* 结束 */
+    $('barFill').style.width = '100%';
+    if (mode === 'create') showShare();
+    else showScore();
+  });
+
+  $('quitBtn').addEventListener('click', function () { location.href = location.pathname; });
+
+  /* ==========================================================
+     出题：生成分享链接
+     ========================================================== */
+  function showShare() {
+    $('quiz').hidden = true;
+    var url = location.origin + location.pathname + '?s=' + seed.toString(36) + '&a=' + encAnswers(myAnswers);
+
+    var r = $('result');
+    r.hidden = false;
+    r.innerHTML =
+      '<h1>出题完成 🎉</h1>' +
+      '<p class="sub">把下面的链接发给朋友，看看他们能猜中几道。</p>' +
+      '<div class="share-box">' +
+        '<p>分享链接（点开就能挑战）：</p>' +
+        '<textarea class="share-url" id="shareUrl" readonly></textarea>' +
+        '<div class="row"><button class="btn" id="copyBtn">复制链接</button>' +
+        '<button class="btn ghost" id="previewBtn">我自己先试一遍</button></div>' +
+        '<div class="copy-tip" id="copyTip"></div>' +
+      '</div>' +
+      '<p class="hint">💡 链接里只编码了「题目种子 + 我的答案」，不含任何个人信息。朋友答完会看到自己的默契度。</p>';
+
+    $('shareUrl').value = url;
+
+    $('copyBtn').addEventListener('click', function () {
+      var ta = $('shareUrl');
+      ta.select(); ta.setSelectionRange(0, 99999);
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      if (!ok && navigator.clipboard) { navigator.clipboard.writeText(url).then(function(){ $('copyTip').textContent = '✅ 已复制'; }, function(){}); }
+      $('copyTip').textContent = ok ? '✅ 已复制，去发给朋友吧' : '请长按上面的框手动复制';
+      setTimeout(function () { $('copyTip').textContent = ''; }, 2600);
+    });
+
+    $('previewBtn').addEventListener('click', function () { location.href = url; });
+  }
+
+  /* ==========================================================
+     答题：算默契度
+     ========================================================== */
+  function showScore() {
+    $('quiz').hidden = true;
+    var hit = 0;
+    var rows = '';
+    for (var i = 0; i < TOTAL; i++) {
+      var qi = idxList[i];
+      var item = BANK[qi];
+      var mine = myAnswers[i];
+      var theirs = targetAnswers[i];
+      var ok = (mine === theirs);
+      if (ok) hit++;
+      rows += '<div class="rv">' +
+        '<div class="mark">' + (ok ? '✅' : '❌') + '</div>' +
+        '<div class="txt"><b>' + esc(item.q) + '</b>' +
+        '<span class="ans">对方选了「' + esc(item.o[theirs]) + '」' +
+        (ok ? '' : '，你选了「' + esc(item.o[mine]) + '」') + '</span></div>' +
+        '</div>';
+    }
+
+    var pct = Math.round(hit / TOTAL * 100);
+    var lv, desc;
+    if (pct === 100) { lv = '👑 心有灵犀'; desc = '全部猜中。这不是默契，这是读心术。'; }
+    else if (pct >= 80) { lv = '💚 非常默契'; desc = '很了解对方了，剩下几道算是保留一点神秘感。'; }
+    else if (pct >= 60) { lv = '🌿 挺合得来'; desc = '大方向都对，细节上还有得聊。'; }
+    else if (pct >= 40) { lv = '🌤 需要多聊聊'; desc = '一半一半，说明你们还没互相交底。'; }
+    else if (pct >= 20) { lv = '🌱 还在认识'; desc = '刚开始，多问几句会好很多。'; }
+    else { lv = '❄️ 完全没猜中'; desc = '……你们确定认识吗？'; }
+
+    var r = $('result');
+    r.hidden = false;
+    r.innerHTML =
+      '<div class="score-wrap">' +
+        '<div class="pct">' + pct + '<span>%</span></div>' +
+        '<div class="level">' + lv + '</div>' +
+        '<div class="level-desc">' + desc + '<br>答对 <b>' + hit + '</b> / ' + TOTAL + ' 题</div>' +
+      '</div>' +
+      '<div class="review"><h3>逐题对照</h3>' + rows + '</div>' +
+      '<div class="row" style="margin-top:1.1rem">' +
+        '<button class="btn" id="againBtn">再来一次</button>' +
+        '<button class="btn ghost" id="createBtn">我也出题</button>' +
+      '</div>';
+    $('againBtn').addEventListener('click', function () { location.reload(); });
+    $('createBtn').addEventListener('click', function () { location.href = location.pathname; });
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
