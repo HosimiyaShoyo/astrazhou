@@ -625,3 +625,36 @@ a, button, summary, input, textarea, select, ul.posts li, .home-nav a, .game-lis
 }
 
 /* 减少无谓的视觉噪音：发丝级描边统一压到更细的观感 */
+
+
+/* ---------- 友情链接（页脚一行，小图标 + 文字） ---------- */
+footer.site .friend-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .3rem;
+  margin: 0 0 .55rem;
+  padding: 0 0 .55rem;
+  border-bottom: 1px dashed var(--line);
+  font-size: .82rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+footer.site .friend-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .2s;
+}
+footer.site .friend-links a:hover { color: var(--accent); }
+footer.site .friend-links .link-icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  border-radius: 50%;
+  opacity: .85;
+  vertical-align: middle;
+  display: block;
+}
