@@ -26,6 +26,7 @@ body{
 #sky{z-index:0}#snow{z-index:1}
 
 /* SVG 雪花（漂浮装饰） */
+.flake img{opacity:.9}
 .flake{position:fixed;z-index:1;pointer-events:none;opacity:.35;animation:drift linear infinite}
 @keyframes drift{
   0%{transform:translateY(-10vh) rotate(0deg)}
@@ -66,6 +67,9 @@ body{
 #starTop.on{transform:scale(1.45) rotate(15deg);filter:drop-shadow(0 0 18px #FFD34D)}
 
 /* 爬树小人 */
+.deco{position:absolute;pointer-events:none;z-index:2;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))}
+.deco.deer{width:21%;left:-5%;bottom:3%}
+.deco.gift{width:16%;right:-3%;bottom:0}
 .climber{position:absolute;left:50%;bottom:0;font-size:24px;transform:translate(-50%,0);
   transition:bottom .55s cubic-bezier(.34,1.56,.64,1);z-index:4;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55))}
 
@@ -139,6 +143,9 @@ body{
               fill="#FFD34D" stroke="#C9A000" stroke-width="1.5" stroke-linejoin="round"/>
       </g>
     </svg>
+    <img class="deco deer" src="assets/tree/reindeer.svg" alt="" aria-hidden="true">
+    <img class="deco gift" src="assets/tree/gift.svg" alt="" aria-hidden="true">
+
     <div class="climber" id="climber">🧗</div>
   </div>
 </div>
@@ -343,20 +350,11 @@ body{
   /* ==========================================================
      ⑤ 漂浮的 SVG 雪花（六角结晶，纯矢量）
      ========================================================== */
-  function snowflakeSvg(size, color) {
-    // 六角雪花路径
-    var arms = '';
-    for (var i = 0; i < 6; i++) {
-      var a = (i * 60) * Math.PI / 180;
-      var x2 = 50 + Math.cos(a) * 44, y2 = 50 + Math.sin(a) * 44;
-      var bx = 50 + Math.cos(a) * 26, by = 50 + Math.sin(a) * 26;
-      var l1 = a - 0.5, r1 = a + 0.5;
-      var sx = 50 + Math.cos(a) * 26, sy = 50 + Math.sin(a) * 26;
-      arms += '<line x1="50" y1="50" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
-      arms += '<line x1="' + bx.toFixed(1) + '" y1="' + by.toFixed(1) + '" x2="' + (bx + Math.cos(l1)*14).toFixed(1) + '" y2="' + (by + Math.sin(l1)*14).toFixed(1) + '"/>';
-      arms += '<line x1="' + bx.toFixed(1) + '" y1="' + by.toFixed(1) + '" x2="' + (bx + Math.cos(r1)*14).toFixed(1) + '" y2="' + (by + Math.sin(r1)*14).toFixed(1) + '"/>';
-    }
-    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round">' + arms + '</svg>';
+  function snowflakeSvg(size) {
+    var files = ['flake1.svg', 'flake2.svg', 'flake3.svg'];
+    var f = files[Math.floor(Math.random() * files.length)];
+    return '<img src="assets/tree/' + f + '" width="' + size + '" height="' + size +
+           '" alt="" style="display:block;filter:brightness(1.5) drop-shadow(0 0 4px rgba(255,255,255,.9))">';
   }
 
   function spawnFlakes() {
@@ -370,7 +368,7 @@ body{
       d.style.animationDuration = (14 + Math.random() * 16) + 's';
       d.style.animationDelay = (-Math.random() * 25) + 's';
       d.style.opacity = (0.12 + Math.random() * 0.22).toFixed(2);
-      d.innerHTML = snowflakeSvg(size, '#DDEBFF');
+      d.innerHTML = snowflakeSvg(size);
       layer.appendChild(d);
     }
   }
