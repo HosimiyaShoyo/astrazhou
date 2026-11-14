@@ -10,16 +10,16 @@
 <meta property="og:description" content="10 道题，猜中我的答案就往树上爬 🎄">
 <meta property="og:image" content="https://astrazhou.is-cool.dev/assets/og-cover.jpg">
 <meta property="og:url" content="https://astrazhou.is-cool.dev/match.html">
-<meta name="theme-color" content="#101B36">
+<meta name="theme-color" content="#F0DCC0">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;overflow:hidden;background:#101B36}
+html,body{margin:0;height:100%;overflow:hidden;background:#F0DCC0}
 body{
   font-family:'Baloo 2',system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
-  font-weight:700;color:#fff;-webkit-font-smoothing:antialiased;
+  font-weight:700;color:#3A2A18;-webkit-font-smoothing:antialiased;
   display:flex;flex-direction:column;align-items:center;
-  background:radial-gradient(135% 78% at 50% 108%,#3A4B7E 0%,#1F2B4D 42%,#0C1526 100%);
+  background:linear-gradient(180deg,#F6E7CE 0%,#F0DCC0 55%,#E8D0AE 100%);
   position:relative;overflow:hidden;
 }
 #sky,#snow{position:fixed;inset:0;pointer-events:none}
@@ -35,13 +35,11 @@ body{
 /* ===== 顶部 ===== */
 .top{position:relative;z-index:6;width:100%;max-width:540px;padding:13px 15px 0;display:flex;align-items:center;gap:10px;flex:none}
 .back{width:36px;height:36px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.13);border:2px solid rgba(255,255,255,.24);color:#fff;text-decoration:none;font-size:17px;
+  background:rgba(255,255,255,.85);border:2.5px solid #3A2A18;color:#3A2A18;box-shadow:0 3px 0 #3A2A18;text-decoration:none;font-size:17px;
   transition:transform .15s}
 .back:active{transform:scale(.93)}
-.title{font-size:14.5px;line-height:1.3;-webkit-text-stroke:3px #23222B;paint-order:stroke fill;color:#FFD34D;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.score-chip{margin-left:auto;flex:none;font-size:12px;padding:5px 11px;border-radius:999px;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#DCE8FF;white-space:nowrap}
+.title{font-size:15px;line-height:1.3;font-weight:800;color:#C0392B;text-shadow:0 1px 0 #fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-chip{margin-left:auto;flex:none;font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px;background:#fff;border:2.5px solid #3A2A18;color:#3A2A18;white-space:nowrap;box-shadow:0 3px 0 #3A2A18}
 
 /* ===== 舞台（树） ===== */
 .stage{position:relative;z-index:3;flex:1 1 auto;width:100%;max-width:540px;min-height:0;
@@ -51,17 +49,23 @@ body{
 #treeSvg{width:100%;height:100%;overflow:visible;display:block}
 .tier-g{transition:opacity .5s}
 .tier-g .foliage{transition:fill .5s,filter .5s}
-.tier-g.dim{opacity:.4}
-.tier-g.dim .foliage{fill:#2A3D5C}
-.tier-g.lit{filter:drop-shadow(0 0 9px rgba(127,209,174,.95))}
-.tier-g.lit .foliage{fill:#248F63}
-.tier-g.lit:nth-child(even) .foliage{fill:#1E7A55}
-.orn{transition:opacity .55s,fill .55s}
+.tier-g.dim{opacity:.55}
+.tier-g.dim .foliage{fill:url(#gLeafDim)}
+.tier-g.lit{filter:drop-shadow(0 0 6px rgba(80,210,150,.55))}
+.tier-g.lit .foliage{fill:url(#gLeaf)}
+
+.snowcap{transition:opacity .5s,fill .5s}
+.light{transition:opacity .5s,r .5s}
+.tier-g.dim .snowcap{opacity:.35}
+.tier-g.dim .light{opacity:.3}
+.tier-g.lit .light{animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+.orn{transition:opacity .55s,fill .55s,filter .55s}
 .tier-g.dim .orn{opacity:.1}
 .tier-g.lit .orn{opacity:1}
 .trunk-svg{fill:#5B3A22}
-#starTop{transition:transform .6s cubic-bezier(.34,1.56,.64,1),filter .6s;transform-origin:center}
-#starTop.on{transform:scale(1.5) rotate(18deg);filter:drop-shadow(0 0 20px #FFD34D)}
+#starTop{transition:transform .6s cubic-bezier(.34,1.56,.64,1),filter .6s;transform-origin:110px 66px}
+#starTop.on{transform:scale(1.35) rotate(12deg);filter:drop-shadow(0 0 16px #FFD34D)}
 
 /* 爬树小人 */
 .climber{position:absolute;left:50%;bottom:0;font-size:23px;transform:translate(-50%,0);
@@ -71,7 +75,7 @@ body{
 .panel{position:relative;z-index:7;width:100%;max-width:540px;flex:none;padding:0 12px 13px}
 .card{
   background:rgba(255,255,255,.975);color:#1B2540;border-radius:20px;
-  padding:14px 14px 12px;box-shadow:0 14px 38px rgba(0,0,0,.48),0 0 0 3px #23222B;
+  padding:14px 14px 12px;box-shadow:0 8px 0 #3A2A18,0 16px 30px rgba(120,80,40,.28);border:3px solid #3A2A18;
 }
 .qhead{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#E8EFFB;color:#4A6396;flex:none}
@@ -120,21 +124,21 @@ body{
 /* ===== 开场 ===== */
 .boot{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:15px;padding:0 24px;text-align:center;transition:opacity .45s;
-  background:radial-gradient(120% 72% at 50% 100%,#3A4B7E,#1F2B4D 55%,#0C1526)}
+  background:radial-gradient(120% 72% at 50% 100%,#FBF1DF,#F0DCC0 55%,#E4C9A4)}
 .boot.hide{opacity:0;pointer-events:none}
 .boot-logo{font-size:52px;line-height:1;filter:drop-shadow(0 6px 16px rgba(255,211,77,.4))}
-.boot-top{font-size:clamp(17px,4.8vw,22px);color:#fff;-webkit-text-stroke:5px #23222B;paint-order:stroke fill;rotate:-2deg}
-.boot-main{font-size:clamp(30px,9.5vw,44px);color:#FFD34D;-webkit-text-stroke:8px #23222B;paint-order:stroke fill;line-height:1.08}
-.boot-sub{font-size:13px;color:#A9B8DC;max-width:21em;line-height:1.75;font-weight:600}
+.boot-top{font-size:clamp(17px,4.8vw,22px);color:#8B5E3C;font-weight:800;rotate:-2deg}
+.boot-main{font-size:clamp(30px,9.5vw,44px);color:#C0392B;font-weight:900;line-height:1.08;text-shadow:2px 3px 0 #fff,4px 6px 0 rgba(58,42,24,.18)}
+.boot-sub{font-size:13px;color:#7A5C3E;max-width:21em;line-height:1.75;font-weight:600}
 .mode-pick{width:100%;max-width:330px;display:flex;flex-direction:column;gap:9px;margin-top:6px}
-.mode-btn{font:inherit;text-align:left;padding:13px 15px;border-radius:15px;cursor:pointer;
-  background:rgba(255,255,255,.94);border:2px solid #23222B;box-shadow:0 5px 0 #23222B;
+.mode-btn{font:inherit;text-align:left;padding:13px 15px;border-radius:16px;cursor:pointer;
+  background:#fff;border:3px solid #3A2A18;box-shadow:0 5px 0 #3A2A18;
   transition:transform .13s,box-shadow .13s}
-.mode-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #23222B}
-.mode-btn b{display:block;font-size:15px;color:#1B2540;margin-bottom:2px}
-.mode-btn small{display:block;font-size:12px;color:#5B6A93;line-height:1.5;font-weight:600}
+.mode-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #3A2A18}
+.mode-btn b{display:block;font-size:15px;color:#C0392B;margin-bottom:2px}
+.mode-btn small{display:block;font-size:12px;color:#7A5C3E;line-height:1.5;font-weight:600}
 .dots{display:flex;gap:7px;margin-top:2px}
-.dots span{width:10px;height:10px;border-radius:50%;background:#FFD34D;animation:bd .95s ease-in-out infinite}
+.dots span{width:10px;height:10px;border-radius:50%;background:#E8423F;animation:bd .95s ease-in-out infinite}
 .dots span:nth-child(2){background:#E8423F;animation-delay:.16s}
 .dots span:nth-child(3){background:#7FD1AE;animation-delay:.32s}
 @keyframes bd{0%,60%,100%{transform:none}30%{transform:translateY(-7px)}}
@@ -162,12 +166,61 @@ body{
 
 <div class="stage">
   <div class="tree-wrap" id="treeWrap">
-    <svg id="treeSvg" viewBox="0 0 200 260" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-      <g id="tiers"></g>
-      <rect class="trunk-svg" x="90" y="238" width="20" height="20" rx="3"/>
+    <svg id="treeSvg" viewBox="0 0 220 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <defs>
+        <linearGradient id="gLeaf" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5FCB92"/>
+          <stop offset="45%" stop-color="#34A96C"/>
+          <stop offset="100%" stop-color="#1E7A4C"/>
+        </linearGradient>
+        <linearGradient id="gLeafDim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#B9C7B4"/>
+          <stop offset="100%" stop-color="#93A48F"/>
+        </linearGradient>
+        <linearGradient id="gTrunk2" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#8B5A2B"/>
+          <stop offset="45%" stop-color="#A97142"/>
+          <stop offset="100%" stop-color="#6E4420"/>
+        </linearGradient>
+        <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFF6C9"/>
+          <stop offset="48%" stop-color="#FFD84D"/>
+          <stop offset="100%" stop-color="#E0A21B"/>
+        </linearGradient>
+        <linearGradient id="gRibbon" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#E8443F"/>
+          <stop offset="100%" stop-color="#B62B27"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 顶部丝带横幅 -->
+      <g id="banner">
+        <path d="M22 34 L2 20 L2 54 L22 44 Z" fill="#B62B27" stroke="#3A2A18" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M198 34 L218 20 L218 54 L198 44 Z" fill="#B62B27" stroke="#3A2A18" stroke-width="2.6" stroke-linejoin="round"/>
+        <rect x="18" y="24" width="184" height="24" rx="6" fill="url(#gRibbon)" stroke="#3A2A18" stroke-width="2.6"/>
+        <text x="110" y="41" text-anchor="middle" font-size="14" font-weight="800" fill="#FFF6DC" font-family="system-ui,'PingFang SC',sans-serif">我的树顶</text>
+      </g>
+
+      <!-- 树顶金球 -->
       <g id="starTop">
-        <path d="M100 2 L106 18 L124 18 L110 28 L115 45 L100 35 L85 45 L90 28 L76 18 L94 18 Z"
-              fill="#FFD34D" stroke="#C9A000" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="110" cy="66" r="17" fill="url(#gGold)" stroke="#3A2A18" stroke-width="2.6"/>
+        <circle cx="104" cy="59" r="4.5" fill="#fff" opacity=".55"/>
+        <rect x="106" y="48" width="8" height="5" rx="2" fill="#E0A21B" stroke="#3A2A18" stroke-width="1.8"/>
+      </g>
+
+      <!-- 树层（JS 生成） -->
+      <g id="tiers"></g>
+
+      <!-- 树干 -->
+      <path d="M100 262 h20 v20 a4 4 0 0 1 -4 4 h-12 a4 4 0 0 1 -4 -4 z"
+            fill="url(#gTrunk2)" stroke="#3A2A18" stroke-width="2.4" stroke-linejoin="round"/>
+
+      <!-- 雪地 -->
+      <g id="snowGround">
+        <path d="M0 288 q18 -12 38 -4 q16 6 34 -3 q18 -9 38 1 q20 10 40 1 q18 -8 34 2 q16 9 36 -1 L220 300 L0 300 Z"
+              fill="#FBFDFF" stroke="#C9D8E8" stroke-width="1.6"/>
+        <ellipse cx="38" cy="292" rx="16" ry="5" fill="#E8F2FB"/>
+        <ellipse cx="176" cy="290" rx="20" ry="6" fill="#E8F2FB"/>
       </g>
     </svg>
     <div class="climber" id="climber">🧗</div>
@@ -272,34 +325,85 @@ body{
      ========================================================== */
   var NS = 'http://www.w3.org/2000/svg';
   function buildTree() {
-    var g0 = $('tiers');
+    var g0 = document.getElementById('tiers');
     g0.innerHTML = '';
     for (var i = 0; i < TOTAL; i++) {
       var g = document.createElementNS(NS, 'g');
       g.setAttribute('class', 'tier-g dim');
       g.dataset.i = i;
-      var topY = 46 + i * 19;
-      var halfW = 17 + i * 8.4;
-      var h = 28;
-      var tri = document.createElementNS(NS, 'polygon');
-      tri.setAttribute('class', 'foliage');
-      tri.setAttribute('points', (100) + ',' + topY + ' ' + (100 - halfW) + ',' + (topY + h) + ' ' + (100 + halfW) + ',' + (topY + h));
-      tri.setAttribute('fill', '#248F63');
-      tri.setAttribute('stroke', '#1B6E4E');
-      tri.setAttribute('stroke-width', '1');
-      tri.setAttribute('stroke-linejoin', 'round');
-      g.appendChild(tri);
-      var cols = ['#E8423F', '#FFD34D', '#7FD1AE', '#F08A5D'];
-      var cnt = 2 + (i % 2);
-      for (var k = 0; k < cnt; k++) {
-        var c = document.createElementNS(NS, 'circle');
-        c.setAttribute('class', 'orn');
-        c.setAttribute('cx', (100 + (k - (cnt - 1) / 2) * halfW * 0.86).toFixed(1));
-        c.setAttribute('cy', (topY + h * (0.56 + (k % 2) * 0.26)).toFixed(1));
-        c.setAttribute('r', '2.9');
-        c.setAttribute('fill', cols[(i + k) % cols.length]);
-        g.appendChild(c);
+
+      var topY = 76 + i * 18.4;
+      var halfW = 15 + i * 8.2;
+      var hgt = 30;
+      var cx = 110;
+
+      /* 圆润针叶：左右用二次贝塞尔外鼓，底边做成三段波浪 */
+      var out = 5.5;              /* 外鼓幅度 */
+      var d = 'M' + cx + ',' + topY;
+      d += ' Q' + (cx + halfW * 0.55).toFixed(1) + ',' + (topY + hgt * 0.52).toFixed(1)
+         + ' ' + (cx + halfW).toFixed(1) + ',' + (topY + hgt).toFixed(1);
+      /* 底边三个向下的小弧 */
+      var segs = 3, step = (2 * halfW) / segs;
+      for (var s = segs - 1; s >= 0; s--) {
+        var xa = cx - halfW + step * s;
+        var xb = cx - halfW + step * (s + 1);
+        var mx = (xa + xb) / 2;
+        d += ' Q' + mx.toFixed(1) + ',' + (topY + hgt + 7).toFixed(1) + ' ' + xa.toFixed(1) + ',' + (topY + hgt).toFixed(1);
       }
+      d += ' Q' + (cx - halfW * 0.55).toFixed(1) + ',' + (topY + hgt * 0.52).toFixed(1)
+         + ' ' + cx + ',' + topY + ' Z';
+
+      var leaf = document.createElementNS(NS, 'path');
+      leaf.setAttribute('class', 'foliage');
+      leaf.setAttribute('d', d);
+      leaf.setAttribute('fill', 'url(#gLeafDim)');
+      leaf.setAttribute('stroke', '#3A2A18');
+      leaf.setAttribute('stroke-width', '2.6');
+      leaf.setAttribute('stroke-linejoin', 'round');
+      g.appendChild(leaf);
+
+      /* 彩灯串：沿层的下弧挂一排 */
+      var lights = Math.max(4, Math.round(halfW / 5.2));
+      for (var lp = 1; lp < lights; lp++) {
+        var lx = cx - halfW + (2 * halfW) * (lp / lights);
+        var dip = Math.sin(Math.PI * (lp / lights)) * 6;
+        var dot = document.createElementNS(NS, 'circle');
+        dot.setAttribute('class', 'light');
+        dot.setAttribute('cx', lx.toFixed(1));
+        dot.setAttribute('cy', (topY + hgt + 1.5 + dip).toFixed(1));
+        dot.setAttribute('r', '2.2');
+        dot.setAttribute('fill', ['#FFD84D', '#7FD9E8', '#FF9EBB', '#9BE87F', '#C9A7FF'][(i + lp) % 5]);
+        dot.setAttribute('stroke', '#3A2A18');
+        dot.setAttribute('stroke-width', '0.9');
+        g.appendChild(dot);
+      }
+
+      /* 装饰球 */
+      var cols = ['#E8443F', '#FFD84D', '#7FD1AE', '#F08A5D', '#C77DFF'];
+      var cnt = 2 + (i % 2);
+      for (var c = 0; c < cnt; c++) {
+        var ox = cx + (c - (cnt - 1) / 2) * halfW * 0.78;
+        var oy = topY + hgt * (0.60 + (c % 2) * 0.24);
+        var r = 3.4;
+        var ball = document.createElementNS(NS, 'circle');
+        ball.setAttribute('class', 'orn');
+        ball.setAttribute('cx', ox.toFixed(1));
+        ball.setAttribute('cy', oy.toFixed(1));
+        ball.setAttribute('r', r);
+        ball.setAttribute('fill', cols[(i + c) % cols.length]);
+        ball.setAttribute('stroke', '#3A2A18');
+        ball.setAttribute('stroke-width', '1.3');
+        g.appendChild(ball);
+        var hi = document.createElementNS(NS, 'circle');
+        hi.setAttribute('class', 'orn');
+        hi.setAttribute('cx', (ox - 1.1).toFixed(1));
+        hi.setAttribute('cy', (oy - 1.2).toFixed(1));
+        hi.setAttribute('r', '1.05');
+        hi.setAttribute('fill', '#fff');
+        hi.setAttribute('opacity', '.9');
+        g.appendChild(hi);
+      }
+
       g0.appendChild(g);
     }
   }
