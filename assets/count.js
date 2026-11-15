@@ -75,14 +75,62 @@
     });
   }
 
-  /* ---------------- 文章页：插入隐藏图完成 +1 ---------------- */
-  function pingHit() {
+  /* ---------------- 文章页：滚过 3/4 才算一次浏览 ---------------- */
+  var hitSent = false;
+  function sendHit() {
+    if (hitSent) return;
+    hitSent = true;
     var key = document.body && document.body.getAttribute('data-hit');
     if (!key) return;
     var img = makeImg(hitsUrl(key));
     img.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px';
     img.loading = 'eager';
     document.body.appendChild(img);
+  }
+
+  function pingHit() {
+    if (!document.body || !document.body.getAttribute('data-hit')) return;
+
+    /* 取文章主体（没有 <article> 就当整个页面） */
+    var art = document.querySelector('article') || document.body;
+    var ticking = false;
+
+    function check() {
+      ticking = false;
+      if (hitSent) return;
+
+      var rect = art.getBoundingClientRect();
+      var artTop = rect.top + window.pageYOffset;
+      var artH = rect.height;
+      /* 文章本身的 3/4 位置（绝对坐标） */
+      var targetY = artTop + artH * 0.75;
+      /* 视口底部滚到哪了 */
+      var seen = window.pageYOffset + window.innerHeight;
+
+      /* 文章不够长、一屏就能看完 → 直接算 */
+      var docScrollable = document.documentElement.scrollHeight - window.innerHeight;
+      if (docScrollable <= 40) { sendHit(); return; }
+
+      if (seen >= targetY) sendHit();
+    }
+
+    function onScroll() {
+      if (ticking || hitSent) return;
+      ticking = true;
+      if (window.requestAnimationFrame) requestAnimationFrame(check);
+      else setTimeout(check, 60);
+    }
+
+    /* 首屏就够长的情况先查一次 */
+    check();
+    if (hitSent) return;
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    /* 兜底：30 秒后还没滚到，但至少看了一会儿，也算（避免永远不计） */
+    setTimeout(function () {
+      if (!hitSent) sendHit();
+    }, 30000);
   }
 
   /* ---------------- 点赞（abacus，可选）---------------- */
