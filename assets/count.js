@@ -1,45 +1,31 @@
 /* ============================================================
-   Astra Zhou —— 轻量浏览计数 v3
+   Astra Zhou —— 轻量浏览计数 v4
 
-   浏览数：hits.sh（SVG 徽章，100% 可用，不受免费层休眠影响）
-   点赞数：abacus（失败只影响点赞数字，不影响阅读）
-
-   设计要点：
-   - 浏览数用 <img> 直接拉 hits.sh，浏览器自己管缓存，快且稳
-   - 文章页额外插一张隐藏图完成 +1
-   - 点赞用 localStorage 防重复，abacus 挂了也不报错
-   - 所有请求都带超时，绝不让页面卡住
+   - 浏览数：abacus（返回 JSON，显示成普通文字，跟上博客排版）
+   - 计入时机：滚动到文章 3/4 处才算一次（短文章直接计，30 秒兜底）
+   - 稳定性：6 秒超时 + localStorage 缓存上次值 + 全程静默失败
    ============================================================ */
 (function () {
   'use strict';
 
-  /* ---------------- 配置 ---------------- */
-  var HITS_BASE = 'https://hits.sh/';
-  var SITE = 'astrazhou.is-cool.dev';
-  var COLOR = '4d7c0f';        /* 博客的橄榄绿 */
-  var LABEL = '%20';           /* 空白标签，只显示数字 */
-  var ABACUS = 'https://abacus.jasoncameron.dev/';
+  var API = 'https://abacus.jasoncameron.dev/';
   var NS = 'astra-zhou';
   var TIMEOUT = 6000;
+  var STORE = 'astra_cnt_';
 
-  /* ---------------- 工具 ---------------- */
-  function hitsUrl(key) {
-    /* key 形如 "post-post-20261115" 或 "page-index"
-       hits.sh 要求 key 是有效 URI，所以拼成站点路径 */
-    var slug = String(key).replace(/^post-/, '').replace(/^page-/, '');
-    return HITS_BASE + SITE + '/p/' + encodeURIComponent(slug) + '.svg?label=' + LABEL + '&color=' + COLOR;
+  /* ---------- 工具 ---------- */
+  function fmt(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
-  function makeImg(src, cls) {
-    var img = document.createElement('img');
-    img.src = src;
-    img.alt = '';
-    img.setAttribute('aria-hidden', 'true');
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    if (cls) img.className = cls;
-    img.style.cssText = 'display:inline-block;vertical-align:-0.18em;height:1.18em;width:auto;border:0;margin:0';
-    return img;
+  function cacheGet(key) {
+    try {
+      var v = localStorage.getItem(STORE + key);
+      return v === null ? null : parseInt(v, 10);
+    } catch (e) { return null; }
+  }
+  function cacheSet(key, n) {
+    try { localStorage.setItem(STORE + key, String(n)); } catch (e) {}
   }
 
   function fetchJson(url, opt) {
@@ -60,38 +46,61 @@
       .catch(function () { if (timer) clearTimeout(timer); return null; });
   }
 
-  function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function pick(d) {
+    if (!d) return null;
+    if (typeof d.value === 'number') return d.value;
+    if (d.error === 'Key not found') return 0;
+    return null;
+  }
 
-  /* ---------------- 浏览数：换成 hits.sh 图片 ---------------- */
-  function renderCounts() {
+  function get(key) {
+    return fetchJson(API + 'get/' + NS + '/' + encodeURIComponent(key), { cache: 'no-store' }).then(pick);
+  }
+  function hit(key) {
+    return fetchJson(API + 'hit/' + NS + '/' + encodeURIComponent(key), { keepalive: true }).then(pick);
+  }
+
+  /* ---------- 渲染浏览数（文字） ---------- */
+  function fill() {
     var els = document.querySelectorAll('[data-count]');
     Array.prototype.forEach.call(els, function (el) {
       var key = el.getAttribute('data-count');
       if (!key) return;
-      /* 已经在里面放过图了就不重复处理 */
-      if (el.querySelector('img')) return;
-      el.innerHTML = '';
-      el.appendChild(makeImg(hitsUrl(key)));
+
+      /* 先放缓存值，页面瞬间就有数 */
+      var c = cacheGet(key);
+      if (c !== null) el.textContent = fmt(c);
+
+      /* 再取最新的 */
+      get(key).then(function (v) {
+        if (v === null) return;           /* 失败保持缓存值 */
+        el.textContent = fmt(v);
+        cacheSet(key, v);
+      });
     });
   }
 
-  /* ---------------- 文章页：滚过 3/4 才算一次浏览 ---------------- */
+  /* ---------- 文章页：滚过 3/4 才算一次 ---------- */
   var hitSent = false;
+
   function sendHit() {
     if (hitSent) return;
     hitSent = true;
     var key = document.body && document.body.getAttribute('data-hit');
     if (!key) return;
-    var img = makeImg(hitsUrl(key));
-    img.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px';
-    img.loading = 'eager';
-    document.body.appendChild(img);
+    hit(key).then(function (v) {
+      if (v === null) return;
+      cacheSet(key, v);
+      /* 本页显示的数字也跟着更新 */
+      var el = document.querySelector('[data-count="' + key + '"]');
+      if (el) el.textContent = fmt(v);
+      fill();
+    });
   }
 
-  function pingHit() {
+  function watchScroll() {
     if (!document.body || !document.body.getAttribute('data-hit')) return;
 
-    /* 取文章主体（没有 <article> 就当整个页面） */
     var art = document.querySelector('article') || document.body;
     var ticking = false;
 
@@ -102,12 +111,10 @@
       var rect = art.getBoundingClientRect();
       var artTop = rect.top + window.pageYOffset;
       var artH = rect.height;
-      /* 文章本身的 3/4 位置（绝对坐标） */
-      var targetY = artTop + artH * 0.75;
-      /* 视口底部滚到哪了 */
+      var targetY = artTop + artH * 0.75;          /* 文章 3/4 处 */
       var seen = window.pageYOffset + window.innerHeight;
 
-      /* 文章不够长、一屏就能看完 → 直接算 */
+      /* 文章不够长、一屏能看完 → 直接计 */
       var docScrollable = document.documentElement.scrollHeight - window.innerHeight;
       if (docScrollable <= 40) { sendHit(); return; }
 
@@ -121,19 +128,17 @@
       else setTimeout(check, 60);
     }
 
-    /* 首屏就够长的情况先查一次 */
     check();
     if (hitSent) return;
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
-    /* 兜底：30 秒后还没滚到，但至少看了一会儿，也算（避免永远不计） */
-    setTimeout(function () {
-      if (!hitSent) sendHit();
-    }, 30000);
+
+    /* 兜底：看了 30 秒还没滚到 3/4，也算一次 */
+    setTimeout(function () { if (!hitSent) sendHit(); }, 30000);
   }
 
-  /* ---------------- 点赞（abacus，可选）---------------- */
+  /* ---------- 点赞 ---------- */
   function initLike() {
     var btns = document.querySelectorAll('[data-like]');
     Array.prototype.forEach.call(btns, function (btn) {
@@ -144,31 +149,32 @@
       try { liked = localStorage.getItem(flag) === '1'; } catch (e) {}
       if (liked) btn.classList.add('liked');
 
-      /* 读当前点赞数 */
-      fetchJson(ABACUS + 'get/' + NS + '/' + encodeURIComponent(key), { cache: 'no-store' })
-        .then(function (d) {
-          if (!d || typeof d.value !== 'number') return;
-          if (out) out.textContent = fmt(d.value);
-        });
+      var c = cacheGet(key);
+      if (out && c !== null) out.textContent = fmt(c);
+
+      get(key).then(function (v) {
+        if (v === null) return;
+        if (out) out.textContent = fmt(v);
+        cacheSet(key, v);
+      });
 
       btn.addEventListener('click', function () {
         if (btn.classList.contains('liked')) return;
         btn.classList.add('liked');
         try { localStorage.setItem(flag, '1'); } catch (e) {}
-        fetchJson(ABACUS + 'hit/' + NS + '/' + encodeURIComponent(key), { keepalive: true })
-          .then(function (d) {
-            if (!d || typeof d.value !== 'number') return;
-            if (out) out.textContent = fmt(d.value);
-          });
+        hit(key).then(function (v) {
+          if (v === null) return;
+          if (out) out.textContent = fmt(v);
+          cacheSet(key, v);
+        });
       });
     });
   }
 
-  /* ---------------- 图片兜底：CDN 抽风时换回源站 ---------------- */
+  /* ---------- 图片兜底 ---------- */
   var CDN = 'https://gcore.jsdelivr.net/gh/HosimiyaShoyo/astrazhou@main/';
   function imgFallback() {
-    var imgs = document.querySelectorAll('img[src*="gcore.jsdelivr.net"]');
-    Array.prototype.forEach.call(imgs, function (img) {
+    Array.prototype.forEach.call(document.querySelectorAll('img[src*="gcore.jsdelivr.net"]'), function (img) {
       img.addEventListener('error', function () {
         if (img.getAttribute('data-fb')) return;
         img.setAttribute('data-fb', '1');
@@ -178,19 +184,16 @@
     });
   }
 
-  /* ---------------- 启动 ---------------- */
+  /* ---------- 启动 ---------- */
   function boot() {
-    renderCounts();
-    pingHit();
+    fill();
+    watchScroll();
     initLike();
     imgFallback();
   }
 
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(boot, { timeout: 1200 });
-  } else {
-    setTimeout(boot, 60);
-  }
+  if ('requestIdleCallback' in window) requestIdleCallback(boot, { timeout: 1200 });
+  else setTimeout(boot, 60);
 
-  window.astraCount = { refresh: renderCounts };
+  window.astraCount = { refresh: fill };
 })();
