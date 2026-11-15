@@ -40,6 +40,12 @@
   .ver button.on, .ver button:hover { color: var(--accent); border-color: var(--accent); }
   .nes-tip { font-size: .82rem; color: var(--muted); line-height: 1.8; margin-top: 1rem; }
 </style>
+<!-- 提前建立连接，慢网络下省掉 DNS + TLS 握手 -->
+<link rel="preconnect" href="https://abacus.jasoncameron.dev" crossorigin>
+<link rel="dns-prefetch" href="https://abacus.jasoncameron.dev">
+<link rel="preconnect" href="https://v1.hitokoto.cn" crossorigin>
+<link rel="dns-prefetch" href="https://v1.hitokoto.cn">
+<link rel="dns-prefetch" href="https://gcore.jsdelivr.net">
 </head>
 <body>
 <div class="wrap">

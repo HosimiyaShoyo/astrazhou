@@ -152,6 +152,12 @@ body{
   .tree-wrap{width:min(54vw,214px)}
 }
 </style>
+<!-- 提前建立连接，慢网络下省掉 DNS + TLS 握手 -->
+<link rel="preconnect" href="https://abacus.jasoncameron.dev" crossorigin>
+<link rel="dns-prefetch" href="https://abacus.jasoncameron.dev">
+<link rel="preconnect" href="https://v1.hitokoto.cn" crossorigin>
+<link rel="dns-prefetch" href="https://v1.hitokoto.cn">
+<link rel="dns-prefetch" href="https://gcore.jsdelivr.net">
 </head>
 <body>
 

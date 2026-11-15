@@ -14,7 +14,7 @@
 <meta name="twitter:image" content="https://astrazhou.is-cool.dev/assets/og-cover.jpg">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1794707047">
+<link rel="stylesheet" href="assets/style.css?v=1794754085">
 <script src="assets/count.js" defer></script>
 <style>
     /* ---------- 首屏横幅 ---------- */
@@ -42,6 +42,12 @@
       object-position: center;
     }
   </style>
+<!-- 提前建立连接，慢网络下省掉 DNS + TLS 握手 -->
+<link rel="preconnect" href="https://abacus.jasoncameron.dev" crossorigin>
+<link rel="dns-prefetch" href="https://abacus.jasoncameron.dev">
+<link rel="preconnect" href="https://v1.hitokoto.cn" crossorigin>
+<link rel="dns-prefetch" href="https://v1.hitokoto.cn">
+<link rel="dns-prefetch" href="https://gcore.jsdelivr.net">
 </head>
 <body>
 <div class="wrap">
@@ -114,7 +120,7 @@
 
     <!-- 首屏横幅 -->
     <a class="hero-banner" href="posts/post-20261115.html" aria-label="阅读《风起今朝——写在BLG登顶S16之后》">
-      <img src="assets/banner/gug.jpg" alt="恭喜 BLG 获得 2026 英雄联盟全球总决赛冠军 —— 阅读《风起今朝》" width="1600" height="900" decoding="async">
+      <img loading="lazy" decoding="async" src="assets/banner/gug.jpg" alt="恭喜 BLG 获得 2026 英雄联盟全球总决赛冠军 —— 阅读《风起今朝》" width="1600" height="900" decoding="async">
     </a>
 
     <nav class="home-nav">

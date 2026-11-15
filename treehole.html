@@ -14,7 +14,7 @@
 <meta name="twitter:image" content="https://astrazhou.is-cool.dev/assets/og-cover.jpg">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=1792804612">
+<link rel="stylesheet" href="assets/style.css?v=1794754085">
 <script src="assets/count.js" defer></script>
 <style>
   [hidden] { display: none !important; }
@@ -36,6 +36,12 @@
   .msg.ok { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.45); }
   .form { margin-top: 1.8rem; }
 </style>
+<!-- 提前建立连接，慢网络下省掉 DNS + TLS 握手 -->
+<link rel="preconnect" href="https://abacus.jasoncameron.dev" crossorigin>
+<link rel="dns-prefetch" href="https://abacus.jasoncameron.dev">
+<link rel="preconnect" href="https://v1.hitokoto.cn" crossorigin>
+<link rel="dns-prefetch" href="https://v1.hitokoto.cn">
+<link rel="dns-prefetch" href="https://gcore.jsdelivr.net">
 </head>
 <body>
 <div class="wrap">
