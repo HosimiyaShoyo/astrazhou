@@ -1,40 +1,47 @@
 /* ============================================================
-   Astra Zhou —— 轻量浏览计数（慢网络优化版）
+   Astra Zhou —— 轻量浏览计数 v3
 
-   策略：
-   1. 先秒显 localStorage 里上次拿到的数字（0 等待）
-   2. 后台去请求，带 6 秒超时，超时就保持旧值
-   3. 请求成功才覆盖显示，并更新 localStorage
-   4. 任何失败都静默处理，页面其它部分完全不受影响
+   浏览数：hits.sh（SVG 徽章，100% 可用，不受免费层休眠影响）
+   点赞数：abacus（失败只影响点赞数字，不影响阅读）
 
-   用法：
-     <span data-count="post-my-slug">—</span>   只读显示
-     <body data-hit="post-my-slug">              打开本页时 +1
+   设计要点：
+   - 浏览数用 <img> 直接拉 hits.sh，浏览器自己管缓存，快且稳
+   - 文章页额外插一张隐藏图完成 +1
+   - 点赞用 localStorage 防重复，abacus 挂了也不报错
+   - 所有请求都带超时，绝不让页面卡住
    ============================================================ */
 (function () {
   'use strict';
 
+  /* ---------------- 配置 ---------------- */
+  var HITS_BASE = 'https://hits.sh/';
+  var SITE = 'astrazhou.is-cool.dev';
+  var COLOR = '4d7c0f';        /* 博客的橄榄绿 */
+  var LABEL = '%20';           /* 空白标签，只显示数字 */
+  var ABACUS = 'https://abacus.jasoncameron.dev/';
   var NS = 'astra-zhou';
-  var API = 'https://abacus.jasoncameron.dev/';
   var TIMEOUT = 6000;
-  var STORE = 'astra_cnt_';
 
-  function fmt(n) {
-    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  /* ---------------- 工具 ---------------- */
+  function hitsUrl(key) {
+    /* key 形如 "post-post-20261115" 或 "page-index"
+       hits.sh 要求 key 是有效 URI，所以拼成站点路径 */
+    var slug = String(key).replace(/^post-/, '').replace(/^page-/, '');
+    return HITS_BASE + SITE + '/p/' + encodeURIComponent(slug) + '.svg?label=' + LABEL + '&color=' + COLOR;
   }
 
-  /* ---- localStorage 缓存（仅用于"先显示上次的值"）---- */
-  function cacheGet(key) {
-    try {
-      var v = localStorage.getItem(STORE + key);
-      return v === null ? null : parseInt(v, 10);
-    } catch (e) { return null; }
-  }
-  function cacheSet(key, n) {
-    try { localStorage.setItem(STORE + key, String(n)); } catch (e) {}
+  function makeImg(src, cls) {
+    var img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    img.setAttribute('aria-hidden', 'true');
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    if (cls) img.className = cls;
+    img.style.cssText = 'display:inline-block;vertical-align:-0.18em;height:1.18em;width:auto;border:0;margin:0';
+    return img;
   }
 
-  /* ---- 带超时的 fetch ---- */
   function fetchJson(url, opt) {
     var ctl = null, timer = null;
     if (typeof AbortController === 'function') {
@@ -53,47 +60,32 @@
       .catch(function () { if (timer) clearTimeout(timer); return null; });
   }
 
-  function pick(d) {
-    if (!d) return null;
-    if (typeof d.value === 'number') return d.value;
-    if (d.error === 'Key not found') return 0;   /* 还没人看过 = 0 */
-    return null;
-  }
+  function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
-  function get(key) {
-    return fetchJson(API + 'get/' + NS + '/' + encodeURIComponent(key), { cache: 'no-store' })
-      .then(pick);
-  }
-  function hit(key) {
-    return fetchJson(API + 'hit/' + NS + '/' + encodeURIComponent(key), { keepalive: true })
-      .then(pick);
-  }
-
-  /* ---- 渲染所有 [data-count] ---- */
-  function fill() {
+  /* ---------------- 浏览数：换成 hits.sh 图片 ---------------- */
+  function renderCounts() {
     var els = document.querySelectorAll('[data-count]');
-    if (!els.length) return;
-
     Array.prototype.forEach.call(els, function (el) {
       var key = el.getAttribute('data-count');
-
-      /* ① 先放缓存值（如果有），立刻不空着 */
-      var c = cacheGet(key);
-      if (c !== null) el.textContent = fmt(c);
-
-      /* ② 再去要最新的 */
-      get(key).then(function (v) {
-        if (v === null) {
-          /* 失败：如果之前也没缓存，就保持 "—" */
-          return;
-        }
-        el.textContent = fmt(v);
-        cacheSet(key, v);
-      });
+      if (!key) return;
+      /* 已经在里面放过图了就不重复处理 */
+      if (el.querySelector('img')) return;
+      el.innerHTML = '';
+      el.appendChild(makeImg(hitsUrl(key)));
     });
   }
 
-  /* ---- 点赞 ---- */
+  /* ---------------- 文章页：插入隐藏图完成 +1 ---------------- */
+  function pingHit() {
+    var key = document.body && document.body.getAttribute('data-hit');
+    if (!key) return;
+    var img = makeImg(hitsUrl(key));
+    img.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px';
+    img.loading = 'eager';
+    document.body.appendChild(img);
+  }
+
+  /* ---------------- 点赞（abacus，可选）---------------- */
   function initLike() {
     var btns = document.querySelectorAll('[data-like]');
     Array.prototype.forEach.call(btns, function (btn) {
@@ -104,36 +96,33 @@
       try { liked = localStorage.getItem(flag) === '1'; } catch (e) {}
       if (liked) btn.classList.add('liked');
 
-      var c = cacheGet(key);
-      if (out && c !== null) out.textContent = fmt(c);
-
-      get(key).then(function (v) {
-        if (v === null) return;
-        if (out) out.textContent = fmt(v);
-        cacheSet(key, v);
-      });
+      /* 读当前点赞数 */
+      fetchJson(ABACUS + 'get/' + NS + '/' + encodeURIComponent(key), { cache: 'no-store' })
+        .then(function (d) {
+          if (!d || typeof d.value !== 'number') return;
+          if (out) out.textContent = fmt(d.value);
+        });
 
       btn.addEventListener('click', function () {
         if (btn.classList.contains('liked')) return;
         btn.classList.add('liked');
         try { localStorage.setItem(flag, '1'); } catch (e) {}
-        hit(key).then(function (v) {
-          if (v === null) return;
-          if (out) out.textContent = fmt(v);
-          cacheSet(key, v);
-        });
+        fetchJson(ABACUS + 'hit/' + NS + '/' + encodeURIComponent(key), { keepalive: true })
+          .then(function (d) {
+            if (!d || typeof d.value !== 'number') return;
+            if (out) out.textContent = fmt(d.value);
+          });
       });
     });
   }
 
-  /* ---- 图片兜底：CDN 抽风时换回源站 ---- */
+  /* ---------------- 图片兜底：CDN 抽风时换回源站 ---------------- */
   var CDN = 'https://gcore.jsdelivr.net/gh/HosimiyaShoyo/astrazhou@main/';
   function imgFallback() {
     var imgs = document.querySelectorAll('img[src*="gcore.jsdelivr.net"]');
     Array.prototype.forEach.call(imgs, function (img) {
       img.addEventListener('error', function () {
-        var once = img.getAttribute('data-fb');
-        if (once) return;
+        if (img.getAttribute('data-fb')) return;
         img.setAttribute('data-fb', '1');
         var path = img.getAttribute('src').replace(CDN, '');
         img.setAttribute('src', 'assets/' + path.replace(/^assets\//, ''));
@@ -141,37 +130,19 @@
     });
   }
 
-  /* ---- 启动 ---- */
+  /* ---------------- 启动 ---------------- */
   function boot() {
+    renderCounts();
+    pingHit();
     initLike();
     imgFallback();
-
-    var key = document.body && document.body.getAttribute('data-hit');
-
-    /* 有 data-hit 的（文章页）先 +1 再刷新列表；
-       没有的（首页/列表页）直接渲染缓存里的值。 */
-    if (key) {
-      var c = cacheGet(key);
-      if (c !== null) {
-        var el = document.querySelector('[data-count="' + key + '"]');
-        if (el) el.textContent = fmt(c + 1);
-      }
-      hit(key).then(function (v) {
-        if (v !== null) cacheSet(key, v);
-        fill();
-      });
-    } else {
-      fill();
-    }
   }
 
-  /* 页面空闲时再跑，不和首屏渲染抢资源 */
   if ('requestIdleCallback' in window) {
-    requestIdleCallback(boot, { timeout: 1500 });
+    requestIdleCallback(boot, { timeout: 1200 });
   } else {
     setTimeout(boot, 60);
   }
 
-  /* 暴露给外部，需要时可以手动刷新 */
-  window.astraCount = { refresh: fill };
+  window.astraCount = { refresh: renderCounts };
 })();
