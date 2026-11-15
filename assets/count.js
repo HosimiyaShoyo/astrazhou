@@ -23,6 +23,23 @@
   var K_SERVER = 'astra_srv_';    /* 服务器已确认的值 */
   var K_PENDING = 'astra_pnd_';   /* 还没同步上去的次数 */
 
+  /* ============================================================
+     初始值（种子）：换服务/清缓存后用来恢复历史数据
+     —— 数值来自 2026-11-14 从 abacus 实际读到的快照
+     —— 服务器上如果有更大的值，会自动覆盖这里
+     —— 想加就加，key 对应页面的 data-count / data-hit
+     ============================================================ */
+  var SEED = {
+    'post-post-20261019': 120,   /* 感情耐药性与自我埋葬 */
+    'post-post-20260810': 40,    /* 客制化机械小配列—AZ63 */
+    'post-post-20261115': 15     /* 风起今朝 */
+  };
+
+  function seedOf(key) {
+    return Object.prototype.hasOwnProperty.call(SEED, key) ? SEED[key] : 0;
+  }
+
+
   /* ---------- 工具 ---------- */
   function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
@@ -81,7 +98,12 @@
   }
 
   /* ---------- 本地状态 ---------- */
-  function getServer(key) { return numGet(K_SERVER + key); }
+  function getServer(key) {
+    /* 本地记录的值 和 种子值 取最大 —— 这样清了缓存也不会归零 */
+    var local = numGet(K_SERVER + key);
+    var seed = seedOf(key);
+    return Math.max(local, seed);
+  }
   function getPending(key) { return numGet(K_PENDING + key); }
   function setServer(key, n) { numSet(K_SERVER + key, n); }
   function setPending(key, n) { numSet(K_PENDING + key, n); }
@@ -190,6 +212,12 @@
   function watchScroll() {
     if (!document.body || !document.body.getAttribute('data-hit')) return;
 
+    /* 文章页先把种子落到本地 */
+    var hitKey = document.body.getAttribute('data-hit');
+    if (hitKey && numGet(K_SERVER + hitKey) < seedOf(hitKey)) {
+      numSet(K_SERVER + hitKey, seedOf(hitKey));
+    }
+
     var art = document.querySelector('article') || document.body;
     var ticking = false;
 
@@ -225,6 +253,11 @@
 
   /* ---------- 列表页：先用本地值渲染，再拉服务器 ---------- */
   function initCounts() {
+    /* 先把种子值落到本地，确保即使离线也有数 */
+    Object.keys(SEED).forEach(function (k) {
+      if (numGet(K_SERVER + k) < SEED[k]) numSet(K_SERVER + k, SEED[k]);
+    });
+
     var els = document.querySelectorAll('[data-count]');
     var keys = {};
     Array.prototype.forEach.call(els, function (el) {
