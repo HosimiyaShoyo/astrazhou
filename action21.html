@@ -70,6 +70,21 @@
   .card.sel{transform:translateY(-14px) scale(1.05);z-index:6}
   .card.sel img{box-shadow:0 0 0 2.5px var(--gold),0 6px 16px rgba(0,0,0,.5)}
   .card.dealt{animation:dealIn .32s cubic-bezier(.22,.61,.36,1) both}
+  .ace-tag{
+    position:absolute;right:2px;bottom:2px;font-size:9px;font-weight:800;line-height:1;
+    padding:2px 3.5px;border-radius:4px;background:#ffd34d;color:#3a2600;
+    box-shadow:0 1px 3px rgba(0,0,0,.4);pointer-events:none;
+  }
+  .ace-tag.low{background:#9fd8ff;color:#00243a}
+  .ace-pick{display:flex;flex-direction:column;gap:.5rem}
+  .ace-btn{
+    font:inherit;text-align:left;padding:.7rem .9rem;border-radius:11px;cursor:pointer;
+    background:rgba(255,255,255,.94);border:none;color:#123c2d;
+    box-shadow:0 3px 0 rgba(0,0,0,.3);transition:transform .12s,box-shadow .12s;
+  }
+  .ace-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+  .ace-btn b{display:block;font-size:.92rem;margin-bottom:.1rem}
+  .ace-btn small{display:block;font-size:.74rem;color:#4a6b5c;line-height:1.5}
   @keyframes dealIn{from{opacity:0;transform:translateY(18px) scale(.9)}to{opacity:1;transform:none}}
 
   /* 倒扣区 */
@@ -247,18 +262,30 @@
     return parseInt(card.rank, 10);
   }
 
-  /* 手牌最优点数（A 尽量取 11，但不超 21） */
+  /* 手牌点数：A 用玩家指定的值（aValue），没指定时默认 11 */
   function bestValue(hand) {
-    var total = 0, aces = 0;
+    var total = 0;
     for (var i = 0; i < hand.length; i++) {
       var c = hand[i];
-      if (c.rank === '1') { aces++; total += 1; }
-      else total += cardPoint(c);
-    }
-    for (var k = 0; k < aces; k++) {
-      if (total + 10 <= 21) total += 10;
+      if (c.rank === '1') {
+        total += (c.aValue === 1 || c.aValue === 11) ? c.aValue : 11;
+      } else {
+        total += cardPoint(c);
+      }
     }
     return total;
+  }
+
+  /* 给 AI 用：A 自动选最接近 21 不爆的值 */
+  function autoAceValue(handWithoutNew) {
+    var base = 0;
+    for (var i = 0; i < handWithoutNew.length; i++) {
+      var c = handWithoutNew[i];
+      if (c.rank === '1') base += (c.aValue === 1 ? 1 : 11);
+      else base += cardPoint(c);
+    }
+    /* 若把新 A 当 11 会爆，就当 1 */
+    return (base + 11 > 21) ? 1 : 11;
   }
 
   /* 距离 21 的评价：超 21 视为出局 */
@@ -331,12 +358,61 @@
       log('牌堆用尽，重新洗牌', 'hl');
     }
     var c = G.deck.pop();
+    /* 先给默认值，A 的话稍后再定 */
+    if (c.rank === '1') c.aValue = (who === 'ai') ? autoAceValue(p.hand) : null;
     p.hand.push(c);
-    G.deckTopKnown = null;   /* 抽出后，之前的"已知牌堆顶"失效 */
+    G.deckTopKnown = null;
     spend(who, 1);
     if (who === 'me') G.meActed = true; else G.aiActed = true;
-    log((who === 'me' ? '你' : 'AI') + ' 抽了一张牌' + (who === 'me' ? '：' + cardName(c) : ''), who === 'me' ? 'hl' : '');
+    log((who === 'me' ? '你' : 'AI') + ' 抽了一张牌' + (who === 'me' ? '：' + cardName(c) + (c.rank === '1' ? '（待定 1 或 11）' : '') : ''), who === 'me' ? 'hl' : '');
+
+    /* 玩家抽到 A → 弹窗决定 */
+    if (who === 'me' && c.rank === '1' && !c.aValue) {
+      askAce(c);
+    }
     return true;
+  }
+
+  /* A 的选择弹窗 */
+  function askAce(card) {
+    var rest = G.me.hand.filter(function (x) { return x !== card; });
+    var baseV = 0;
+    rest.forEach(function (x) {
+      if (x.rank === '1') baseV += (x.aValue === 1 ? 1 : 11);
+      else baseV += cardPoint(x);
+    });
+    var asOne = baseV + 1;
+    var asEleven = baseV + 11;
+
+    var box = document.createElement('div');
+    box.className = 'over';
+    box.innerHTML =
+      '<div class="over-box" style="max-width:340px">' +
+        '<h2 style="font-size:1.1rem">抽到 A 了</h2>' +
+        '<p style="margin-bottom:.9rem">这张 <b style="color:#ffe9a8">' + cardName(card) + '</b>，你要算作几点？</p>' +
+        '<div class="ace-pick">' +
+          '<button class="ace-btn" data-v="1">' +
+            '<b>算 1 点</b>' +
+            '<small>手牌将变成 ' + asOne + ' 点' + (asOne > 21 ? ' <span style="color:#ff9a93">（爆牌）</span>' : '') + '</small>' +
+          '</button>' +
+          '<button class="ace-btn" data-v="11">' +
+            '<b>算 11 点</b>' +
+            '<small>手牌将变成 ' + asEleven + ' 点' + (asEleven > 21 ? ' <span style="color:#ff9a93">（爆牌）</span>' : '') + '</small>' +
+          '</button>' +
+        '</div>' +
+        '<p style="font-size:.7rem;opacity:.6;margin-top:.8rem">选定后不能更改</p>' +
+      '</div>';
+    document.body.appendChild(box);
+
+    function choose(v) {
+      card.aValue = v;
+      box.remove();
+      log('你把这张 A 算作 ' + v + ' 点', 'hl');
+      renderAll();
+    }
+    Array.prototype.forEach.call(box.querySelectorAll('.ace-btn'), function (b) {
+      b.addEventListener('click', function () { choose(parseInt(b.getAttribute('data-v'), 10)); });
+    });
   }
 
   function foldCard(who, idx) {
@@ -461,6 +537,13 @@
       img.alt = cardName(c);
       img.draggable = false;
       d.appendChild(img);
+      /* A 牌上标出当前取值 */
+      if (c.rank === '1') {
+        var tag = document.createElement('span');
+        tag.className = 'ace-tag' + (c.aValue === 1 ? ' low' : '');
+        tag.textContent = c.aValue === 1 ? '1' : '11';
+        d.appendChild(tag);
+      }
       handEl.appendChild(d);
     });
 
@@ -1020,6 +1103,8 @@
 
     desc = r.reason || '';
     desc += '<br>你 ' + r.va + ' 点　对手 ' + r.vb + ' 点';
+    desc += '<br><span style="font-size:.72rem;opacity:.65">你的手牌：' + (G.me.hand.map(function(c){ return cardName(c) + (c.rank==='1' ? '('+c.aValue+')' : ''); }).join('、') || '无') + '</span>';
+    desc += '<br><span style="font-size:.72rem;opacity:.65">对手手牌：' + (G.ai.hand.map(cardName).join('、') || '无') + '</span>';
     if (by === 'public') desc += '<br><span style="opacity:.7">（公开阶段决定）</span>';
 
     var box = document.createElement('div');
