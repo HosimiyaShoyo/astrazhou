@@ -291,46 +291,66 @@
      游戏状态
      ============================================================ */
   var G = null;
+  var TABLE = null;          /* 跨局保留：玩家、筹码、累计战绩 */
+  var ROUND_NO = 0;          /* 第几局 */
   var $ = function (id) { return document.getElementById(id); };
 
-  function newGame(mode) {
-    var isFive = (mode === 'human5');   /* human1 / doom2 都是 1v1 */
+  /* 创建整张桌子（一局游戏里的所有人） */
+  function newTable(mode) {
+    var isFive = (mode === 'human5');
     var players = [];
     players.push({
       id: 0, name: '你', isMe: true, isAI: false, style: 'me',
       hand: [], folded: [], ap: 5, compareUsed: false, stopped: false, out: false, topKnown: null,
-      chips: 4000, bet: 0
+      chips: 4000, bet: 0, wins: 0
     });
     var n = isFive ? 4 : 1;
     for (var i = 0; i < n; i++) {
-      var p = PERSONAS[i];
+      var pp = PERSONAS[i];
       players.push({
-        id: i + 1, name: p.name, isMe: false, isAI: true, style: p.style, tag: p.tag,
+        id: i + 1, name: pp.name, isMe: false, isAI: true, style: pp.style, tag: pp.tag,
         hand: [], folded: [], ap: 5, compareUsed: false, stopped: false, out: false, topKnown: null,
-        chips: 4000, bet: 0
+        chips: 4000, bet: 0, wins: 0
       });
     }
-    /* 开局每人交底注 100，进底池 */
-    var BASE_BET = 100;
+    return { mode: mode, players: players };
+  }
+
+  /* 开始新的一轮（保留筹码、累计胜场，重置手牌和行动点） */
+  function newRound() {
+    ROUND_NO++;
+    var players = TABLE.players;
     var pot = 0;
+    var BASE_BET = 100;
+
     players.forEach(function (p) {
+      p.hand = [];
+      p.folded = [];
+      p.ap = 5;
+      p.compareUsed = false;
+      p.stopped = false;
+      p.topKnown = null;
+      p.out = false;
+      p.bet = 0;
+      /* 交底注（有多少交多少，不够就全押） */
       var pay = Math.min(BASE_BET, p.chips);
       p.chips -= pay;
       p.bet = pay;
       pot += pay;
+      /* 掏不出底注的人，这局不参与 */
+      if (pay < BASE_BET) { p.out = true; p.bet = 0; pot -= pay; p.chips += pay; }
     });
 
     return {
-      mode: mode,
+      mode: TABLE.mode,
       deck: buildDeck(),
       players: players,
       pot: pot,
       baseBet: BASE_BET,
-      turn: 0,
       round: 1,
+      turn: 0,
       phase: 'play',
-      acted: {},           /* 本回合是否操作过 */
-      log: []
+      acted: {}
     };
   }
 
@@ -502,7 +522,7 @@
 
     var left = alive();
     if (left.length <= 1) {
-      setTimeout(function () { gameOver(left[0] || null, r); }, 800);
+      setTimeout(function () { roundEnd(left[0] || null, r); }, 800);
     } else {
       /* 若轮到的人出局了，跳到下一个活着的人 */
       setTimeout(function () { nextTurnIfNeeded(); }, 800);
@@ -1304,42 +1324,108 @@
     });
     renderLog();
 
-    setTimeout(function () { gameOver(winner, { reason: reason, public: true }); }, 900);
+    setTimeout(function () { roundEnd(winner, { reason: reason, public: true }); }, 900);
   }
 
-  function gameOver(winner, info) {
+  /* 一局结束：结算筹码 → 决定继续下一局还是收摊 */
+  function roundEnd(winner, info) {
     G.phase = 'over';
     renderAll();
 
-    var me = meP();
-    var title, color, icon;
-    if (!winner) { title = '无人获胜'; color = '#d9b45a'; icon = '🤝'; }
-    else if (winner.isMe) { title = '你赢了'; color = '#7fd1ae'; icon = '🏆'; }
-    else { title = winner.name + ' 赢了'; color = '#e8a09a'; icon = '💀'; }
-
-    /* 底池给赢家（双负则退回各自投入） */
+    /* 底池结算 */
     if (winner) {
       winner.chips += G.pot;
-      G.log.push({ t: '💰 ' + winner.name + ' 赢得底池 ' + G.pot, c: 'hl' });
-      G.pot = 0;
+      winner.wins++;
+      G.log.push({ t: '💰 ' + winner.name + ' 赢得底池 ' + G.pot + '（现有 ' + winner.chips + '）', c: 'hl' });
     } else {
       G.players.forEach(function (p) { p.chips += p.bet; });
-      G.log.push({ t: '💰 无人获胜，底池退回', c: '' });
-      G.pot = 0;
+      G.log.push({ t: '💰 无人获胜，底池退回各人', c: '' });
     }
-    syncChips();
+    G.pot = 0;
+    renderLog();
+    renderTop();
 
-    var rows = G.players.map(function (p) {
+    /* 谁还能继续玩？筹码 ≥ 底注 */
+    var canPlay = TABLE.players.filter(function (p) { return p.chips >= 100; });
+    var meAlive = meP().chips >= 100;
+
+    /* 弹个短暂的过场，然后自动进下一局 */
+    var box = document.createElement('div');
+    box.className = 'over';
+    var title, color, icon;
+    if (!winner) { title = '本局无人获胜'; color = '#d9b45a'; icon = '🤝'; }
+    else if (winner.isMe) { title = '本局你赢了'; color = '#7fd1ae'; icon = '🏆'; }
+    else { title = winner.name + ' 赢了本局'; color = '#e8a09a'; icon = '💀'; }
+
+    var rows = TABLE.players.map(function (p) {
       var v = bestValue(p.hand);
-      var mark = '';
-      if (winner === p) mark = ' 👑';
-      else if (p.out) mark = ' 出局';
-      var handTxt = p.hand.map(function (c) { return cardName(c) + (c.rank === '1' ? '(' + c.aValue + ')' : ''); }).join('、') || '无';
+      var mark = (winner === p) ? ' 👑' : (p.out ? ' 出局' : '');
+      var broke = p.chips < 100 ? ' <span style="color:#ff9a93">（破产）</span>' : '';
       return '<div style="display:flex;gap:.4rem;font-size:.72rem;line-height:1.6;padding:.16rem 0;border-bottom:1px solid rgba(255,255,255,.06);text-align:left">' +
-        '<span style="flex:none;width:4.4em;color:' + (p.isMe ? '#b8e6c8' : '#f3c9c4') + '">' + p.name + mark + '</span>' +
+        '<span style="flex:none;width:4.6em;color:' + (p.isMe ? '#b8e6c8' : '#f3c9c4') + '">' + p.name + mark + '</span>' +
         '<span style="flex:none;width:3.4em;color:#ffe9a8">' + v + ' 点</span>' +
-        '<span style="flex:none;width:4.6em;color:' + (p.chips < 100 ? '#ff9a93' : '#9dc4b2') + '">💰' + p.chips + '</span>' +
-        '<span style="flex:1;color:#9dc4b2;word-break:break-all">' + handTxt + '</span></div>';
+        '<span style="flex:1;color:#9dc4b2">💰' + p.chips + broke + '</span></div>';
+    }).join('');
+
+    var nextInfo;
+    if (canPlay.length < 2) nextInfo = '<p style="color:#ff9a93;margin-top:.7rem">牌桌上只剩你一个人还能下注了</p>';
+    else if (!meAlive) nextInfo = '<p style="color:#ff9a93;margin-top:.7rem">你的筹码已经不够底注了</p>';
+    else nextInfo = '<p style="color:#9dc4b2;margin-top:.7rem">下一局马上开始…</p>';
+
+    box.innerHTML = '<div class="over-box" style="max-width:400px">' +
+      '<h2 style="color:' + color + '">' + title + '</h2>' +
+      '<div class="big" style="color:' + color + '">' + icon + '</div>' +
+      '<p style="font-size:.75rem">' + (info.reason || '') + '</p>' +
+      '<div style="margin-top:.7rem">' + rows + '</div>' +
+      nextInfo +
+      '<div style="display:flex;gap:.5rem;margin-top:.9rem">' +
+        '<button class="abtn primary" id="nextRoundBtn" style="flex:1">立即开始下一局</button>' +
+        '<button class="abtn ghost" id="quitBtn" style="flex:1">收摊</button>' +
+      '</div></div>';
+    document.body.appendChild(box);
+
+    function goNext() {
+      if (box.parentNode) box.remove();
+      if (canPlay.length < 2 || !meAlive) { finalSummary(); return; }
+      startNextRound();
+    }
+
+    box.querySelector('#nextRoundBtn').addEventListener('click', goNext);
+    box.querySelector('#quitBtn').addEventListener('click', function () {
+      if (box.parentNode) box.remove();
+      finalSummary();
+    });
+
+    /* 8 秒后自动进下一局 */
+    if (canPlay.length >= 2 && meAlive) {
+      setTimeout(function () {
+        if (box.parentNode && document.body.contains(box)) goNext();
+      }, 8000);
+    }
+  }
+
+  /* 整场收摊：总结算 */
+  function finalSummary() {
+    if (document.querySelector('.over')) {
+      var old = document.querySelector('.over');
+      if (old) old.remove();
+    }
+    G.phase = 'over';
+    var me = meP();
+    var top = TABLE.players.slice().sort(function (a, b) { return b.chips - a.chips; });
+    var meRank = top.findIndex(function (p) { return p.isMe; }) + 1;
+
+    var title, color, icon;
+    if (me.chips < 100) { title = '你破产了'; color = '#e8a09a'; icon = '💸'; }
+    else if (meRank === 1) { title = '你赢下了整桌'; color = '#7fd1ae'; icon = '👑'; }
+    else { title = '你排第 ' + meRank + ' 名'; color = '#d9b45a'; icon = '🎖'; }
+
+    var rows = top.map(function (p, i) {
+      return '<div style="display:flex;gap:.4rem;font-size:.74rem;line-height:1.7;padding:.18rem 0;border-bottom:1px solid rgba(255,255,255,.06);text-align:left">' +
+        '<span style="flex:none;width:1.6em;color:#8db8a5">' + (i + 1) + '.</span>' +
+        '<span style="flex:none;width:4.6em;color:' + (p.isMe ? '#b8e6c8' : '#f3c9c4') + '">' + p.name + '</span>' +
+        '<span style="flex:none;width:4.6em;color:#ffe9a8">💰' + p.chips + '</span>' +
+        '<span style="flex:1;color:#9dc4b2">赢 ' + p.wins + ' 局</span></div>';
     }).join('');
 
     var box = document.createElement('div');
@@ -1347,16 +1433,19 @@
     box.innerHTML = '<div class="over-box" style="max-width:400px">' +
       '<h2 style="color:' + color + '">' + title + '</h2>' +
       '<div class="big" style="color:' + color + '">' + icon + '</div>' +
-      '<p style="font-size:.76rem">' + (info.reason || '') + '</p>' +
+      '<p style="font-size:.76rem">一共打了 ' + ROUND_NO + ' 局</p>' +
       '<div style="margin-top:.8rem">' + rows + '</div>' +
       '<div style="display:flex;gap:.5rem;margin-top:1rem">' +
-        '<button class="abtn primary" id="again" style="flex:1">再来一局</button>' +
+        '<button class="abtn primary" id="NewGame" style="flex:1">重新开一桌</button>' +
         '<button class="abtn ghost" id="backHome" style="flex:1">换个模式</button>' +
       '</div></div>';
     document.body.appendChild(box);
-
-    box.querySelector('#again').addEventListener('click', function () { box.remove(); startGame(G.mode); });
-    box.querySelector('#backHome').addEventListener('click', function () { box.remove(); location.reload(); });
+    box.querySelector('#NewGame').addEventListener('click', function () {
+      box.remove(); startGame(TABLE ? TABLE.mode : 'human1');
+    });
+    box.querySelector('#backHome').addEventListener('click', function () {
+      box.remove(); location.reload();
+    });
   }
 
   /* ============================================================
@@ -1398,26 +1487,29 @@
      启动
      ============================================================ */
   function startGame(mode) {
-    /* 恢复上次的筹码 */
-    try {
-      var saved = localStorage.getItem('astra21_chips');
-      if (saved !== null) {
-        var s = parseInt(saved, 10);
-        if (!isNaN(s) && s >= 0) { /* 只用于提示，实际每局重置 */ }
-      }
-    } catch (e) {}
-
     if (mode === 'doom2' && !getKey()) {
-      log('没有可用的 OpenRouter Key，已切换到普通人机', 'bad');
-      mode = 'human5';
+      log('没有可用的 OpenRouter Key，已切换到普通人机 · 1v1', 'bad');
+      mode = 'human1';
     }
-    G = newGame(mode);
+    TABLE = newTable(mode);
+    ROUND_NO = 0;
     $('startBox').hidden = true;
     $('gameBox').hidden = false;
-    var label = ({ human1:'普通人机 · 1v1', human5:'普通人机 · 5 人同桌', doom2:'末日人机 · 1v1' })[mode] || mode;
-    log('新游戏开始（' + label + '）', 'hl');
-    log('每人底注 100 已入池，总计 ' + G.pot + '。赢家通吃。');
-    log('每人 5 点行动点。比牌输的人直接出局，最后活着的人赢。');
+    log('=== 新的一桌 ===', 'hl');
+    startNextRound();
+  }
+
+  function startNextRound() {
+    G = newRound();
+    var label = ({ human1:'普通人机 · 1v1', human5:'普通人机 · 5 人同桌', doom2:'末日人机 · 1v1' })[TABLE.mode] || TABLE.mode;
+    log('━━ 第 ' + ROUND_NO + ' 局开始（' + label + '）━━', 'hl');
+    log('底注 ' + G.baseBet + '，底池 ' + G.pot + '。赢家通吃，打完直接进下一局。');
+
+    /* 出局的补一句提示 */
+    var skipped = TABLE.players.filter(function (p) { return p.out; });
+    if (skipped.length) log('（' + skipped.map(function (p) { return p.name; }).join('、') + ' 筹码不足，这次跳过）', 'bad');
+
+    if (alive().length < 2) { finalSummary(); return; }
     renderAll();
   }
 
