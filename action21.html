@@ -358,7 +358,8 @@
       round: 1,
       turn: 0,
       phase: 'play',
-      acted: {}
+      acted: {},
+      log: []
     };
   }
 
@@ -368,6 +369,7 @@
 
   function log(msg, cls) {
     if (!G) { if (window.console) console.warn('[a21] G 未初始化，丢弃日志:', msg); return; }
+    if (!Array.isArray(G.log)) G.log = [];
     G.log.push({ t: msg, c: cls || '' });
     if (G.log.length > 80) G.log.shift();
     renderLog();
@@ -1069,6 +1071,8 @@
 
   function renderLog() {
     var el = $('log');
+    if (!el || !G) return;
+    if (!Array.isArray(G.log)) G.log = [];
     el.innerHTML = '';
     G.log.slice(-40).forEach(function (l) {
       var d = document.createElement('div');
