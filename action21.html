@@ -52,6 +52,11 @@
   .ap-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.16)}
   .ap-dot.on{background:#7fd1ae;box-shadow:0 0 5px rgba(127,209,174,.8)}
 
+  /* 座位筹码 */
+  .seat-money{display:flex;align-items:center;gap:.4rem;margin:.16rem 0 .28rem;font-size:.68rem}
+  .m-chip{font-weight:800;color:#ffe9a8;font-variant-numeric:tabular-nums}
+  .m-bet{color:#8db8a5;font-variant-numeric:tabular-nums}
+
   /* 手牌 */
   .hand{display:flex;gap:0;min-height:calc(var(--card-h)*.62);flex-wrap:nowrap;overflow-x:auto;padding:2px 0;scrollbar-width:none}
   .hand::-webkit-scrollbar{display:none}
@@ -216,6 +221,7 @@
           <span class="seat-name me" id="myName">你</span>
           <span class="seat-val" id="myVal">—</span>
         </div>
+        <div class="seat-money" id="myMoney"></div>
         <div class="hand" id="myHand"></div>
         <div class="folded-row" id="myFolded"></div>
       </div>
@@ -718,12 +724,17 @@
     /* 对手们的公开线索：手牌数、倒扣数、行动点 */
     var avgOtherCards = others.reduce(function (s, q) { return s + q.hand.length; }, 0) / (others.length || 1);
     var anyOtherBroke = others.some(function (q) { return q.ap === 0; });
+    /* 筹码是公开信息，用来决定加注力度 */
+    var richestRival = others.reduce(function (m, q) { return Math.max(m, q.chips); }, 0);
+    var rivalCanPay = richestRival >= 500;
+    var amShort = p.chips < 500;
+    var amRich = p.chips > richestRival * 1.5;
 
     switch (p.style) {
       /* ---- 猛冲：喜欢追高分、更早发起比牌 ---- */
       case 'aggressive':
         /* 手牌好就压注 */
-        if (v >= 18 && p.chips >= 200 && Math.random() < 0.55) return { type: 'raise', amount: 200 };
+        if (v >= 18 && p.chips >= 200 && Math.random() < 0.55) return { type: 'raise', amount: amRich ? 500 : 200 };
         if (v >= 16 && p.chips >= 100 && Math.random() < 0.4) return { type: 'raise', amount: 100 };
         if (canCmp && v >= 19) return { type: 'compare', target: pickTarget(p) };
         if (canCmp && v >= 17 && G.round >= 3) return { type: 'compare', target: pickTarget(p) };
@@ -743,7 +754,7 @@
       /* ---- 伪装：高点数先不倒扣，装弱小，等别人送上门 ---- */
       case 'bluffer':
         /* 装强压注，吓退别人 */
-        if (v < 15 && p.chips >= 500 && Math.random() < 0.3) return { type: 'raise', amount: 500 };
+        if (v < 15 && p.chips >= 500 && rivalCanPay && Math.random() < 0.3) return { type: 'raise', amount: 500 };
         if (canCmp && v >= 20 && G.round >= 3 && Math.random() < 0.6)
           return { type: 'compare', target: pickTarget(p) };
         if (v >= 17 && v <= 21 && p.ap > 1 && others.some(function (q) { return q.hand.length > 2; }))
@@ -754,7 +765,7 @@
 
       /* ---- 算牌：看牌堆和轮次，等最佳时机 ---- */
       case 'counter':
-        if (v >= 20 && p.chips >= 500 && Math.random() < 0.6) return { type: 'raise', amount: 500 };
+        if (v >= 20 && p.chips >= 500 && Math.random() < 0.6) return { type: 'raise', amount: amShort ? 200 : 500 };
         if (v >= 18 && p.chips >= 100 && Math.random() < 0.3) return { type: 'raise', amount: 100 };
         if (anyOtherBroke && canCmp && v >= 16) return { type: 'compare', target: pickTarget(p) };
         if (canCmp && v >= 20 && G.round >= 3) return { type: 'compare', target: pickTarget(p) };
@@ -834,11 +845,14 @@
     lines.push('你的手牌：' + p.hand.map(function (c) { return cardName(c) + (c.rank === '1' ? '(' + c.aValue + ')' : ''); }).join('、') + '（共 ' + bestValue(p.hand) + ' 点）');
     lines.push('你的倒扣牌：' + (p.folded.length ? p.folded.map(cardName).join('、') : '无'));
     lines.push('你的行动点：' + p.ap + '/5　比牌机会：' + (p.compareUsed ? '已用' : '还有'));
+    lines.push('你的筹码：' + p.chips + '　本局已投：' + p.bet);
     if (foe) {
       lines.push('对手手牌：' + (foe.hand.length ? foe.hand.length + ' 张，看不到牌面' : '还没有牌'));
       lines.push('对手倒扣牌：' + foe.folded.length + ' 张');
       lines.push('对手行动点：' + foe.ap + '/5');
+      lines.push('对手筹码：' + foe.chips + '（公开可见）　本局已投：' + foe.bet);
     }
+    lines.push('底池：' + G.pot);
     lines.push('牌堆剩余：' + G.deck.length + ' 张');
     if (p.topKnown) lines.push('你通过看牌知道牌堆顶：' + cardName(p.topKnown));
     lines.push('请决定下一步，只输出 JSON。');
@@ -946,7 +960,8 @@
         '<span class="ap-dots">' + apDots(p.ap) + '</span>' +
         '<span class="seat-name">' + p.name + (p.tag ? '·' + p.tag : '') + '</span>' +
         '<span class="seat-val">' + (p.out ? '出局' : (p.hand.length ? p.hand.length + ' 张' : '—')) + '</span>' +
-        '</div>';
+        '</div>' +
+        '<div class="seat-money"><span class="m-chip">💰' + p.chips + '</span><span class="m-bet">已投 ' + p.bet + '</span></div>';
       /* 手牌背面 */
       html += '<div class="hand" data-seat="' + p.id + '">';
       for (var i = 0; i < p.hand.length; i++) {
@@ -971,6 +986,8 @@
     var p = meP();
     $('mySeat').className = 'myself' + ((cur() === p && G.phase !== 'over') ? ' active' : '') + (p.out ? ' out' : '');
     $('myAP').innerHTML = apDots(p.ap);
+    var mm = $('myMoney');
+    if (mm) mm.innerHTML = '<span class="m-chip">💰' + p.chips + '</span><span class="m-bet">已投 ' + p.bet + '</span>';
 
     var handEl = $('myHand');
     handEl.innerHTML = '';
