@@ -227,6 +227,7 @@
       <button class="raise-btn" data-r="200">+200</button>
       <button class="raise-btn" data-r="500">+500</button>
       <button class="raise-btn" data-r="1000">+1000</button>
+      <span class="chip-line"></span>
     </div>
     <div class="acts" id="acts"></div>
     <div class="log" id="log"></div>
@@ -1082,16 +1083,7 @@
       return b;
     }
 
-    if (!myTurn) {
-      var t = document.createElement('span');
-      t.className = 'chip';
-      t.textContent = me.out ? '你已出局，等待其他玩家分出胜负' :
-        (cur() ? cur().name + ' 正在思考…' : '等待中');
-      el.appendChild(t);
-      return;
-    }
-
-    /* 加注条：只有轮到我、还有筹码时显示 */
+    /* 加注条：先统一处理显隐，再决定是否早退 */
     var rb = $('raiseBar');
     if (rb) {
       var canRaise = myTurn && me.chips >= 100 && !me.stopped;
@@ -1102,6 +1094,15 @@
       });
       var cl = rb.querySelector('.chip-line');
       if (cl) cl.textContent = '你剩 ' + me.chips + '，已投 ' + me.bet;
+    }
+
+    if (!myTurn) {
+      var t = document.createElement('span');
+      t.className = 'chip';
+      t.textContent = me.out ? '你已出局，等待其他玩家分出胜负' :
+        (cur() ? cur().name + ' 正在思考…' : '等待中');
+      el.appendChild(t);
+      return;
     }
 
     var targets = validTargets(me);
