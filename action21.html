@@ -156,13 +156,17 @@
   </div>
 
   <div id="startBox" class="start">
-    <h2>🎴 选一个模式</h2>
+    <h2>🎴 选一个对手</h2>
     <p>以经典 21 点为框架，衍生出的卡牌博弈。<br>手牌超 21 不会立刻死，但要靠倒扣把点数修剪回来。</p>
     <div class="mode">
-      <button data-mode="easy"><b>新手 · 本地 AI</b><small>规则驱动，按点数决策。不花钱，秒回。</small></button>
-      <button data-mode="normal"><b>普通 · 本地 AI</b><small>会算你的牌数、挑比牌时机。不花钱。</small></button>
-      <button data-mode="hard"><b>困难 · 本地 AI</b><small>记牌 + 诈唬，会装弱引你比牌。不花钱。</small></button>
-      <button data-mode="llm"><b>进阶 · OpenRouter 免费池 ✨</b><small>让大模型当对手。需要 key，失败自动回退本地 AI。</small></button>
+      <button data-mode="human">
+        <b>普通人机</b>
+        <small>规则驱动的本地 AI。按点数决策，会算你的牌数。不花钱，秒回。</small>
+      </button>
+      <button data-mode="doom">
+        <b>末日人机 🔥</b>
+        <small>OpenRouter 免费池的大模型对手。会诈唬、会记牌、会装弱引你比牌。首次使用需填 Key，接口失败自动回退普通人机。</small>
+      </button>
     </div>
   </div>
 
@@ -737,7 +741,8 @@
     var ai = G.ai, me = G.me;
     var v = bestValue(ai.hand);
     var myV = bestValue(me.hand);
-    var mode = G.mode === 'llm' ? 'normal' : G.mode;
+    /* 两种模式：human 走本地规则；doom 走到这里说明大模型失败，同样用本地规则兜底 */
+    var mode = 'normal';
 
     /* 前两轮限制：只能向手牌数相同的对手发起比牌 */
     var canCompare = !ai.compareUsed && ai.hand.length &&
@@ -819,7 +824,7 @@
   }
 
   function decideAI() {
-    if (G.mode !== 'llm') return Promise.resolve(decideLocal());
+    if (G.mode !== 'doom') return Promise.resolve(decideLocal());
 
     var key = getLLMKey();
     if (!key) {
@@ -984,19 +989,19 @@
      启动
      ============================================================ */
   function startGame(mode) {
-    if (mode === 'llm' && !getLLMKey()) {
-      var k = prompt('进阶模式需要一个 OpenRouter API Key（openrouter.ai/keys 免费领，sk-or- 开头）\n\n留空则使用本地 AI：', '');
+    if (mode === 'doom' && !getLLMKey()) {
+      var k = prompt('末日人机需要一个 OpenRouter API Key（openrouter.ai/keys 免费领，sk-or- 开头）\n\n留空则使用本地 AI：', '');
       if (k && k.trim()) {
         try { localStorage.setItem('astra21_key', k.trim()); } catch (e) {}
         LLM_KEY = k.trim();
       } else {
-        mode = 'normal';
+        mode = 'human';
       }
     }
     G = newGame(mode);
     $('startBox').hidden = true;
     $('gameBox').hidden = false;
-    log('新游戏开始（' + ({easy:'新手',normal:'普通',hard:'困难',llm:'进阶'}[mode] || mode) + '模式）');
+    log('新游戏开始（' + ({human:'普通人机',doom:'末日人机'}[mode] || mode) + '模式）');
     log('每人 5 点行动点。每回合至少消耗 1 点。');
     renderAll();
   }
