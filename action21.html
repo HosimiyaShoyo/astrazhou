@@ -318,6 +318,7 @@
 
   /* 开始新的一轮（保留筹码、累计胜场，重置手牌和行动点） */
   function newRound() {
+    if (!TABLE) { TABLE = newTable('human1'); }
     ROUND_NO++;
     var players = TABLE.players;
     var pot = 0;
@@ -359,6 +360,7 @@
   function cur() { return G.players[G.turn]; }
 
   function log(msg, cls) {
+    if (!G) { if (window.console) console.warn('[a21] G 未初始化，丢弃日志:', msg); return; }
     G.log.push({ t: msg, c: cls || '' });
     if (G.log.length > 80) G.log.shift();
     renderLog();
@@ -1487,16 +1489,17 @@
      启动
      ============================================================ */
   function startGame(mode) {
+    var fallbackNote = false;
     if (mode === 'doom2' && !getKey()) {
-      log('没有可用的 OpenRouter Key，已切换到普通人机 · 1v1', 'bad');
+      fallbackNote = true;
       mode = 'human1';
     }
     TABLE = newTable(mode);
     ROUND_NO = 0;
     $('startBox').hidden = true;
     $('gameBox').hidden = false;
-    log('=== 新的一桌 ===', 'hl');
     startNextRound();
+    if (fallbackNote) log('没有可用的 OpenRouter Key，已切换到普通人机 · 1v1', 'bad');
   }
 
   function startNextRound() {
