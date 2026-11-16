@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>行动21点 · Astra Zhou</title>
+<meta name="description" content="以经典 21 点为框架衍生的一款卡牌益智游戏：发牌、倒扣、看牌、比牌、停牌。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="行动21点 · Astra Zhou">
+<meta property="og:description" content="以经典 21 点为框架衍生的一款卡牌益智游戏。">
+<meta property="og:image" content="https://astrazhou.is-cool.dev/assets/og-cover.jpg">
+<meta property="og:url" content="https://astrazhou.is-cool.dev/action21.html">
+<meta name="theme-color" content="#0d332c">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css?v=1794830690">
+<style>
+  :root{
+    --felt:#1a5c46;
+    --felt-2:#134a38;
+    --gold:#d9b45a;
+    --card-w:74px;
+    --card-h:104px;
+  }
+  body{background:#0a1a14}
+  .a21{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:1rem 1rem 1.4rem}
+
+  /* 顶栏 */
+  .a21-top{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.9rem}
+  .a21-top h1{margin:0;font-size:1.12rem;color:#eaf6ef;letter-spacing:.02em}
+  .a21-top .sub{font-size:.76rem;color:#9dc4b2}
+  .a21-top .spacer{flex:1}
+  .chip{
+    font-size:.74rem;padding:.26rem .62rem;border-radius:999px;
+    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#d8ecdf;
+  }
+  .chip.gold{background:rgba(217,180,90,.18);border-color:rgba(217,180,90,.5);color:#f0d9a0}
+
+  /* 牌桌 */
+  .table{
+    position:relative;border-radius:18px;padding:1rem .85rem .9rem;
+    background:radial-gradient(120% 90% at 50% 0%,var(--felt),var(--felt-2) 70%,#0e382a);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.07),0 14px 38px rgba(0,0,0,.45);
+  }
+
+  /* 玩家区 */
+  .seat{margin-bottom:.85rem}
+  .seat:last-child{margin-bottom:0}
+  .seat-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
+  .seat-name{font-size:.82rem;font-weight:700;color:#eaf6ef}
+  .seat-name.ai{color:#f3c9c4}
+  .seat-name.me{color:#b8e6c8}
+  .ap-dots{display:flex;gap:3px}
+  .ap-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18)}
+  .ap-dot.on{background:#7fd1ae;box-shadow:0 0 6px rgba(127,209,174,.8)}
+  .seat-val{font-size:.78rem;color:#ffe9a8;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* 手牌 */
+  .hand{display:flex;gap:0;min-height:calc(var(--card-h) + 6px);flex-wrap:nowrap;overflow-x:auto;overflow-y:visible;padding:3px 0}
+  .card{
+    position:relative;flex:none;width:var(--card-w);height:var(--card-h);
+    margin-right:-32px;transition:transform .22s cubic-bezier(.22,.61,.36,1),box-shadow .22s;
+    user-select:none;
+  }
+  .card:last-child{margin-right:0}
+  .card img{width:100%;height:100%;display:block;border-radius:5px;box-shadow:0 3px 9px rgba(0,0,0,.4)}
+  .card.pick{cursor:pointer}
+  .card.pick:hover{transform:translateY(-10px) scale(1.03);z-index:5}
+  .card.sel{transform:translateY(-14px) scale(1.05);z-index:6}
+  .card.sel img{box-shadow:0 0 0 2.5px var(--gold),0 6px 16px rgba(0,0,0,.5)}
+  .card.dealt{animation:dealIn .32s cubic-bezier(.22,.61,.36,1) both}
+  @keyframes dealIn{from{opacity:0;transform:translateY(18px) scale(.9)}to{opacity:1;transform:none}}
+
+  /* 倒扣区 */
+  .folded-row{display:flex;gap:5px;margin-top:.4rem;min-height:36px;align-items:center;flex-wrap:wrap}
+  .folded-lbl{font-size:.68rem;color:#8db8a5;margin-right:2px}
+  .folded-card{width:26px;height:37px;flex:none;border-radius:3px;overflow:hidden;opacity:.9}
+  .folded-card img{width:100%;height:100%;display:block}
+  .folded-card.revealed{box-shadow:0 0 0 1.5px var(--gold)}
+
+  /* 牌堆 */
+  .deck-row{display:flex;align-items:center;gap:.6rem;margin:.5rem 0 .2rem;padding-top:.6rem;border-top:1px dashed rgba(255,255,255,.14)}
+  .deck-pile{position:relative;width:44px;height:62px;flex:none}
+  .deck-pile img{width:100%;height:100%;border-radius:4px;box-shadow:0 3px 8px rgba(0,0,0,.45)}
+  .deck-count{position:absolute;right:-6px;bottom:-4px;font-size:.62rem;background:#0e2a20;color:#cfe9dc;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:0 5px;line-height:1.4}
+  .deck-hint{font-size:.72rem;color:#9dc4b2;line-height:1.5}
+
+  /* 操作区 */
+  .acts{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.85rem}
+  .abtn{
+    font:inherit;font-size:.84rem;font-weight:700;padding:.55rem .95rem;border-radius:11px;cursor:pointer;
+    background:rgba(255,255,255,.92);border:none;color:#123c2d;
+    box-shadow:0 3px 0 rgba(0,0,0,.28);transition:transform .12s,box-shadow .12s,opacity .2s;
+  }
+  .abtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+  .abtn[disabled]{opacity:.4;cursor:default;transform:none;box-shadow:0 3px 0 rgba(0,0,0,.28)}
+  .abtn.primary{background:#7fd1ae;color:#0b2c20}
+  .abtn.danger{background:#e8a09a;color:#4a1512}
+  .abtn.ghost{background:transparent;color:#cfe9dc;border:1px solid rgba(255,255,255,.28);box-shadow:none}
+
+  /* 日志 */
+  .log{margin-top:.85rem;max-height:132px;overflow-y:auto;font-size:.76rem;line-height:1.7;color:#a8ccbb}
+  .log div{padding:.12rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .log .hl{color:#ffe9a8}
+  .log .bad{color:#ffb3ad}
+
+  /* 结算 */
+  .over{
+    position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:1.2rem;
+    background:rgba(4,16,12,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  }
+  .over-box{
+    max-width:330px;width:100%;text-align:center;border-radius:18px;padding:1.4rem 1.15rem;
+    background:linear-gradient(180deg,#123c2d,#0b2a20);border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 24px 60px rgba(0,0,0,.6);
+  }
+  .over-box h2{margin:0 0 .3rem;font-size:1.35rem;color:#ffe9a8}
+  .over-box p{margin:.3rem 0 0;font-size:.84rem;color:#b8d6c6;line-height:1.7}
+  .over-box .big{font-size:2.1rem;font-weight:800;line-height:1.1;margin:.2rem 0 .1rem}
+
+  /* 开场选择 */
+  .start{max-width:420px;margin:2rem auto 0;text-align:center}
+  .start h2{margin:0 0 .4rem;font-size:1.3rem;color:#eaf6ef}
+  .start p{margin:0 0 1.2rem;font-size:.84rem;color:#9dc4b2;line-height:1.7}
+  .mode{display:flex;flex-direction:column;gap:.6rem;text-align:left}
+  .mode button{
+    font:inherit;padding:.85rem 1rem;border-radius:13px;cursor:pointer;
+    background:rgba(255,255,255,.94);border:none;color:#123c2d;
+    box-shadow:0 4px 0 rgba(0,0,0,.3);transition:transform .12s,box-shadow .12s;
+  }
+  .mode button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+  .mode button b{display:block;font-size:.95rem;margin-bottom:.12rem}
+  .mode button small{display:block;font-size:.74rem;color:#4a6b5c;line-height:1.5}
+
+  @media (max-width:520px){
+    :root{--card-w:60px;--card-h:84px}
+    .card{margin-right:-28px}
+    .a21{padding:.7rem .6rem 1rem}
+    .abtn{font-size:.8rem;padding:.5rem .8rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="a21">
+
+  <div class="a21-top">
+    <div>
+      <h1>行动21点</h1>
+      <div class="sub">发牌 · 倒扣 · 看牌 · 比牌 · 停牌</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip" id="roundChip">第 1 轮</span>
+    <span class="chip gold" id="phaseChip">你的回合</span>
+    <button class="abtn ghost" id="rulesBtn" style="padding:.3rem .7rem;font-size:.76rem">规则</button>
+  </div>
+
+  <div id="startBox" class="start">
+    <h2>🎴 选一个模式</h2>
+    <p>以经典 21 点为框架，衍生出的卡牌博弈。<br>手牌超 21 不会立刻死，但要靠倒扣把点数修剪回来。</p>
+    <div class="mode">
+      <button data-mode="easy"><b>新手 · 本地 AI</b><small>规则驱动，按点数决策。不花钱，秒回。</small></button>
+      <button data-mode="normal"><b>普通 · 本地 AI</b><small>会算你的牌数、挑比牌时机。不花钱。</small></button>
+      <button data-mode="hard"><b>困难 · 本地 AI</b><small>记牌 + 诈唬，会装弱引你比牌。不花钱。</small></button>
+      <button data-mode="llm"><b>进阶 · OpenRouter 免费池 ✨</b><small>让大模型当对手。需要 key，失败自动回退本地 AI。</small></button>
+    </div>
+  </div>
+
+  <div id="gameBox" hidden>
+    <div class="table">
+      <!-- 对手 -->
+      <div class="seat">
+        <div class="seat-head">
+          <span class="ap-dots" id="aiAP"></span>
+          <span class="seat-name ai">对手</span>
+          <span class="seat-val" id="aiVal">—</span>
+        </div>
+        <div class="hand" id="aiHand"></div>
+        <div class="folded-row" id="aiFolded"></div>
+      </div>
+
+      <!-- 牌堆 -->
+      <div class="deck-row">
+        <div class="deck-pile" id="deckPile"></div>
+        <div class="deck-hint" id="deckHint">牌堆</div>
+      </div>
+
+      <!-- 我 -->
+      <div class="seat">
+        <div class="seat-head">
+          <span class="ap-dots" id="myAP"></span>
+          <span class="seat-name me">你</span>
+          <span class="seat-val" id="myVal">—</span>
+        </div>
+        <div class="hand" id="myHand"></div>
+        <div class="folded-row" id="myFolded"></div>
+      </div>
+    </div>
+
+    <div class="acts" id="acts"></div>
+    <div class="log" id="log"></div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     牌
+     ============================================================ */
+  var SUITS = ['spade','heart','club','diamond'];   // 黑桃 > 红桃 > 梅花 > 方块
+  var SUIT_RANK = { spade:4, heart:3, club:2, diamond:1 };
+  var RANKS = ['1','2','3','4','5','6','7','8','9','10','jack','queen','king'];
+  var RANK_LABEL = { '1':'A','jack':'J','queen':'Q','king':'K' };
+
+  function cardImg(card) {
+    return 'assets/cards/' + card.suit + '_' + card.rank + '.svg';
+  }
+  function rankLabel(r) { return RANK_LABEL[r] || r; }
+  function cardName(card) {
+    var suitCN = { spade:'黑桃', heart:'红桃', club:'梅花', diamond:'方块' }[card.suit];
+    return suitCN + rankLabel(card.rank);
+  }
+  /* 单张牌的"点数权重"：用于平局时比倒扣牌 */
+  function cardPoint(card) {
+    if (card.rank === '1') return 1;
+    if (card.rank === 'jack' || card.rank === 'queen' || card.rank === 'king') return 10;
+    return parseInt(card.rank, 10);
+  }
+
+  /* 手牌最优点数（A 尽量取 11，但不超 21） */
+  function bestValue(hand) {
+    var total = 0, aces = 0;
+    for (var i = 0; i < hand.length; i++) {
+      var c = hand[i];
+      if (c.rank === '1') { aces++; total += 1; }
+      else total += cardPoint(c);
+    }
+    for (var k = 0; k < aces; k++) {
+      if (total + 10 <= 21) total += 10;
+    }
+    return total;
+  }
+
+  /* 距离 21 的评价：超 21 视为出局 */
+  function score(hand) {
+    var v = bestValue(hand);
+    return v > 21 ? -1 : v;     /* -1 表示爆牌 */
+  }
+
+  /* ============================================================
+     洗牌
+     ============================================================ */
+  function buildDeck() {
+    var d = [];
+    for (var s = 0; s < SUITS.length; s++) {
+      for (var r = 0; r < RANKS.length; r++) {
+        d.push({ suit: SUITS[s], rank: RANKS[r] });
+      }
+    }
+    /* Fisher-Yates */
+    for (var i = d.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = d[i]; d[i] = d[j]; d[j] = t;
+    }
+    return d;
+  }
+
+  /* ============================================================
+     游戏状态
+     ============================================================ */
+  var G = null;
+
+  function newGame(mode) {
+    return {
+      mode: mode || 'normal',
+      deck: buildDeck(),
+      round: 1,
+      turn: 0,                 /* 0 = 我, 1 = AI */
+      phase: 'play',           /* play | over */
+      meActed: false,          /* 我本回合是否做过操作 */
+      aiActed: false,          /* AI 本回合是否做过操作 */
+      deckTopKnown: null,      /* 看牌时顺便知道的牌堆顶 */
+      log: [],
+      me:  { name:'你',  hand:[], folded:[], ap:5, compareUsed:false, stopped:false, out:false },
+      ai:  { name:'AI',  hand:[], folded:[], ap:5, compareUsed:false, stopped:false, out:false }
+    };
+  }
+
+  function other(who) { return who === 'me' ? 'ai' : 'me'; }
+  function P(who) { return G[who]; }
+
+  /* ============================================================
+     行动
+     ============================================================ */
+  function spend(who, n) {
+    var p = P(who);
+    p.ap = Math.max(0, p.ap - (n || 1));
+  }
+
+  function log(msg, cls) {
+    G.log.push({ t: msg, c: cls || '' });
+    if (G.log.length > 60) G.log.shift();
+    renderLog();
+  }
+
+  function drawCard(who) {
+    var p = P(who);
+    if (p.ap < 1) return false;
+    if (!G.deck.length) {
+      G.deck = buildDeck();
+      log('牌堆用尽，重新洗牌', 'hl');
+    }
+    var c = G.deck.pop();
+    p.hand.push(c);
+    G.deckTopKnown = null;   /* 抽出后，之前的"已知牌堆顶"失效 */
+    spend(who, 1);
+    if (who === 'me') G.meActed = true; else G.aiActed = true;
+    log((who === 'me' ? '你' : 'AI') + ' 抽了一张牌' + (who === 'me' ? '：' + cardName(c) : ''), who === 'me' ? 'hl' : '');
+    return true;
+  }
+
+  function foldCard(who, idx) {
+    var p = P(who);
+    if (p.ap < 1 || !p.hand.length) return false;
+    if (idx === undefined) idx = p.hand.length - 1;
+    var c = p.hand.splice(idx, 1)[0];
+    p.folded.push(c);
+    spend(who, 1);
+    if (who === 'me') G.meActed = true; else G.aiActed = true;
+    log((who === 'me' ? '你' : 'AI') + ' 倒扣了一张牌' + (who === 'me' ? '：' + cardName(c) : ''), who === 'me' ? 'hl' : '');
+    return true;
+  }
+
+  function peek(who, targetWho, idx) {
+    var p = P(who), t = P(targetWho);
+    if (p.ap < 1) return null;
+    var res = { card: null, deckTop: null };
+    if (t.folded.length && idx !== undefined && idx >= 0 && idx < t.folded.length) {
+      res.card = t.folded[idx];
+    }
+    /* 顺便知道牌堆顶 */
+    if (G.deck.length) {
+      res.deckTop = G.deck[G.deck.length - 1];
+      G.deckTopKnown = res.deckTop;
+    }
+    spend(who, 1);
+    if (who === 'me') G.meActed = true; else G.aiActed = true;
+    return res;
+  }
+
+  function stop(who) {
+    var p = P(who);
+    p.stopped = true;
+    p.ap = 0;
+    log((who === 'me' ? '你' : 'AI') + ' 宣布停牌，行动点清零', 'hl');
+  }
+
+  /* ============================================================
+     比牌
+     ============================================================ */
+  function compare(a, b) {
+    var pa = P(a), pb = P(b);
+    var va = bestValue(pa.hand), vb = bestValue(pb.hand);
+
+    var ra = (va > 21) ? Infinity : Math.abs(21 - va);
+    var rb = (vb > 21) ? Infinity : Math.abs(21 - vb);
+
+    if (ra === rb) {
+      /* 平局 → 比倒扣牌 */
+      if (!pa.folded.length && !pb.folded.length) {
+        return { result: 'bothLose', va: va, vb: vb, reason: '点数相同且双方都没有倒扣牌，双方判负' };
+      }
+      if (!pa.folded.length) return { result: 'bWins', va: va, vb: vb, reason: '点数相同，但你（' + pa.name + '）没有倒扣牌，判负' };
+      if (!pb.folded.length) return { result: 'aWins', va: va, vb: vb, reason: '点数相同，' + pb.name + ' 没有倒扣牌，判负' };
+
+      /* 比倒扣牌：先比点数，再比花色 */
+      var fa = bestFolded(pa.folded), fb = bestFolded(pb.folded);
+      if (fa.point !== fb.point) {
+        return fa.point > fb.point
+          ? { result:'aWins', va:va, vb:vb, reason:'点数相同，倒扣牌 ' + cardName(fa.card) + ' 大于 ' + cardName(fb.card) }
+          : { result:'bWins', va:va, vb:vb, reason:'点数相同，倒扣牌 ' + cardName(fb.card) + ' 大于 ' + cardName(fa.card) };
+      }
+      if (fa.suit !== fb.suit) {
+        return SUIT_RANK[fa.suit] > SUIT_RANK[fb.suit]
+          ? { result:'aWins', va:va, vb:vb, reason:'倒扣牌同点数，' + cardName(fa.card) + ' 花色大于 ' + cardName(fb.card) }
+          : { result:'bWins', va:va, vb:vb, reason:'倒扣牌同点数，' + cardName(fb.card) + ' 花色大于 ' + cardName(fa.card) };
+      }
+      return { result:'bothLose', va:va, vb:vb, reason:'倒扣牌完全一样，双方判负' };
+    }
+
+    if (ra < rb) return { result:'aWins', va:va, vb:vb, reason: (va > 21 ? pa.name + ' 爆牌' : pa.name + ' 更接近 21 点') };
+    return { result:'bWins', va:va, vb:vb, reason: (vb > 21 ? pb.name + ' 爆牌' : pb.name + ' 更接近 21 点') };
+  }
+
+  function bestFolded(arr) {
+    var best = null;
+    for (var i = 0; i < arr.length; i++) {
+      var c = arr[i], p = cardPoint(c), s = SUIT_RANK[c.suit];
+      if (!best || p > best.point || (p === best.point && s > best.suit)) {
+        best = { card: c, point: p, suit: s };
+      }
+    }
+    return best;
+  }
+
+  /* ============================================================
+     渲染
+     ============================================================ */
+  var $ = function (id) { return document.getElementById(id); };
+
+  function renderAll() {
+    renderSeat('ai');
+    renderSeat('me');
+    renderDeck();
+    renderActs();
+    renderTop();
+  }
+
+  function renderTop() {
+    $('roundChip').textContent = '第 ' + G.round + ' 轮';
+    var ph = $('phaseChip');
+    if (G.phase === 'over') { ph.textContent = '已结束'; ph.className = 'chip'; }
+    else if (G.turn === 0) { ph.textContent = '你的回合'; ph.className = 'chip gold'; }
+    else { ph.textContent = '对手回合'; ph.className = 'chip'; }
+  }
+
+  function renderSeat(who) {
+    var p = P(who);
+    var handEl = $(who + 'Hand');
+    var foldedEl = $(who + 'Folded');
+    var apEl = $(who + 'AP');
+    var valEl = $(who + 'Val');
+
+    /* 手牌 */
+    handEl.innerHTML = '';
+    p.hand.forEach(function (c, i) {
+      var d = document.createElement('div');
+      d.className = 'card dealt';
+      var img = document.createElement('img');
+      img.src = cardImg(c);
+      img.alt = cardName(c);
+      img.draggable = false;
+      d.appendChild(img);
+      handEl.appendChild(d);
+    });
+
+    /* 行动点 */
+    apEl.innerHTML = '';
+    for (var i = 0; i < 5; i++) {
+      var dot = document.createElement('span');
+      dot.className = 'ap-dot' + (i < p.ap ? ' on' : '');
+      apEl.appendChild(dot);
+    }
+
+    /* 点数 */
+    if (!p.hand.length) valEl.textContent = '—';
+    else {
+      var v = bestValue(p.hand);
+      valEl.textContent = v + ' 点' + (v > 21 ? ' 爆' : '');
+      valEl.style.color = v > 21 ? '#ff9a93' : '#ffe9a8';
+    }
+
+    /* 倒扣牌 */
+    foldedEl.innerHTML = '';
+    if (p.folded.length) {
+      var lbl = document.createElement('span');
+      lbl.className = 'folded-lbl';
+      lbl.textContent = '倒扣 ' + p.folded.length + ' 张';
+      foldedEl.appendChild(lbl);
+      p.folded.forEach(function (c, i) {
+        var d = document.createElement('div');
+        d.className = 'folded-card';
+        d.setAttribute('data-i', i);
+        var img = document.createElement('img');
+        img.src = 'assets/cards/back.svg';
+        img.alt = '倒扣牌';
+        d.appendChild(img);
+        foldedEl.appendChild(d);
+      });
+    }
+  }
+
+  function renderDeck() {
+    var el = $('deckPile');
+    el.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = 'assets/cards/back.svg';
+    img.alt = '牌堆';
+    el.appendChild(img);
+    var cnt = document.createElement('span');
+    cnt.className = 'deck-count';
+    cnt.textContent = G.deck.length;
+    el.appendChild(cnt);
+
+    $('deckHint').textContent = G.deckTopKnown
+      ? '你已知牌堆顶：' + cardName(G.deckTopKnown)
+      : '牌堆剩余 ' + G.deck.length + ' 张';
+  }
+
+  function renderLog() {
+    var el = $('log');
+    el.innerHTML = '';
+    G.log.slice(-30).forEach(function (l) {
+      var d = document.createElement('div');
+      if (l.c) d.className = l.c;
+      d.textContent = l.t;
+      el.appendChild(d);
+    });
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function renderActs() {
+    var el = $('acts');
+    el.innerHTML = '';
+    if (G.phase === 'over') return;
+
+    var me = G.me;
+    var myTurn = (G.turn === 0);
+
+    function add(label, cls, onclick, disabled) {
+      var b = document.createElement('button');
+      b.className = 'abtn ' + (cls || '');
+      b.textContent = label;
+      b.disabled = !!disabled;
+      if (!disabled) b.addEventListener('click', onclick);
+      el.appendChild(b);
+      return b;
+    }
+
+    if (!myTurn) {
+      var t = document.createElement('span');
+      t.className = 'chip';
+      t.textContent = '对手正在思考…';
+      el.appendChild(t);
+      return;
+    }
+
+    /* 我的回合 */
+    add('发牌（1点）', '', function () { act('draw'); }, me.ap < 1);
+    add('倒扣（1点）', '', function () { beginPick(); }, me.ap < 1 || !me.hand.length);
+    add('看牌（1点）', '', function () { act('peek'); }, me.ap < 1);
+    if (!me.compareUsed) {
+      add('比牌', 'primary', function () { act('compare'); }, false);
+    }
+    add('停牌', 'danger', function () { act('stop'); }, me.ap === 0);
+
+    if (G.meActed) {
+      add('结束回合', 'ghost', function () { endTurn(); }, false);
+    }
+  }
+
+  /* ============================================================
+     交互
+     ============================================================ */
+  var picking = false;
+
+  function beginPick() {
+    picking = true;
+    var handEl = $('myHand');
+    Array.prototype.forEach.call(handEl.children, function (node, i) {
+      node.classList.add('pick');
+      node.addEventListener('click', function () {
+        if (!picking) return;
+        picking = false;
+        foldCard('me', i);
+        renderAll();
+      });
+    });
+    var tip = document.createElement('span');
+    tip.className = 'chip';
+    tip.textContent = '点一张牌倒扣（再点「倒扣」取消）';
+    $('acts').appendChild(tip);
+  }
+
+  function act(kind) {
+    if (G.phase === 'over' || G.turn !== 0) return;
+
+    if (kind === 'draw') {
+      if (!drawCard('me')) return;
+      renderAll();
+      afterMyAction();
+    } else if (kind === 'peek') {
+      var t = G.ai;
+      var res = peek('me', 'ai', t.folded.length ? 0 : undefined);
+      renderAll();
+      if (res) {
+        var parts = [];
+        if (res.card) parts.push('对手的一张倒扣牌是 ' + cardName(res.card));
+        else parts.push('对手没有倒扣牌可看');
+        if (res.deckTop) parts.push('牌堆顶是 ' + cardName(res.deckTop));
+        log('你看牌：' + parts.join('；'), 'hl');
+      }
+      afterMyAction();
+    } else if (kind === 'compare') {
+      G.me.compareUsed = true;
+      var r = compare('me', 'ai');
+      log('你发起比牌！', 'hl');
+      revealFolded();
+      setTimeout(function () { endGame(r, 'me'); }, 500);
+      renderAll();
+    } else if (kind === 'stop') {
+      stop('me');
+      renderAll();
+      endTurn();
+    }
+  }
+
+  function afterMyAction() {
+    if (G.phase === 'over') return;
+    renderActs();
+    /* 如果双方行动点都空了 → 公开阶段 */
+    if (G.me.ap === 0 && G.ai.ap === 0) {
+      setTimeout(publicReveal, 400);
+    }
+  }
+
+  function endTurn() {
+    picking = false;
+    if (G.phase === 'over') return;
+
+    if (!G.meActed && G.me.ap > 0) {
+      log('规则要求：回合内至少消耗 1 点行动点', 'bad');
+      return;
+    }
+    G.meActed = false;
+
+    /* 换手 */
+    G.turn = 1;
+    if (G.turn === 1 && G.round > 1) { /* 保持轮次计数 */ }
+    renderAll();
+
+    /* 检查是否双方 AP 都空 */
+    if (G.me.ap === 0 && G.ai.ap === 0) {
+      setTimeout(publicReveal, 400);
+      return;
+    }
+
+    setTimeout(aiTurn, 700);
+  }
+
+  /* ============================================================
+     对手回合
+     ============================================================ */
+  function aiTurn() {
+    if (G.phase === 'over') return;
+    if (G.ai.ap === 0) {
+      /* AI 没点了，直接换手 */
+      finishAITurn();
+      return;
+    }
+
+    decideAI().then(function (move) {
+      applyAIMove(move);
+    }).catch(function () {
+      applyAIMove(ruleMove());
+    });
+  }
+
+  function finishAITurn() {
+    G.aiActed = false;
+    G.turn = 0;
+    G.round++;
+    renderAll();
+    if (G.me.ap === 0 && G.ai.ap === 0) {
+      setTimeout(publicReveal, 400);
+    }
+  }
+
+  function applyAIMove(move) {
+    var ai = G.ai;
+    if (G.phase === 'over') return;
+
+    if (move.type === 'compare' && !ai.compareUsed && ai.hand.length) {
+      ai.compareUsed = true;
+      var r = compare('ai', 'me');
+      log('对手发起比牌！', 'bad');
+      revealFolded();
+      setTimeout(function () { endGame(r, 'ai'); }, 500);
+      renderAll();
+      return;
+    }
+    if (move.type === 'stop') {
+      stop('ai');
+      renderAll();
+      finishAITurn();
+      return;
+    }
+    if (move.type === 'fold' && ai.hand.length && ai.ap > 0) {
+      /* 倒扣点数最大的那张 */
+      var idx = pickWorstForFold(ai);
+      foldCard('ai', idx);
+      renderAll();
+      setTimeout(function () {
+        if (ai.ap > 0 && Math.random() < 0.55) aiTurn(); else finishAITurn();
+      }, 520);
+      return;
+    }
+    if (move.type === 'draw' && ai.ap > 0) {
+      drawCard('ai');
+      renderAll();
+      setTimeout(function () {
+        if (ai.ap > 0 && aiShouldContinue()) aiTurn(); else finishAITurn();
+      }, 520);
+      return;
+    }
+    finishAITurn();
+  }
+
+  function pickWorstForFold(p) {
+    /* 找点数最大的那张倒扣 */
+    var best = 0, bestV = -1;
+    p.hand.forEach(function (c, i) {
+      var v = cardPoint(c);
+      if (c.rank === '1') v = 11;      /* A 倒扣最划算 */
+      if (v > bestV) { bestV = v; best = i; }
+    });
+    return best;
+  }
+
+  function aiShouldContinue() {
+    var v = bestValue(G.ai.hand);
+    if (v > 21) return true;            /* 爆了，得处理 */
+    if (v < 12) return true;
+    if (G.ai.ap > 2) return true;
+    return false;
+  }
+
+  /* ============================================================
+     本地 AI 策略
+     ============================================================ */
+  function ruleMove() { return decideLocal(); }
+
+  function decideLocal() {
+    var ai = G.ai, me = G.me;
+    var v = bestValue(ai.hand);
+    var myV = bestValue(me.hand);
+    var mode = G.mode === 'llm' ? 'normal' : G.mode;
+
+    /* 前两轮限制：只能向手牌数相同的对手发起比牌 */
+    var canCompare = !ai.compareUsed && ai.hand.length &&
+      (G.round > 2 || ai.hand.length === me.hand.length);
+
+    /* 爆牌了：必须倒扣 */
+    if (v > 21) {
+      if (ai.hand.length && ai.ap > 0) return { type: 'fold' };
+      if (ai.ap > 0) return { type: 'draw' };
+      return { type: 'stop' };
+    }
+
+    /* 简单模式：只看自己的点数 */
+    if (mode === 'easy') {
+      if (v < 16 && ai.ap > 0) return Math.random() < 0.7 ? { type: 'draw' } : { type: 'fold' };
+      if (v >= 18 && canCompare) return { type: 'compare' };
+      if (ai.ap > 0) return { type: 'fold' };
+      return { type: 'stop' };
+    }
+
+    /* 普通：加上对手信息 */
+    if (mode === 'normal') {
+      var myScore = score(me.hand);
+      /* 对手爆了，稳赢，比牌 */
+      if (canCompare && myScore < 0) return { type: 'compare' };
+      if (v >= 19 && canCompare) return { type: 'compare' };
+      if (v >= 17 && v <= 21 && ai.ap <= 1 && canCompare) return { type: 'compare' };
+      if (v < 17 && ai.ap > 0) {
+        /* 手牌太多时优先倒扣 */
+        if (ai.hand.length >= 4 && v > 16) return { type: 'fold' };
+        return { type: 'draw' };
+      }
+      if (ai.ap > 0) return { type: 'fold' };
+      return { type: 'stop' };
+    }
+
+    /* 困难：记牌 + 诈唬 */
+    var foldedCount = ai.folded.length;
+    var deckLow = G.deck.length < 10;
+
+    if (canCompare) {
+      /* 对手没牌 → 我点数不难看就比 */
+      if (me.hand.length === 0 && v >= 12) return { type: 'compare' };
+      /* 对手爆牌 */
+      if (score(me.hand) < 0) return { type: 'compare' };
+      /* 我接近满分且轮到后期 */
+      if (v >= 20 && G.round >= 3) return { type: 'compare' };
+      /* 诈唬：我点数很高但没倒扣，装弱不下注 → 等对手主动比 */
+    }
+
+    if (v >= 20 && ai.ap >= 2) return { type: 'stop' };    /* 保分，清空行动点逼公开 */
+    if (v < 15 && ai.ap > 0 && !deckLow) return { type: 'draw' };
+    if (v > 18 && ai.ap > 0) return { type: 'fold' };
+    if (ai.ap > 0) return Math.random() < 0.6 ? { type: 'draw' } : { type: 'fold' };
+    return { type: 'stop' };
+  }
+
+  /* ============================================================
+     LLM 对手（OpenRouter 免费池）
+     ============================================================ */
+  var LLM_KEY = null;
+  var LLM_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free';
+  var LLM_FALLBACKS = [
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
+    'google/gemma-4-26b-a4b-it:free',
+    'dots-studio/dots-3-note-preview:free'
+  ];
+
+  function getLLMKey() {
+    if (LLM_KEY) return LLM_KEY;
+    try {
+      LLM_KEY = localStorage.getItem('astra21_key') || '';
+      if (!LLM_KEY) {
+        /* 尝试从主站的 keys.js 读（如果加载了） */
+        if (window.__KEYS__ && window.__KEYS__.openrouter) LLM_KEY = window.__KEYS__.openrouter;
+      }
+    } catch (e) {}
+    return LLM_KEY;
+  }
+
+  function decideAI() {
+    if (G.mode !== 'llm') return Promise.resolve(decideLocal());
+
+    var key = getLLMKey();
+    if (!key) {
+      /* 没 key → 回退 */
+      return Promise.resolve(decideLocal());
+    }
+
+    var payload = {
+      model: LLM_MODEL,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: stateSummary() }
+      ],
+      temperature: 0.4,
+      max_tokens: 60
+    };
+
+    var ctl = null, timer = null;
+    if (typeof AbortController === 'function') {
+      ctl = new AbortController();
+      timer = setTimeout(function () { ctl.abort(); }, 12000);
+    }
+
+    return fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify(payload),
+      signal: ctl ? ctl.signal : undefined
+    }).then(function (r) {
+      if (timer) clearTimeout(timer);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (d) {
+      var txt = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '';
+      return parseMove(txt);
+    }).catch(function () {
+      if (timer) clearTimeout(timer);
+      return decideLocal();
+    });
+  }
+
+  var SYSTEM_PROMPT = [
+    '你在玩一款叫「行动21点」的卡牌游戏，你是对手 AI。',
+    '规则要点：',
+    '- 手牌点数接近 21 越好，超过 21 是爆牌（比牌时直接判负）。',
+    '- 每回合有行动点，抽牌/倒扣/看牌各消耗 1 点；回合内至少要用 1 点。',
+    '- 倒扣的牌不计入点数，是修剪手牌的唯一手段。',
+    '- 比牌：双方亮牌，更接近 21 者胜；平局时比倒扣牌（点数→花色，黑桃>红桃>梅花>方块）；没有倒扣牌者判负。',
+    '- 每人只有一次主动比牌机会。前两轮只能向手牌数相同的对手发起。',
+    '- 停牌：立刻清空自己的行动点。',
+    '- 所有人行动点归零时强制公开比牌。',
+    '你的目标：赢。可以考虑诈唬，但不要冒险在劣势比牌。',
+    '只输出一个 JSON，不要解释，格式：{"type":"draw"} 或 {"type":"fold"} 或 {"type":"compare"} 或 {"type":"stop"}'
+  ].join('\n');
+
+  function stateSummary() {
+    var ai = G.ai, me = G.me;
+    var lines = [];
+    lines.push('轮次：第 ' + G.round + ' 轮');
+    lines.push('你的手牌：' + ai.hand.map(cardName).join('、') + '（共 ' + bestValue(ai.hand) + ' 点）');
+    lines.push('你的倒扣牌：' + (ai.folded.length ? ai.folded.map(cardName).join('、') : '无'));
+    lines.push('你的行动点：' + ai.ap + ' / 5');
+    lines.push('你的比牌机会：' + (ai.compareUsed ? '已用过' : '还有一次'));
+    lines.push('对手手牌：' + (me.hand.length ? me.hand.length + ' 张（看不清牌面）' : '还没有牌'));
+    lines.push('对手倒扣牌：' + me.folded.length + ' 张');
+    lines.push('对手行动点：' + me.ap + ' / 5');
+    lines.push('牌堆剩余：' + G.deck.length + ' 张');
+    if (G.deckTopKnown) lines.push('牌堆顶（双方都知道）：' + cardName(G.deckTopKnown));
+    lines.push('');
+    lines.push('请决定你的下一步行动，只输出 JSON。');
+    return lines.join('\n');
+  }
+
+  function parseMove(txt) {
+    if (!txt) return decideLocal();
+    var m = txt.match(/\{[^}]*\}/);
+    if (!m) return decideLocal();
+    try {
+      var o = JSON.parse(m[0]);
+      var t = String(o.type || '').toLowerCase();
+      if (['draw','fold','compare','stop'].indexOf(t) < 0) return decideLocal();
+      /* 合法性校验 */
+      if (t === 'compare' && G.ai.compareUsed) return decideLocal();
+      if (t === 'fold' && !G.ai.hand.length) return decideLocal();
+      if (t === 'draw' && G.ai.ap < 1) return decideLocal();
+      return { type: t };
+    } catch (e) {
+      return decideLocal();
+    }
+  }
+
+  /* ============================================================
+     公开阶段 / 结束
+     ============================================================ */
+  function revealFolded() {
+    ['me','ai'].forEach(function (who) {
+      var p = P(who);
+      var el = $(who + 'Folded');
+      var cards = el.querySelectorAll('.folded-card');
+      Array.prototype.forEach.call(cards, function (node, i) {
+        var c = p.folded[i];
+        if (!c) return;
+        node.classList.add('revealed');
+        node.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = cardImg(c);
+        img.alt = cardName(c);
+        node.appendChild(img);
+      });
+    });
+  }
+
+  function publicReveal() {
+    if (G.phase === 'over') return;
+    log('所有行动点耗尽，强制进入公开阶段', 'hl');
+    revealFolded();
+    var r = compare('me', 'ai');
+    setTimeout(function () { endGame(r, 'public'); }, 600);
+  }
+
+  function endGame(r, by) {
+    G.phase = 'over';
+    renderAll();
+
+    var title, color, desc;
+    if (r.result === 'aWins') { title = '你赢了'; color = '#7fd1ae'; }
+    else if (r.result === 'bWins') { title = '对手赢了'; color = '#e8a09a'; }
+    else { title = '平局 / 双负'; color = '#d9b45a'; }
+
+    desc = r.reason || '';
+    desc += '<br>你 ' + r.va + ' 点　对手 ' + r.vb + ' 点';
+    if (by === 'public') desc += '<br><span style="opacity:.7">（公开阶段决定）</span>';
+
+    var box = document.createElement('div');
+    box.className = 'over';
+    box.innerHTML =
+      '<div class="over-box">' +
+        '<h2 style="color:' + color + '">' + title + '</h2>' +
+        '<div class="big" style="color:' + color + '">' +
+          (r.result === 'aWins' ? '🏆' : (r.result === 'bWins' ? '💀' : '🤝')) +
+        '</div>' +
+        '<p>' + desc + '</p>' +
+        '<div style="display:flex;gap:.5rem;margin-top:1.1rem">' +
+          '<button class="abtn primary" id="again" style="flex:1">再来一局</button>' +
+          '<button class="abtn ghost" id="backHome" style="flex:1">换个模式</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(box);
+
+    box.querySelector('#again').addEventListener('click', function () {
+      box.remove(); startGame(G.mode);
+    });
+    box.querySelector('#backHome').addEventListener('click', function () {
+      box.remove(); location.reload();
+    });
+  }
+
+  /* ============================================================
+     启动
+     ============================================================ */
+  function startGame(mode) {
+    if (mode === 'llm' && !getLLMKey()) {
+      var k = prompt('进阶模式需要一个 OpenRouter API Key（openrouter.ai/keys 免费领，sk-or- 开头）\n\n留空则使用本地 AI：', '');
+      if (k && k.trim()) {
+        try { localStorage.setItem('astra21_key', k.trim()); } catch (e) {}
+        LLM_KEY = k.trim();
+      } else {
+        mode = 'normal';
+      }
+    }
+    G = newGame(mode);
+    $('startBox').hidden = true;
+    $('gameBox').hidden = false;
+    log('新游戏开始（' + ({easy:'新手',normal:'普通',hard:'困难',llm:'进阶'}[mode] || mode) + '模式）');
+    log('每人 5 点行动点。每回合至少消耗 1 点。');
+    renderAll();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-mode]'), function (b) {
+    b.addEventListener('click', function () { startGame(b.getAttribute('data-mode')); });
+  });
+
+  $('rulesBtn').addEventListener('click', function () {
+    var box = document.createElement('div');
+    box.className = 'over';
+    box.innerHTML =
+      '<div class="over-box" style="max-width:400px;text-align:left">' +
+        '<h2 style="text-align:center">规则</h2>' +
+        '<div style="font-size:.8rem;line-height:1.85;color:#b8d6c6;max-height:60vh;overflow-y:auto;text-align:left">' +
+          '<p><b style="color:#ffe9a8">点数</b>：2–10 按面值，JQK 为 10，A 可当 1 或 11。</p>' +
+          '<p><b style="color:#ffe9a8">发牌</b>：1 点，从牌堆顶盲抽一张。</p>' +
+          '<p><b style="color:#ffe9a8">出牌</b>：1 点，把一张手牌倒扣，倒扣的牌不计入点数。</p>' +
+          '<p><b style="color:#ffe9a8">看牌</b>：1 点，看对手一张倒扣牌，并知道牌堆顶是什么。</p>' +
+          '<p><b style="color:#ffe9a8">比牌</b>：不耗点，每人一次。更接近 21 者胜，爆牌直接负。平局比倒扣牌（点数→花色，黑桃>红桃>梅花>方块）。没有倒扣牌者判负。</p>' +
+          '<p><b style="color:#ffe9a8">停牌</b>：清空自己行动点。</p>' +
+          '<p><b style="color:#ffe9a8">公开阶段</b>：所有人行动点归零时强制比牌。</p>' +
+          '<p style="color:#9dc4b2">前两轮只能向手牌数相同的对手发起比牌，第三轮起无限制。</p>' +
+        '</div>' +
+        '<button class="abtn primary" id="closeRules" style="width:100%;margin-top:1rem">知道了</button>' +
+      '</div>';
+    document.body.appendChild(box);
+    box.querySelector('#closeRules').addEventListener('click', function () { box.remove(); });
+    box.addEventListener('click', function (e) { if (e.target === box) box.remove(); });
+  });
+})();
+</script>
+</body>
+</html>
