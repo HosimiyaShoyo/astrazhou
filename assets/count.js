@@ -276,26 +276,52 @@
     });
   }
 
-  /* ---------- 点赞（沿用本地 + 服务） ---------- */
+  /* ---------- 点赞：本地立即生效，后台同步 ---------- */
   function initLike() {
     Array.prototype.forEach.call(document.querySelectorAll('[data-like]'), function (btn) {
       var key = btn.getAttribute('data-like');
       var out = btn.querySelector('.like-n');
       var flag = 'astra_like_' + key;
+
+      /* 是否已经赞过 */
       var liked = false;
       try { liked = localStorage.getItem(flag) === '1'; } catch (e) {}
       if (liked) btn.classList.add('liked');
 
-      if (out) out.textContent = fmt(displayValue(key));
-      sync(key).then(function () { if (out) out.textContent = fmt(displayValue(key)); });
+      /* 立刻用本地的 (server + pending) 显示，不等网络 */
+      function paint() {
+        if (!out) return;
+        var v = displayValue(key);
+        out.textContent = v > 0 ? fmt(v) : '0';
+      }
+      paint();
 
-      btn.addEventListener('click', function () {
-        if (btn.classList.contains('liked')) return;
+      /* 后台去服务器对账（失败无所谓，不阻塞） */
+      sync(key).then(paint);
+
+      /* 点击：立即生效 */
+      btn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        if (btn.classList.contains('liked')) {
+          /* 已赞过，轻提示 */
+          btn.classList.add('bump');
+          setTimeout(function () { btn.classList.remove('bump'); }, 220);
+          return;
+        }
+
         btn.classList.add('liked');
+        btn.classList.add('bump');
+        setTimeout(function () { btn.classList.remove('bump'); }, 220);
         try { localStorage.setItem(flag, '1'); } catch (e) {}
+
+        /* 本地记账 → 立刻 +1 */
         setPending(key, getPending(key) + 1);
-        if (out) out.textContent = fmt(displayValue(key));
-        sync(key);
+        paint();
+
+        /* 后台同步 */
+        sync(key).then(paint);
       });
     });
   }
@@ -352,23 +378,35 @@
     if (key && getPending(key) > 0) sync(key);
   });
 
+  /* 页面能直接看到错误，方便排查 */
+  window.addEventListener('error', function (e) {
+    try {
+      if (window.console && console.error) console.error('[count.js]', e.message);
+    } catch (x) {}
+  });
+
   window.astraCount = {
     refresh: initCounts,
     pending: function (k) { return getPending(k); },
     sync: sync,
-    /* 手动给某个 key 设一个本地基准值（会覆盖本地 server 值） */
     setBase: function (k, v) { setServer(k, v); paint(k); },
-    /* 导出所有本地计数，方便排查 */
+    like: function (k) {
+      setPending(k, getPending(k) + 1);
+      paint(k);
+      return sync(k).then(function () { return displayValue(k); });
+    },
     dump: function () {
-      var out = {};
-      for (var i = 0; i < localStorage.length; i++) {
-        var key = localStorage.key(i);
-        if (key && key.indexOf(K_SERVER) === 0) {
-          var k2 = key.slice(K_SERVER.length);
-          out[k2] = { server: getServer(k2), pending: getPending(k2), show: displayValue(k2) };
+      var o = {};
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var key = localStorage.key(i);
+          if (key && key.indexOf(K_SERVER) === 0) {
+            var k2 = key.slice(K_SERVER.length);
+            o[k2] = { server: getServer(k2), pending: getPending(k2), show: displayValue(k2) };
+          }
         }
-      }
-      return out;
+      } catch (e) {}
+      return o;
     }
   };
 })();

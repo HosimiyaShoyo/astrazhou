@@ -569,6 +569,9 @@ button.like {
 button.like:hover { transform: translateY(-1px); color: var(--accent); border-color: var(--accent); }
 button.like.liked { color: var(--accent); border-color: var(--accent); cursor: default; }
 button.like.liked:hover { transform: none; }
+.like.bump { animation: likeBump .22s cubic-bezier(.34,1.56,.64,1); }
+@keyframes likeBump { 0%{transform:scale(1)} 45%{transform:scale(1.14)} 100%{transform:scale(1)} }
+.like-n { font-variant-numeric: tabular-nums; }
 
 /* 文章末尾的拍摄器材等说明 */
 article p.exif {
