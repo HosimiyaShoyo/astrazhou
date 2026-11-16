@@ -186,13 +186,17 @@
     <h2>🎴 选一个对手</h2>
     <p>以经典 21 点为框架衍生出的卡牌博弈。<br>手牌超 21 不会立刻死，但要靠倒扣把点数修剪回来。<br>比牌输的人直接出局，最后活着的人赢。</p>
     <div class="mode">
+      <button data-mode="human1">
+        <b>普通人机 · 1v1</b>
+        <small>你和 1 个 AI 单挑。牌少、节奏快，10 秒一局。不花钱。</small>
+      </button>
       <button data-mode="human5">
         <b>普通人机 · 5 人同桌</b>
-        <small>你和 4 个性格不同的 AI 抢一局。有人猛冲有人保守，谁也不敢先亮牌。不花钱，秒回。</small>
+        <small>你和 4 个性格不同的 AI 抢一局。有人猛冲有人保守，比牌输的人出局。不花钱。</small>
       </button>
       <button data-mode="doom2">
         <b>末日人机 🔥 · 1v1</b>
-        <small>OpenRouter 免费池的大模型当对手。会诈唬、会装弱引你比牌。接口失败自动回退本地 AI。</small>
+        <small>OpenRouter 免费池的大模型当对手。会诈唬、会装弱引你比牌。失败自动回退本地 AI。</small>
       </button>
     </div>
   </div>
@@ -290,7 +294,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   function newGame(mode) {
-    var isFive = (mode === 'human5');
+    var isFive = (mode === 'human5');   /* human1 / doom2 都是 1v1 */
     var players = [];
     players.push({
       id: 0, name: '你', isMe: true, isAI: false, style: 'me',
@@ -769,10 +773,14 @@
 
   var LLM_KEY = null;
   var LLM_FALLBACKS = [
-    'baidu/ernie-5.5-flash-preview:free',
-    'recursive/flint-v1.0:free',
+    'inclusionai/ling-3.2-flash:free',
     'particle-ai/particle-1:free',
-    'liquid/lfm-3-1.7b:free'
+    'recursive/flint-v1.0:free',
+    'baidu/ernie-5.5-flash-preview:free',
+    'liquid/lfm-3-1.7b:free',
+    'dots-studio/dots-3-note-preview:free',
+    'nvidia/nemotron-3.5-super-vl:free',
+    'nvidia/nemotron-3-ultra-550b-a55b:free'
   ];
 
   function getKey() {
@@ -1406,7 +1414,7 @@
     G = newGame(mode);
     $('startBox').hidden = true;
     $('gameBox').hidden = false;
-    var label = mode === 'human5' ? '普通人机 · 5 人同桌' : '末日人机 · 1v1';
+    var label = ({ human1:'普通人机 · 1v1', human5:'普通人机 · 5 人同桌', doom2:'末日人机 · 1v1' })[mode] || mode;
     log('新游戏开始（' + label + '）', 'hl');
     log('每人底注 100 已入池，总计 ' + G.pot + '。赢家通吃。');
     log('每人 5 点行动点。比牌输的人直接出局，最后活着的人赢。');
@@ -1442,6 +1450,7 @@
         '<p><b style="color:#ffe9a8">停牌</b>：清空自己行动点。</p>' +
         '<p><b style="color:#ffe9a8">公开阶段</b>：所有存活者行动点归零时强制亮牌，最接近 21 者胜。</p>' +
         '<p style="color:#9dc4b2">前两轮只能向手牌数相同的对手发起比牌，第三轮起无限制。</p>' +
+        '<p style="color:#9dc4b2">人数可选：1v1 单挑，或 5 人同桌（4 个 AI 性格各异）。</p>' +
       '</div>' +
       '<button class="abtn primary" id="closeRules" style="width:100%;margin-top:.9rem">知道了</button></div>';
     document.body.appendChild(box);
