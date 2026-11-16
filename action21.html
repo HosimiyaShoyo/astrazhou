@@ -502,7 +502,11 @@
   /* ============================================================
      渲染
      ============================================================ */
-  var $ = function (id) { return document.getElementById(id); };
+  var $ = function (id) {
+    var el = document.getElementById(id);
+    if (!el && window.console) console.warn('[a21] 找不到元素 #' + id);
+    return el;
+  };
 
   function renderAll() {
     renderSeat('ai');
@@ -522,10 +526,12 @@
 
   function renderSeat(who) {
     var p = P(who);
-    var handEl = $(who + 'Hand');
-    var foldedEl = $(who + 'Folded');
-    var apEl = $(who + 'AP');
-    var valEl = $(who + 'Val');
+    /* 注意：状态里 who 是 'me'，但 HTML 的元素 id 用的是 'my' 前缀 */
+    var prefix = (who === 'me') ? 'my' : 'ai';
+    var handEl = $(prefix + 'Hand');
+    var foldedEl = $(prefix + 'Folded');
+    var apEl = $(prefix + 'AP');
+    var valEl = $(prefix + 'Val');
 
     /* 手牌 */
     handEl.innerHTML = '';
@@ -1069,7 +1075,8 @@
   function revealFolded() {
     ['me','ai'].forEach(function (who) {
       var p = P(who);
-      var el = $(who + 'Folded');
+      var prefix = (who === 'me') ? 'my' : 'ai';
+      var el = $(prefix + 'Folded');
       var cards = el.querySelectorAll('.folded-card');
       Array.prototype.forEach.call(cards, function (node, i) {
         var c = p.folded[i];
