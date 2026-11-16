@@ -108,6 +108,17 @@
   .abtn.danger{background:#e8a09a;color:#4a1512}
   .abtn.ghost{background:transparent;color:#cfe9dc;border:1px solid rgba(255,255,255,.28);box-shadow:none}
 
+  /* 加注条 */
+  .raise-bar{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin-top:.6rem;padding:.5rem .6rem;
+    border-radius:11px;background:rgba(217,180,90,.10);border:1px solid rgba(217,180,90,.28)}
+  .raise-lbl{font-size:.74rem;color:#f0d9a0;font-weight:700}
+  .raise-btn{font:inherit;font-size:.76rem;font-weight:800;padding:.34rem .62rem;border-radius:8px;cursor:pointer;
+    background:rgba(255,255,255,.92);border:none;color:#123c2d;box-shadow:0 2px 0 rgba(0,0,0,.28);
+    transition:transform .12s,box-shadow .12s,opacity .2s}
+  .raise-btn:active{transform:translateY(2px);box-shadow:0 0 0 rgba(0,0,0,.28)}
+  .raise-btn[disabled]{opacity:.35;cursor:default;transform:none}
+  .chip-line{font-size:.68rem;color:#ffe9a8;font-weight:700;margin-left:auto}
+
   /* 日志 */
   .log{margin-top:.7rem;max-height:112px;overflow-y:auto;font-size:.72rem;line-height:1.65;color:#a8ccbb}
   .log div{padding:.1rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -164,6 +175,8 @@
       <div class="sub">发牌 · 倒扣 · 看牌 · 比牌 · 停牌</div>
     </div>
     <div class="spacer"></div>
+    <span class="chip gold" id="chipDisplay">💰 4000</span>
+    <span class="chip" id="potChip">底池 0</span>
     <span class="chip" id="roundChip">第 1 轮</span>
     <span class="chip gold" id="phaseChip">你的回合</span>
     <button class="abtn ghost" id="rulesBtn" style="padding:.28rem .65rem;font-size:.72rem">规则</button>
@@ -204,6 +217,13 @@
       </div>
     </div>
 
+    <div class="raise-bar" id="raiseBar" hidden>
+      <span class="raise-lbl">加注：</span>
+      <button class="raise-btn" data-r="100">+100</button>
+      <button class="raise-btn" data-r="200">+200</button>
+      <button class="raise-btn" data-r="500">+500</button>
+      <button class="raise-btn" data-r="1000">+1000</button>
+    </div>
     <div class="acts" id="acts"></div>
     <div class="log" id="log"></div>
   </div>
@@ -274,20 +294,34 @@
     var players = [];
     players.push({
       id: 0, name: '你', isMe: true, isAI: false, style: 'me',
-      hand: [], folded: [], ap: 5, compareUsed: false, stopped: false, out: false, topKnown: null
+      hand: [], folded: [], ap: 5, compareUsed: false, stopped: false, out: false, topKnown: null,
+      chips: 4000, bet: 0
     });
     var n = isFive ? 4 : 1;
     for (var i = 0; i < n; i++) {
       var p = PERSONAS[i];
       players.push({
         id: i + 1, name: p.name, isMe: false, isAI: true, style: p.style, tag: p.tag,
-        hand: [], folded: [], ap: 5, compareUsed: false, stopped: false, out: false, topKnown: null
+        hand: [], folded: [], ap: 5, compareUsed: false, stopped: false, out: false, topKnown: null,
+        chips: 4000, bet: 0
       });
     }
+    /* 开局每人交底注 100，进底池 */
+    var BASE_BET = 100;
+    var pot = 0;
+    players.forEach(function (p) {
+      var pay = Math.min(BASE_BET, p.chips);
+      p.chips -= pay;
+      p.bet = pay;
+      pot += pay;
+    });
+
     return {
       mode: mode,
       deck: buildDeck(),
       players: players,
+      pot: pot,
+      baseBet: BASE_BET,
       turn: 0,
       round: 1,
       phase: 'play',
@@ -304,6 +338,26 @@
     G.log.push({ t: msg, c: cls || '' });
     if (G.log.length > 80) G.log.shift();
     renderLog();
+  }
+
+  /* ============================================================
+     下注
+     ============================================================ */
+  var RAISE_STEPS = [100, 200, 500, 1000];
+
+  function raiseBet(p, amount) {
+    if (G.phase === 'over' || p.out) return false;
+    if (p.chips < amount) return false;
+    p.chips -= amount;
+    p.bet += amount;
+    G.pot += amount;
+    log('💰 ' + p.name + ' 加注 ' + amount + '（投入 ' + p.bet + '）', p.isMe ? 'hl' : 'p' + p.id);
+    renderAll();
+    return true;
+  }
+
+  function syncChips() {
+    try { localStorage.setItem('astra21_chips', String(meP().chips)); } catch (e) {}
   }
 
   /* ============================================================
@@ -407,7 +461,7 @@
         : { winner: b, reason: '同为 ' + va + ' 点，倒扣牌 ' + cardName(fb.card) + ' > ' + cardName(fa.card), va: va, vb: vb };
     }
     if (fa.suit !== fb.suit) {
-      return SUIT_RANK[fa.suit] > SUIT_RANK[fb.suit]
+      return fa.suit > fb.suit
         ? { winner: a, reason: '倒扣牌同为 ' + fa.point + ' 点，' + cardName(fa.card) + ' 花色更大', va: va, vb: vb }
         : { winner: b, reason: '倒扣牌同为 ' + fa.point + ' 点，' + cardName(fb.card) + ' 花色更大', va: va, vb: vb };
     }
@@ -552,6 +606,16 @@
         return;
       }
     }
+    if (mv.type === 'raise' && (mv.amount || 0) > 0) {
+      if (!raiseBet(p, mv.amount)) { mv = decideAI(p); }
+      else {
+        setTimeout(function () {
+          if (p.ap > 0) aiTurn();
+          else { G.acted[p.id] = false; G.turn = nextAliveIdx(G.turn); renderAll(); afterTurn(); }
+        }, 480);
+        return;
+      }
+    }
     if (mv.type === 'stop') {
       stopP(p); renderAll();
       G.turn = nextAliveIdx(G.turn); renderAll(); afterTurn(); return;
@@ -631,6 +695,9 @@
     switch (p.style) {
       /* ---- 猛冲：喜欢追高分、更早发起比牌 ---- */
       case 'aggressive':
+        /* 手牌好就压注 */
+        if (v >= 18 && p.chips >= 200 && Math.random() < 0.55) return { type: 'raise', amount: 200 };
+        if (v >= 16 && p.chips >= 100 && Math.random() < 0.4) return { type: 'raise', amount: 100 };
         if (canCmp && v >= 19) return { type: 'compare', target: pickTarget(p) };
         if (canCmp && v >= 17 && G.round >= 3) return { type: 'compare', target: pickTarget(p) };
         if (v < 19 && p.ap > 0) return { type: 'draw' };
@@ -639,6 +706,7 @@
 
       /* ---- 保守：先把自己修剪安全，很少主动比 ---- */
       case 'cautious':
+        if (v >= 19 && p.chips >= 100 && Math.random() < 0.35) return { type: 'raise', amount: 100 };
         if (v > 18 && p.ap > 0) return { type: 'fold' };
         if (v < 15 && p.ap > 0) return { type: 'draw' };
         if (canCmp && v >= 20 && G.round >= 4) return { type: 'compare', target: pickTarget(p) };
@@ -647,6 +715,8 @@
 
       /* ---- 伪装：高点数先不倒扣，装弱小，等别人送上门 ---- */
       case 'bluffer':
+        /* 装强压注，吓退别人 */
+        if (v < 15 && p.chips >= 500 && Math.random() < 0.3) return { type: 'raise', amount: 500 };
         if (canCmp && v >= 20 && G.round >= 3 && Math.random() < 0.6)
           return { type: 'compare', target: pickTarget(p) };
         if (v >= 17 && v <= 21 && p.ap > 1 && others.some(function (q) { return q.hand.length > 2; }))
@@ -657,6 +727,8 @@
 
       /* ---- 算牌：看牌堆和轮次，等最佳时机 ---- */
       case 'counter':
+        if (v >= 20 && p.chips >= 500 && Math.random() < 0.6) return { type: 'raise', amount: 500 };
+        if (v >= 18 && p.chips >= 100 && Math.random() < 0.3) return { type: 'raise', amount: 100 };
         if (anyOtherBroke && canCmp && v >= 16) return { type: 'compare', target: pickTarget(p) };
         if (canCmp && v >= 20 && G.round >= 3) return { type: 'compare', target: pickTarget(p) };
         if (v > 19 && p.ap > 1) return { type: 'stop' };
@@ -989,6 +1061,19 @@
       return;
     }
 
+    /* 加注条：只有轮到我、还有筹码时显示 */
+    var rb = $('raiseBar');
+    if (rb) {
+      var canRaise = myTurn && me.chips >= 100 && !me.stopped;
+      rb.hidden = !canRaise;
+      Array.prototype.forEach.call(rb.querySelectorAll('.raise-btn'), function (b) {
+        var amt = parseInt(b.getAttribute('data-r'), 10);
+        b.disabled = me.chips < amt;
+      });
+      var cl = rb.querySelector('.chip-line');
+      if (cl) cl.textContent = '你剩 ' + me.chips + '，已投 ' + me.bet;
+    }
+
     var targets = validTargets(me);
     add('🃏 抽牌 1点', '', actDraw, me.ap < 1);
     add('⬇ 倒扣 1点', '', beginPick, me.ap < 1 || !me.hand.length);
@@ -1224,6 +1309,18 @@
     else if (winner.isMe) { title = '你赢了'; color = '#7fd1ae'; icon = '🏆'; }
     else { title = winner.name + ' 赢了'; color = '#e8a09a'; icon = '💀'; }
 
+    /* 底池给赢家（双负则退回各自投入） */
+    if (winner) {
+      winner.chips += G.pot;
+      G.log.push({ t: '💰 ' + winner.name + ' 赢得底池 ' + G.pot, c: 'hl' });
+      G.pot = 0;
+    } else {
+      G.players.forEach(function (p) { p.chips += p.bet; });
+      G.log.push({ t: '💰 无人获胜，底池退回', c: '' });
+      G.pot = 0;
+    }
+    syncChips();
+
     var rows = G.players.map(function (p) {
       var v = bestValue(p.hand);
       var mark = '';
@@ -1233,6 +1330,7 @@
       return '<div style="display:flex;gap:.4rem;font-size:.72rem;line-height:1.6;padding:.16rem 0;border-bottom:1px solid rgba(255,255,255,.06);text-align:left">' +
         '<span style="flex:none;width:4.4em;color:' + (p.isMe ? '#b8e6c8' : '#f3c9c4') + '">' + p.name + mark + '</span>' +
         '<span style="flex:none;width:3.4em;color:#ffe9a8">' + v + ' 点</span>' +
+        '<span style="flex:none;width:4.6em;color:' + (p.chips < 100 ? '#ff9a93' : '#9dc4b2') + '">💰' + p.chips + '</span>' +
         '<span style="flex:1;color:#9dc4b2;word-break:break-all">' + handTxt + '</span></div>';
     }).join('');
 
@@ -1292,6 +1390,15 @@
      启动
      ============================================================ */
   function startGame(mode) {
+    /* 恢复上次的筹码 */
+    try {
+      var saved = localStorage.getItem('astra21_chips');
+      if (saved !== null) {
+        var s = parseInt(saved, 10);
+        if (!isNaN(s) && s >= 0) { /* 只用于提示，实际每局重置 */ }
+      }
+    } catch (e) {}
+
     if (mode === 'doom2' && !getKey()) {
       log('没有可用的 OpenRouter Key，已切换到普通人机', 'bad');
       mode = 'human5';
@@ -1301,9 +1408,21 @@
     $('gameBox').hidden = false;
     var label = mode === 'human5' ? '普通人机 · 5 人同桌' : '末日人机 · 1v1';
     log('新游戏开始（' + label + '）', 'hl');
+    log('每人底注 100 已入池，总计 ' + G.pot + '。赢家通吃。');
     log('每人 5 点行动点。比牌输的人直接出局，最后活着的人赢。');
     renderAll();
   }
+
+  /* 加注按钮 */
+  Array.prototype.forEach.call(document.querySelectorAll('.raise-btn'), function (b) {
+    b.addEventListener('click', function () {
+      var amt = parseInt(b.getAttribute('data-r'), 10);
+      var me = meP();
+      if (!G || G.phase === 'over' || cur() !== me) return;
+      if (!raiseBet(me, amt)) { log('筹码不足', 'bad'); return; }
+      afterMyAction();
+    });
+  });
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-mode]'), function (b) {
     b.addEventListener('click', function () { startGame(b.getAttribute('data-mode')); });
