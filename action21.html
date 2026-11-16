@@ -364,7 +364,7 @@
     G.deckTopKnown = null;
     spend(who, 1);
     if (who === 'me') G.meActed = true; else G.aiActed = true;
-    log((who === 'me' ? '你' : 'AI') + ' 抽了一张牌' + (who === 'me' ? '：' + cardName(c) + (c.rank === '1' ? '（待定 1 或 11）' : '') : ''), who === 'me' ? 'hl' : '');
+    log((who === 'me' ? '你' : 'AI') + ' 抽了一张牌' + (who === 'me' ? '：' + cardName(c) + (c.rank === '1' ? '（待定 1 或 11）' : '') : '（牌面未知）'), who === 'me' ? 'hl' : '');
 
     /* 玩家抽到 A → 弹窗决定 */
     if (who === 'me' && c.rank === '1' && !c.aValue) {
@@ -555,18 +555,19 @@
     var apEl = $(prefix + 'AP');
     var valEl = $(prefix + 'Val');
 
-    /* 手牌 */
+    /* 手牌：自己的显示牌面，对手的显示牌背 */
     handEl.innerHTML = '';
-    p.hand.forEach(function (c, i) {
+    var iAmMe = (who === 'me');
+    p.hand.forEach(function (c, idx) {
       var d = document.createElement('div');
       d.className = 'card dealt';
       var img = document.createElement('img');
-      img.src = cardImg(c);
-      img.alt = cardName(c);
+      img.src = iAmMe ? cardImg(c) : 'assets/cards/back.svg';
+      img.alt = iAmMe ? cardName(c) : '对手的手牌';
       img.draggable = false;
       d.appendChild(img);
-      /* A 牌上标出当前取值 */
-      if (c.rank === '1') {
+      /* 只有自己的 A 才标出当前取值 */
+      if (iAmMe && c.rank === '1') {
         var tag = document.createElement('span');
         tag.className = 'ace-tag' + (c.aValue === 1 ? ' low' : '');
         tag.textContent = c.aValue === 1 ? '1' : '11';
@@ -583,12 +584,17 @@
       apEl.appendChild(dot);
     }
 
-    /* 点数 */
-    if (!p.hand.length) valEl.textContent = '—';
-    else {
-      var v = bestValue(p.hand);
-      valEl.textContent = v + ' 点' + (v > 21 ? ' 爆' : '');
-      valEl.style.color = v > 21 ? '#ff9a93' : '#ffe9a8';
+    /* 点数：自己显示具体值，对手只显示张数 */
+    if (who === 'me') {
+      if (!p.hand.length) valEl.textContent = '—';
+      else {
+        var v = bestValue(p.hand);
+        valEl.textContent = v + ' 点' + (v > 21 ? ' 爆' : '');
+        valEl.style.color = v > 21 ? '#ff9a93' : '#ffe9a8';
+      }
+    } else {
+      valEl.textContent = p.hand.length ? p.hand.length + ' 张' : '—';
+      valEl.style.color = '#f3c9c4';
     }
 
     /* 倒扣牌 */
@@ -1151,6 +1157,35 @@
         '</div>' +
       '</div>';
     document.body.appendChild(box);
+
+    /* 结算后亮出对手手牌，让人看清输在哪 */
+    (function showEverything() {
+      var handEl = $('aiHand');
+      if (!handEl) return;
+      handEl.innerHTML = '';
+      G.ai.hand.forEach(function (c) {
+        var d = document.createElement('div');
+        d.className = 'card';
+        var img = document.createElement('img');
+        img.src = cardImg(c);
+        img.alt = cardName(c);
+        img.draggable = false;
+        d.appendChild(img);
+        if (c.rank === '1') {
+          var tag = document.createElement('span');
+          tag.className = 'ace-tag' + (c.aValue === 1 ? ' low' : '');
+          tag.textContent = c.aValue === 1 ? '1' : '11';
+          d.appendChild(tag);
+        }
+        handEl.appendChild(d);
+      });
+      var valEl = $('aiVal');
+      if (valEl) {
+        var v = bestValue(G.ai.hand);
+        valEl.textContent = v + ' 点' + (v > 21 ? ' 爆' : '');
+        valEl.style.color = v > 21 ? '#ff9a93' : '#ffe9a8';
+      }
+    })();
 
     box.querySelector('#again').addEventListener('click', function () {
       box.remove(); startGame(G.mode);
