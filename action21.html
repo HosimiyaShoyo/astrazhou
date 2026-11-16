@@ -454,38 +454,60 @@
   /* ============================================================
      比牌
      ============================================================ */
-  function compare(a, b) {
-    var pa = P(a), pb = P(b);
-    var va = bestValue(pa.hand), vb = bestValue(pb.hand);
+  /* 比牌判定：始终以「你」和「对手」两个视角输出，避免名字搞混 */
+  function compare() {
+    var me = G.me, ai = G.ai;
+    var vm = bestValue(me.hand);       /* 你的点数 */
+    var va = bestValue(ai.hand);       /* 对手的点数 */
 
+    var rm = (vm > 21) ? Infinity : Math.abs(21 - vm);
     var ra = (va > 21) ? Infinity : Math.abs(21 - va);
-    var rb = (vb > 21) ? Infinity : Math.abs(21 - vb);
 
-    if (ra === rb) {
-      /* 平局 → 比倒扣牌 */
-      if (!pa.folded.length && !pb.folded.length) {
-        return { result: 'bothLose', va: va, vb: vb, reason: '点数相同且双方都没有倒扣牌，双方判负' };
-      }
-      if (!pa.folded.length) return { result: 'bWins', va: va, vb: vb, reason: '点数相同，但你（' + pa.name + '）没有倒扣牌，判负' };
-      if (!pb.folded.length) return { result: 'aWins', va: va, vb: vb, reason: '点数相同，' + pb.name + ' 没有倒扣牌，判负' };
-
-      /* 比倒扣牌：先比点数，再比花色 */
-      var fa = bestFolded(pa.folded), fb = bestFolded(pb.folded);
-      if (fa.point !== fb.point) {
-        return fa.point > fb.point
-          ? { result:'aWins', va:va, vb:vb, reason:'点数相同，倒扣牌 ' + cardName(fa.card) + ' 大于 ' + cardName(fb.card) }
-          : { result:'bWins', va:va, vb:vb, reason:'点数相同，倒扣牌 ' + cardName(fb.card) + ' 大于 ' + cardName(fa.card) };
-      }
-      if (fa.suit !== fb.suit) {
-        return SUIT_RANK[fa.suit] > SUIT_RANK[fb.suit]
-          ? { result:'aWins', va:va, vb:vb, reason:'倒扣牌同点数，' + cardName(fa.card) + ' 花色大于 ' + cardName(fb.card) }
-          : { result:'bWins', va:va, vb:vb, reason:'倒扣牌同点数，' + cardName(fb.card) + ' 花色大于 ' + cardName(fa.card) };
-      }
-      return { result:'bothLose', va:va, vb:vb, reason:'倒扣牌完全一样，双方判负' };
+    function R(result, reason) {
+      return { result: result, mine: vm, theirs: va, reason: reason };
     }
 
-    if (ra < rb) return { result:'aWins', va:va, vb:vb, reason: (va > 21 ? pa.name + ' 爆牌' : pa.name + ' 更接近 21 点') };
-    return { result:'bWins', va:va, vb:vb, reason: (vb > 21 ? pb.name + ' 爆牌' : pb.name + ' 更接近 21 点') };
+    /* ---- 点数不同：谁更接近 21 谁赢 ---- */
+    if (rm !== ra) {
+      if (rm < ra) {
+        var why;
+        if (va > 21) why = '对手爆牌（' + va + ' 点）';
+        else if (vm === 21) why = '你正好 21 点，满分';
+        else why = '你 ' + vm + ' 点，比对手的 ' + va + ' 点更接近 21';
+        return R('meWin', why);
+      }
+      var why2;
+      if (vm > 21) why2 = '你爆牌了（' + vm + ' 点）';
+      else if (va === 21) why2 = '对手正好 21 点，满分';
+      else why2 = '对手 ' + va + ' 点，比你的 ' + vm + ' 点更接近 21';
+      return R('aiWin', why2);
+    }
+
+    /* ---- 点数相同：比倒扣牌 ---- */
+    if (!me.folded.length && !ai.folded.length) {
+      return R('bothLose', '双方都是 ' + vm + ' 点，且都没有倒扣牌，双双判负');
+    }
+    if (!me.folded.length) {
+      return R('aiWin', '双方都是 ' + vm + ' 点，但你没有倒扣牌，判负');
+    }
+    if (!ai.folded.length) {
+      return R('meWin', '双方都是 ' + vm + ' 点，但对手没有倒扣牌，对手判负');
+    }
+
+    var fm = bestFolded(me.folded);    /* 你的最佳倒扣牌 */
+    var fa = bestFolded(ai.folded);    /* 对手的最佳倒扣牌 */
+
+    if (fm.point !== fa.point) {
+      return fm.point > fa.point
+        ? R('meWin', '双方都是 ' + vm + ' 点，比倒扣牌：你的 ' + cardName(fm.card) + ' 大于对手的 ' + cardName(fa.card))
+        : R('aiWin', '双方都是 ' + vm + ' 点，比倒扣牌：对手的 ' + cardName(fa.card) + ' 大于你的 ' + cardName(fm.card));
+    }
+    if (fm.suit !== fa.suit) {
+      return SUIT_RANK[fm.suit] > SUIT_RANK[fa.suit]
+        ? R('meWin', '双方都是 ' + vm + ' 点，倒扣牌同为 ' + fm.point + ' 点，你的 ' + cardName(fm.card) + ' 花色更大')
+        : R('aiWin', '双方都是 ' + vm + ' 点，倒扣牌同为 ' + fa.point + ' 点，对手的 ' + cardName(fa.card) + ' 花色更大');
+    }
+    return R('bothLose', '双方都是 ' + vm + ' 点，倒扣牌也完全一样，双双判负');
   }
 
   function bestFolded(arr) {
@@ -722,7 +744,7 @@
       afterMyAction();
     } else if (kind === 'compare') {
       G.me.compareUsed = true;
-      var r = compare('me', 'ai');
+      var r = compare();
       log('你发起比牌！', 'hl');
       revealFolded();
       setTimeout(function () { endGame(r, 'me'); }, 500);
@@ -802,7 +824,7 @@
 
     if (move.type === 'compare' && !ai.compareUsed && ai.hand.length) {
       ai.compareUsed = true;
-      var r = compare('ai', 'me');
+      var r = compare();
       log('对手发起比牌！', 'bad');
       revealFolded();
       setTimeout(function () { endGame(r, 'ai'); }, 500);
@@ -1095,7 +1117,7 @@
     if (G.phase === 'over') return;
     log('所有行动点耗尽，强制进入公开阶段', 'hl');
     revealFolded();
-    var r = compare('me', 'ai');
+    var r = compare();
     setTimeout(function () { endGame(r, 'public'); }, 600);
   }
 
@@ -1103,25 +1125,25 @@
     G.phase = 'over';
     renderAll();
 
-    var title, color, desc;
-    if (r.result === 'aWins') { title = '你赢了'; color = '#7fd1ae'; }
-    else if (r.result === 'bWins') { title = '对手赢了'; color = '#e8a09a'; }
-    else { title = '平局 / 双负'; color = '#d9b45a'; }
+    var title, color, icon;
+    if (r.result === 'meWin') { title = '你赢了'; color = '#7fd1ae'; icon = '🏆'; }
+    else if (r.result === 'aiWin') { title = '对手赢了'; color = '#e8a09a'; icon = '💀'; }
+    else { title = '双负'; color = '#d9b45a'; icon = '🤝'; }
 
-    desc = r.reason || '';
-    desc += '<br>你 ' + r.va + ' 点　对手 ' + r.vb + ' 点';
-    desc += '<br><span style="font-size:.72rem;opacity:.65">你的手牌：' + (G.me.hand.map(function(c){ return cardName(c) + (c.rank==='1' ? '('+c.aValue+')' : ''); }).join('、') || '无') + '</span>';
-    desc += '<br><span style="font-size:.72rem;opacity:.65">对手手牌：' + (G.ai.hand.map(cardName).join('、') || '无') + '</span>';
-    if (by === 'public') desc += '<br><span style="opacity:.7">（公开阶段决定）</span>';
+    var desc = r.reason || '';
+    desc += '<br>你 ' + r.mine + ' 点　对手 ' + r.theirs + ' 点';
+    desc += '<br><span style="font-size:.72rem;opacity:.65">你的手牌：' +
+      (G.me.hand.map(function (c) { return cardName(c) + (c.rank === '1' ? '(' + c.aValue + ')' : ''); }).join('、') || '无') + '</span>';
+    desc += '<br><span style="font-size:.72rem;opacity:.65">对手手牌：' +
+      (G.ai.hand.map(function (c) { return cardName(c) + (c.rank === '1' ? '(' + c.aValue + ')' : ''); }).join('、') || '无') + '</span>';
+    if (by === 'public') desc += '<br><span style="opacity:.7;font-size:.74rem">（公开阶段决定）</span>';
 
     var box = document.createElement('div');
     box.className = 'over';
     box.innerHTML =
       '<div class="over-box">' +
         '<h2 style="color:' + color + '">' + title + '</h2>' +
-        '<div class="big" style="color:' + color + '">' +
-          (r.result === 'aWins' ? '🏆' : (r.result === 'bWins' ? '💀' : '🤝')) +
-        '</div>' +
+        '<div class="big" style="color:' + color + '">' + icon + '</div>' +
         '<p>' + desc + '</p>' +
         '<div style="display:flex;gap:.5rem;margin-top:1.1rem">' +
           '<button class="abtn primary" id="again" style="flex:1">再来一局</button>' +
