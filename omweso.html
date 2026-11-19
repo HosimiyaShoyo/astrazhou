@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Omweso · 卢旺达播棋 · Astra Zhou</title>
+<meta name="description" content="Omweso（恩韦索）是卢旺达、乌干达一带的传统播棋。4×8 棋盘、128 颗种子，靠播种与掠取吃掉对方的子。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Omweso · 卢旺达播棋">
+<meta property="og:description" content="4×8 棋盘、128 颗种子，卢旺达与乌干达的传统播棋。">
+<meta property="og:image" content="https://astrazhou.is-cool.dev/assets/og-cover.jpg">
+<meta property="og:url" content="https://astrazhou.is-cool.dev/omweso.html">
+<meta name="theme-color" content="#2b1608">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/style.css?v=1795055502">
+<style>
+  :root{
+    --wood:#6b4423; --wood-2:#4a2d15; --wood-3:#8a5a2f;
+    --pit:#3a2210;
+    --warm:#ffe9a8;
+  }
+  body{background:#1a0f06}
+  .om{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:.9rem .8rem 1.4rem}
+
+  .om-top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
+  .om-top h1{margin:0;font-size:1.08rem;color:#f5e0b8}
+  .om-top .sub{font-size:.72rem;color:#b89468}
+  .om-top .spacer{flex:1}
+  .chip{font-size:.72rem;padding:.24rem .6rem;border-radius:999px;background:rgba(255,233,168,.1);border:1px solid rgba(255,233,168,.24);color:#f0d9a0}
+  .chip.gold{background:rgba(255,233,168,.2);border-color:rgba(255,233,168,.5);color:var(--warm)}
+
+  .board-wrap{
+    position:relative;border-radius:16px;padding:.7rem;
+    background:linear-gradient(160deg,var(--wood-3),var(--wood) 38%,var(--wood-2));
+    border:2px solid #2b1608;
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.12),inset 0 -3px 8px rgba(0,0,0,.5),0 16px 40px rgba(0,0,0,.6);
+  }
+  .board{display:grid;grid-template-columns:repeat(8,1fr);gap:.34rem}
+
+  .pit{
+    position:relative;aspect-ratio:1/.92;border-radius:50%;
+    background:radial-gradient(circle at 50% 32%,#4a2b13,rgba(36,18,7,0) 72%),radial-gradient(circle at 50% 50%,var(--pit),#1d0f05);
+    border:1.5px solid rgba(0,0,0,.5);
+    box-shadow:inset 0 5px 10px rgba(0,0,0,.75),inset 0 -2px 4px rgba(255,255,255,.05);
+    display:flex;align-items:center;justify-content:center;
+    cursor:default;transition:transform .15s,box-shadow .2s;
+    overflow:hidden;
+  }
+  .pit.playable{cursor:pointer}
+  .pit.playable:hover{transform:translateY(-2px);box-shadow:inset 0 5px 10px rgba(0,0,0,.75),0 0 0 2px var(--warm)}
+  .pit.must{box-shadow:inset 0 5px 10px rgba(0,0,0,.75),0 0 0 2.5px #ff9a93,0 0 14px rgba(255,120,110,.5)}
+  .pit.last{animation:pitPop .4s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pitPop{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .pit.captured{animation:capFlash .5s ease-out}
+  @keyframes capFlash{0%{box-shadow:inset 0 5px 10px rgba(0,0,0,.75),0 0 0 3px #7fd1ae,0 0 20px rgba(127,209,174,.8)}100%{box-shadow:inset 0 5px 10px rgba(0,0,0,.75)}}
+
+  .seeds{position:relative;width:78%;height:78%;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:1.5px}
+  .seed{
+    width:7px;height:7px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 35% 30%,#fff5d0,#e8c87a 45%,#a87928);
+    box-shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+  .cnt{position:absolute;right:3px;bottom:2px;font-size:9px;font-weight:800;color:rgba(255,233,168,.75);font-variant-numeric:tabular-nums}
+
+  .divider{
+    grid-column:1/-1;height:2px;margin:.1rem 0;border-radius:2px;
+    background:linear-gradient(90deg,transparent,rgba(0,0,0,.55) 12%,rgba(0,0,0,.55) 88%,transparent);
+  }
+
+  .info{
+    display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    margin-top:.7rem;padding:.5rem .7rem;border-radius:11px;
+    background:rgba(255,233,168,.07);border:1px solid rgba(255,233,168,.16);
+    font-size:.74rem;color:#d8b98a;
+  }
+  .info b{color:var(--warm);font-variant-numeric:tabular-nums}
+
+  .acts{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.7rem}
+  .abtn{
+    font:inherit;font-size:.8rem;font-weight:700;padding:.5rem .85rem;border-radius:10px;cursor:pointer;
+    background:#f0d9a0;color:#3a2210;border:none;box-shadow:0 3px 0 rgba(0,0,0,.35);
+    transition:transform .12s,box-shadow .12s,opacity .2s;
+  }
+  .abtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .abtn[disabled]{opacity:.38;cursor:default;transform:none}
+  .abtn.ghost{background:transparent;color:#d8b98a;border:1px solid rgba(255,233,168,.3);box-shadow:none}
+
+  .log{margin-top:.7rem;max-height:104px;overflow-y:auto;font-size:.72rem;line-height:1.6;color:#b89468}
+  .log div{padding:.08rem 0;border-bottom:1px solid rgba(255,233,168,.06)}
+  .log .hl{color:var(--warm)}
+  .log .bad{color:#ffb3ad}
+  .log .good{color:#9be8a8}
+
+  .over{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:1rem;
+    background:rgba(12,6,2,.86);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);overflow-y:auto}
+  .over-box{max-width:370px;width:100%;text-align:center;border-radius:18px;padding:1.3rem 1.1rem;margin:auto;
+    background:linear-gradient(180deg,#3a2210,#241207);border:1px solid rgba(255,233,168,.2);
+    box-shadow:0 24px 60px rgba(0,0,0,.7)}
+  .over-box h2{margin:0 0 .3rem;font-size:1.25rem;color:var(--warm)}
+  .over-box p{margin:.26rem 0 0;font-size:.82rem;color:#d8b98a;line-height:1.7}
+  .over-box .big{font-size:2rem;line-height:1.1;margin:.2rem 0 .1rem}
+  .over-box .rules-txt{font-size:.78rem;line-height:1.85;color:#d8b98a;max-height:60vh;overflow-y:auto;text-align:left}
+  .over-box .rules-txt b{color:var(--warm)}
+
+  .start{max-width:420px;margin:1.4rem auto 0;text-align:center}
+  .start h2{margin:0 0 .35rem;font-size:1.2rem;color:#f5e0b8}
+  .start p{margin:0 0 1rem;font-size:.82rem;color:#b89468;line-height:1.75}
+  .mode{display:flex;flex-direction:column;gap:.55rem;text-align:left}
+  .mode button{font:inherit;padding:.8rem .95rem;border-radius:12px;cursor:pointer;
+    background:#f0d9a0;border:none;color:#3a2210;box-shadow:0 4px 0 rgba(0,0,0,.35);
+    transition:transform .12s,box-shadow .12s}
+  .mode button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .mode button b{display:block;font-size:.92rem;margin-bottom:.1rem}
+  .mode button small{display:block;font-size:.72rem;color:#5c4326;line-height:1.5}
+
+  @media (max-width:480px){
+    .board{gap:.24rem}
+    .board-wrap{padding:.5rem}
+    .seed{width:5px;height:5px}
+    .cnt{font-size:8px}
+  }
+</style>
+</head>
+<body>
+
+<div class="om">
+  <div class="om-top">
+    <div>
+      <h1>Omweso</h1>
+      <div class="sub">卢旺达 · 乌干达传统播棋</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip" id="turnChip">你的回合</span>
+    <span class="chip gold" id="scoreChip">你 0 · 对手 0</span>
+    <button class="abtn ghost" id="rulesBtn" style="padding:.28rem .65rem;font-size:.72rem">规则</button>
+  </div>
+
+  <div id="startBox" class="start">
+    <h2>🪵 Omweso</h2>
+    <p>4×8 的木头棋盘，128 颗种子。<br>播种、掠取，把对方的子吃干净。</p>
+    <div class="mode">
+      <button data-mode="easy"><b>轻松</b><small>AI 只看眼前一步，随便玩。</small></button>
+      <button data-mode="normal"><b>普通</b><small>AI 会算掠取和反掠取。</small></button>
+      <button data-mode="hard"><b>困难</b><small>AI 会预判两层，难缠。</small></button>
+    </div>
+  </div>
+
+  <div id="gameBox" hidden>
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+    </div>
+    <div class="info">
+      <span>你吃掉：<b id="myScore">0</b> 颗</span>
+      <span>对手吃掉：<b id="aiScore">0</b> 颗</span>
+      <span id="hintText" style="opacity:.75"></span>
+    </div>
+    <div class="acts" id="acts"></div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     Omweso（简化版规则）
+
+     棋盘：4 行 × 8 列 = 32 洞
+       行 0、1 = 对手营地（上）
+       行 2、3 = 你的营地（下）
+     开局：每洞 4 颗，全场 128 颗
+
+     走法：
+       1. 选自己营地的一个洞，拿起全部种子
+       2. 沿环形路径顺时针一格一颗播种
+          路径：行3 左→右 → 行2 右→左 → 行1 左→右 → 行0 右→左
+       3. 最后一颗落点：
+          - 对手营地且该洞 2 或 3 颗 → 掠取，计分
+          - 对手营地且该洞 ≥4 颗 → 对手下一步必须走这个洞
+          - 自己营地 → 正常换手
+     胜负：一方无合法走法即负
+  ============================================================ */
+
+  var ROWS = 4, COLS = 8;
+  var PIT_COUNT = ROWS * COLS;
+
+  var PATH = [];
+  (function () {
+    var c;
+    for (c = 0; c < COLS; c++) PATH.push(3 * COLS + c);
+    for (c = COLS - 1; c >= 0; c--) PATH.push(2 * COLS + c);
+    for (c = 0; c < COLS; c++) PATH.push(1 * COLS + c);
+    for (c = COLS - 1; c >= 0; c--) PATH.push(0 * COLS + c);
+  })();
+  var POS = {};
+  PATH.forEach(function (idx, i) { POS[idx] = i; });
+
+  function isMine(idx) { return Math.floor(idx / COLS) >= 2; }
+  function isOpp(idx) { return Math.floor(idx / COLS) < 2; }
+
+  var G = null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function newGame(mode) {
+    return {
+      mode: mode,
+      pits: new Array(PIT_COUNT).fill(4),
+      turn: 0,
+      forced: null,
+      myCaptured: 0,
+      aiCaptured: 0,
+      over: false,
+      log: [],
+      lastPit: -1,
+      lastCapture: []
+    };
+  }
+
+  function log(msg, cls) {
+    if (!G) return;
+    if (!Array.isArray(G.log)) G.log = [];
+    G.log.push({ t: msg, c: cls || '' });
+    if (G.log.length > 80) G.log.shift();
+  }
+
+  function sowFrom(start) {
+    var seeds = G.pits[start];
+    if (seeds <= 0) return null;
+    G.pits[start] = 0;
+    var pathIdx = POS[start];
+    var last = -1;
+    for (var k = 0; k < seeds; k++) {
+      pathIdx = (pathIdx + 1) % PATH.length;
+      last = PATH[pathIdx];
+      if (last === start) {
+        pathIdx = (pathIdx + 1) % PATH.length;
+        last = PATH[pathIdx];
+      }
+      G.pits[last]++;
+    }
+    return { last: last };
+  }
+
+  function resolve(r, who) {
+    var last = r.last;
+    var res = { captured: [], capturedN: 0, mustPitFor: null };
+    if (isOpp(last)) {
+      var n = G.pits[last];
+      if (n === 2 || n === 3) {
+        res.captured = [last];
+        res.capturedN = n;
+        if (who === 0) G.myCaptured += n; else G.aiCaptured += n;
+        G.pits[last] = 0;
+        log((who === 0 ? '你' : '对手') + ' 掠取了 ' + n + ' 颗！', 'good');
+      } else if (n >= 4) {
+        res.mustPitFor = last;
+      }
+    }
+    return res;
+  }
+
+  function legalMoves(who) {
+    var mine = (who === 0);
+    var owned = function (i) { return mine ? isMine(i) : isOpp(i); };
+    if (G.forced !== null && owned(G.forced) && G.pits[G.forced] > 0) return [G.forced];
+    var list = [];
+    for (var i = 0; i < PIT_COUNT; i++) {
+      if (owned(i) && G.pits[i] > 0) list.push(i);
+    }
+    return list;
+  }
+
+  function applyMove(pit, who) {
+    var r = sowFrom(pit);
+    if (!r) return null;
+    var res = resolve(r, who);
+    G.lastPit = r.last;
+    G.lastCapture = res.captured;
+    if (res.mustPitFor !== null) {
+      G.forced = res.mustPitFor;
+      log((who === 0 ? '你' : '对手') + ' 落在对方营地且超过 3 颗，对方必须走那一洞', 'hl');
+    } else {
+      G.forced = null;
+    }
+    return res;
+  }
+
+  function snap() {
+    return { pits: G.pits.slice(), my: G.myCaptured, ai: G.aiCaptured, forced: G.forced, logLen: G.log.length };
+  }
+  function restore(s) {
+    G.pits = s.pits.slice();
+    G.myCaptured = s.my;
+    G.aiCaptured = s.ai;
+    G.forced = s.forced;
+    if (G.log.length > s.logLen) G.log.length = s.logLen;
+  }
+
+  function preview(pit, who) {
+    var s = snap();
+    var r = sowFrom(pit);
+    var res = r ? resolve(r, who) : { captured: [], capturedN: 0, mustPitFor: null };
+    var out = {
+      capturedN: res.capturedN,
+      mustPitFor: res.mustPitFor,
+      last: r ? r.last : -1,
+      after: G.pits.slice(),
+      afterForced: G.forced
+    };
+    restore(s);
+    return out;
+  }
+
+  function aiChoose() {
+    var moves = legalMoves(1);
+    if (!moves.length) return null;
+
+    if (G.mode === 'easy') {
+      var cap = [], noCap = [];
+      moves.forEach(function (m) {
+        var p = preview(m, 1);
+        if (p.capturedN > 0) cap.push({ m: m, n: p.capturedN });
+        else noCap.push(m);
+      });
+      if (cap.length) {
+        cap.sort(function (x, y) { return y.n - x.n; });
+        return cap[0].m;
+      }
+      return noCap[Math.floor(Math.random() * noCap.length)];
+    }
+
+    var scored = moves.map(function (m) {
+      var p = preview(m, 1);
+      var s = p.capturedN * 10;
+
+      if (isMine(p.last) && (p.after[p.last] === 2 || p.after[p.last] === 3)) s -= 7;
+      if (p.mustPitFor !== null) s -= 4;
+
+      if (G.mode === 'hard') {
+        var s2 = snap();
+        var r2 = sowFrom(m);
+        if (r2) resolve(r2, 1);
+        G.forced = p.mustPitFor;
+        var oppMoves = legalMoves(0);
+        var worst = 0;
+        for (var i = 0; i < oppMoves.length; i++) {
+          var q = preview(oppMoves[i], 0);
+          if (q.capturedN > worst) worst = q.capturedN;
+        }
+        restore(s2);
+        s -= worst * 6;
+      }
+      return { m: m, s: s };
+    });
+
+    scored.sort(function (x, y) { return y.s - x.s; });
+    return scored[0].m;
+  }
+
+  function render() {
+    if (!G) return;
+    var board = $('board');
+    board.innerHTML = '';
+
+    for (var r = 0; r < ROWS; r++) {
+      for (var c = 0; c < COLS; c++) {
+        board.appendChild(makePit(r * COLS + c));
+      }
+      if (r === 1) {
+        var div = document.createElement('div');
+        div.className = 'divider';
+        board.appendChild(div);
+      }
+    }
+
+    $('myScore').textContent = G.myCaptured;
+    $('aiScore').textContent = G.aiCaptured;
+    $('scoreChip').textContent = '你 ' + G.myCaptured + ' · 对手 ' + G.aiCaptured;
+
+    var hint = $('hintText');
+    if (G.over) {
+      $('turnChip').textContent = '已结束';
+      hint.textContent = '';
+    } else if (G.turn === 0) {
+      $('turnChip').textContent = '你的回合';
+      if (G.forced !== null && isMine(G.forced)) {
+        hint.textContent = '对手要求你走标红的那一洞';
+      } else if (!legalMoves(0).length) {
+        hint.textContent = '你没有可走的洞了';
+      } else {
+        hint.textContent = '点自己营地的洞播种';
+      }
+    } else {
+      $('turnChip').textContent = '对手思考中…';
+      hint.textContent = '';
+    }
+
+    renderActs();
+    renderLog();
+  }
+
+  function makePit(idx) {
+    var n = G.pits[idx];
+    var d = document.createElement('div');
+    d.className = 'pit';
+    d.setAttribute('data-idx', idx);
+
+    if (G.lastPit === idx) d.classList.add('last');
+    if (G.lastCapture && G.lastCapture.indexOf(idx) >= 0) d.classList.add('captured');
+
+    var moves = (G.turn === 0 && !G.over) ? legalMoves(0) : [];
+    var playable = moves.indexOf(idx) >= 0;
+    if (playable) d.classList.add('playable');
+    if (G.forced === idx && G.turn === 0 && !G.over) d.classList.add('must');
+
+    if (n > 0) {
+      var wrap = document.createElement('div');
+      wrap.className = 'seeds';
+      var show = Math.min(n, 20);
+      for (var i = 0; i < show; i++) {
+        var s = document.createElement('span');
+        s.className = 'seed';
+        wrap.appendChild(s);
+      }
+      d.appendChild(wrap);
+      if (n > 1) {
+        var cnt = document.createElement('span');
+        cnt.className = 'cnt';
+        cnt.textContent = n;
+        d.appendChild(cnt);
+      }
+    }
+
+    if (playable) {
+      d.addEventListener('click', function () { onPitClick(idx); });
+    }
+    return d;
+  }
+
+  function renderLog() {
+    var el = $('log');
+    if (!el || !G) return;
+    if (!Array.isArray(G.log)) G.log = [];
+    el.innerHTML = '';
+    G.log.slice(-30).forEach(function (l) {
+      var d = document.createElement('div');
+      if (l.c) d.className = l.c;
+      d.textContent = l.t;
+      el.appendChild(d);
+    });
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function renderActs() {
+    var el = $('acts');
+    el.innerHTML = '';
+    if (!G) return;
+    function add(label, cls, fn, disabled) {
+      var b = document.createElement('button');
+      b.className = 'abtn ' + (cls || '');
+      b.textContent = label;
+      b.disabled = !!disabled;
+      if (!disabled) b.addEventListener('click', function (e) {
+        e.preventDefault();
+        try { fn(); } catch (err) { log('出错：' + err.message, 'bad'); render(); }
+      });
+      el.appendChild(b);
+    }
+    add('重新开局', 'ghost', function () { startGame(G.mode); }, false);
+    add('规则', 'ghost', showRules, false);
+  }
+
+  function onPitClick(idx) {
+    if (!G || G.over || G.turn !== 0) return;
+    if (legalMoves(0).indexOf(idx) < 0) return;
+
+    applyMove(idx, 0);
+    render();
+
+    if (!legalMoves(1).length) {
+      setTimeout(function () { finish('你赢了', '#9be8a8', '🏆', '对手没有可走的洞了'); }, 400);
+      return;
+    }
+    G.turn = 1;
+    render();
+    setTimeout(aiTurn, 520);
+  }
+
+  function aiTurn() {
+    if (!G || G.over || G.turn !== 1) return;
+    var mv = aiChoose();
+    if (mv === null) {
+      finish('你赢了', '#9be8a8', '🏆', '对手没有可走的洞了');
+      return;
+    }
+    applyMove(mv, 1);
+    render();
+
+    if (!legalMoves(0).length) {
+      setTimeout(function () { finish('你输了', '#ffb3ad', '💀', '你没有可走的洞了'); }, 400);
+      return;
+    }
+    G.turn = 0;
+    render();
+  }
+
+  function finish(title, color, icon, reason) {
+    G.over = true;
+    render();
+    var total = G.myCaptured + G.aiCaptured;
+    var box = document.createElement('div');
+    box.className = 'over';
+    box.innerHTML = '<div class="over-box">' +
+      '<h2 style="color:' + color + '">' + title + '</h2>' +
+      '<div class="big">' + icon + '</div>' +
+      '<p>' + reason + '</p>' +
+      '<p>你掠取 <b style="color:' + color + '">' + G.myCaptured + '</b> 颗　对手掠取 <b>' + G.aiCaptured + '</b> 颗' +
+      (total ? '<br><span style="font-size:.74rem;opacity:.7">场上还剩 ' + (128 - total) + ' 颗</span>' : '') + '</p>' +
+      '<div style="display:flex;gap:.5rem;margin-top:1rem">' +
+        '<button class="abtn" id="again" style="flex:1">再来一局</button>' +
+        '<button class="abtn ghost" id="back" style="flex:1">换个难度</button>' +
+      '</div></div>';
+    document.body.appendChild(box);
+    box.querySelector('#again').addEventListener('click', function () { box.remove(); startGame(G.mode); });
+    box.querySelector('#back').addEventListener('click', function () { box.remove(); location.reload(); });
+  }
+
+  function showRules() {
+    var box = document.createElement('div');
+    box.className = 'over';
+    box.innerHTML = '<div class="over-box" style="max-width:400px">' +
+      '<h2>Omweso 规则</h2>' +
+      '<div class="rules-txt">' +
+        '<p><b>棋盘</b>：4 行 × 8 列，共 32 个洞。上面两排是对手，下面两排是你。</p>' +
+        '<p><b>开局</b>：每洞 4 颗，全场 128 颗。</p>' +
+        '<p><b>走法</b>：点自己营地的一个洞，把里面的种子全部拿起，沿顺时针方向一格一颗播下去。</p>' +
+        '<p><b>顺时针路径</b>：从你左下角开始 → 最下面一行向右 → 换到上一行向左 → 再到对手那两行 → 绕一圈回到起点。</p>' +
+        '<p><b>掠取</b>：最后一颗落在对手营地，且那一洞正好变成 <b>2 或 3 颗</b>，就把这些全吃掉，计入得分。</p>' +
+        '<p><b>强制</b>：最后一颗落在对手营地且那一洞<b>超过 3 颗</b>，对手下一步<b>必须</b>走那一洞（会标红）。</p>' +
+        '<p><b>胜负</b>：轮到谁走，谁在自己营地一个能走的洞都没有，就输了。</p>' +
+        '<p style="color:#b89468">这是简化版。传统 Omweso 还有连掠、反向播种、「基松戈」等复杂规则。</p>' +
+      '</div>' +
+      '<button class="abtn" id="closeR" style="width:100%;margin-top:.9rem">知道了</button></div>';
+    document.body.appendChild(box);
+    box.querySelector('#closeR').addEventListener('click', function () { box.remove(); });
+    box.addEventListener('click', function (e) { if (e.target === box) box.remove(); });
+  }
+
+  function startGame(mode) {
+    G = newGame(mode);
+    $('startBox').hidden = true;
+    $('gameBox').hidden = false;
+    log('新的一局（' + ({ easy:'轻松', normal:'普通', hard:'困难' })[mode] + '）', 'hl');
+    log('每洞 4 颗，共 128 颗。点自己营地的洞播种。');
+    render();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-mode]'), function (b) {
+    b.addEventListener('click', function () { startGame(b.getAttribute('data-mode')); });
+  });
+
+  $('rulesBtn').addEventListener('click', showRules);
+
+  window.addEventListener('error', function (e) {
+    try {
+      var el = document.getElementById('log');
+      if (el) {
+        var d = document.createElement('div');
+        d.className = 'bad';
+        d.textContent = '脚本错误：' + (e.message || '');
+        el.appendChild(d);
+      }
+    } catch (x) {}
+  });
+
+  window.omweso = {
+    state: function () { return G; },
+    dump: function () {
+      if (!G) return null;
+      var out = [];
+      for (var r = 0; r < 4; r++) out.push(G.pits.slice(r * 8, r * 8 + 8));
+      return { rows: out, mine: G.myCaptured, opp: G.aiCaptured, turn: G.turn, forced: G.forced };
+    }
+  };
+})();
+</script>
+</body>
+</html>
