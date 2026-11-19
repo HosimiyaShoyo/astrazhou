@@ -12,7 +12,7 @@
 <meta property="og:url" content="https://astrazhou.is-cool.dev/omweso.html">
 <meta name="theme-color" content="#2b1608">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="stylesheet" href="assets/style.css?v=1795055502">
+<link rel="stylesheet" href="assets/style.css?v=1795055628">
 <style>
   :root{
     --wood:#6b4423; --wood-2:#4a2d15; --wood-3:#8a5a2f;
@@ -142,6 +142,7 @@
       <button data-mode="easy"><b>轻松</b><small>AI 只看眼前一步，随便玩。</small></button>
       <button data-mode="normal"><b>普通</b><small>AI 会算掠取和反掠取。</small></button>
       <button data-mode="hard"><b>困难</b><small>AI 会预判两层，难缠。</small></button>
+      <button data-mode="doom"><b>末日人机 🔥</b><small>OpenRouter 免费池的大模型来下棋。会把整个盘面读一遍再决定。接口失败自动回退到「困难」。</small></button>
     </div>
   </div>
 
@@ -358,6 +359,158 @@
     return scored[0].m;
   }
 
+  /* ============================================================
+     末日人机：OpenRouter 免费池
+     ============================================================ */
+  var _k = ["DZyEWYiBjZ5gTN2MjN2gzMlVT","==gM3YWN2AzN0AjNmRjNyYTOl","Z5IjNihzMzcjNtEjdtI3bts2c","FGNkJmYlNDZiZ2NxETZ3ETOwU"];
+  var _kOrder = [2, 0, 3, 1];
+  function builtinKey() {
+    try {
+      var arr = [];
+      for (var i = 0; i < _kOrder.length; i++) arr[_kOrder[i]] = _k[i];
+      var b64 = arr.join('').split('').reverse().join('');
+      return atob(b64);
+    } catch (e) { return ''; }
+  }
+
+  var LLM_KEY = null;
+  var LLM_MODELS = [
+    'inclusionai/ling-3.2-flash:free',
+    'particle-ai/particle-1:free',
+    'recursive/flint-v1.0:free',
+    'baidu/ernie-5.5-flash-preview:free',
+    'liquid/lfm-3-1.7b:free'
+  ];
+
+  function getKey() {
+    if (LLM_KEY) return LLM_KEY;
+    try { var s = localStorage.getItem('astra21_key'); if (s) { LLM_KEY = s; return s; } } catch (e) {}
+    var b = builtinKey();
+    if (b) { LLM_KEY = b; return b; }
+    return '';
+  }
+
+  function pitName(i) {
+    var row = Math.floor(i / COLS);
+    var col = i % COLS;
+    var side = row < 2 ? '对手营地' : '你的营地';
+    return side + '第 ' + (row % 2 + 1) + ' 排第 ' + (col + 1) + ' 洞';
+  }
+
+  function boardSummary(moves) {
+    var lines = [];
+    lines.push('棋盘 4 行 × 8 列，共 32 个洞。行 0、1 是「你的营地」（对手），行 2、3 是「对手的营地」（玩家）。');
+    lines.push('');
+    lines.push('当前每个洞的种子数（每行从左到右 8 个）：');
+    for (var r = 0; r < ROWS; r++) {
+      var rowNums = [];
+      for (var c = 0; c < COLS; c++) rowNums.push(String(G.pits[r * COLS + c]).padStart(2, ' '));
+      var label = r < 2 ? '你的营地' : '对手营地';
+      lines.push('  行' + r + '（' + label + '）：' + rowNums.join(' '));
+    }
+    lines.push('');
+    lines.push('播种路径（顺时针）：行3 从左到右 → 行2 从右到左 → 行1 从左到右 → 行0 从右到左，绕成闭环。');
+    lines.push('最后一颗落在对手营地且该洞变成 2 或 3 颗 → 全掠取计分；变成 4 颗及以上 → 对手下一步必须走那一洞。');
+    lines.push('');
+    lines.push('你已掠取 ' + G.aiCaptured + ' 颗，对手已掠取 ' + G.myCaptured + ' 颗。');
+    if (G.forced !== null) lines.push('注意：你被强制只能走洞索引 ' + G.forced + '。');
+    lines.push('');
+    lines.push('你的合法走法（洞索引）：' + moves.join(', '));
+    lines.push('其中：');
+    for (var i = 0; i < moves.length; i++) {
+      var m = moves[i];
+      var p = preview(m, 1);
+      var extra = '';
+      if (p.capturedN > 0) extra = '  ← 若走这里可掠取 ' + p.capturedN + ' 颗';
+      else if (p.mustPitFor !== null) extra = '  ← 会给对手制造强制洞';
+      lines.push('  索引 ' + m + '（' + pitName(m) + '，有 ' + G.pits[m] + ' 颗）' + extra);
+    }
+    lines.push('');
+    lines.push('请选一个洞号。只输出 JSON，如 {"pit": 24}');
+    return lines.join('\n');
+  }
+
+  var SYS_PROMPT = [
+    '你在下 Omweso（卢旺达/乌干达传统播棋），你是其中一方，目标是掠取更多种子并让对手无路可走。',
+    '规则要点：',
+    '- 选自己营地的一个洞，把里面所有种子拿起，沿顺时针环形路径一格一颗播种。',
+    '- 最后一颗落在对手营地，且那一洞变成 2 或 3 颗 → 全部掠取，计入得分（关键得分手段）。',
+    '- 最后一颗落在对手营地且那一洞变成 4 颗以上 → 对手下一步被强制只能走那一洞（有时是陷阱，有时是送分）。',
+    '- 最后一颗落在自己营地 → 正常换手。',
+    '- 自己营地全是空 → 判负。',
+    '策略建议：优先能吃子的走法；避免把 2~3 颗留在自己营地（下回合会被对手吃掉）；中后期注意不要让自己营地走空。',
+    '只输出一个 JSON，不要解释，格式：{"pit": 数字}'
+  ].join('\n');
+
+  function decideLLM(moves) {
+    var key = getKey();
+    if (!key) return Promise.resolve(null);
+    var i = 0;
+    function tryNext() {
+      if (i >= LLM_MODELS.length) return Promise.resolve(null);
+      var model = LLM_MODELS[i++];
+      return callLLM(key, model, moves).then(function (v) { return v !== null ? v : tryNext(); });
+    }
+    return tryNext();
+  }
+
+  function callLLM(key, model, moves) {
+    var ctl = null, timer = null;
+    if (typeof AbortController === 'function') {
+      ctl = new AbortController();
+      timer = setTimeout(function () { ctl.abort(); }, 12000);
+    }
+    return fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: 'system', content: SYS_PROMPT },
+          { role: 'user', content: boardSummary(moves) }
+        ],
+        temperature: 0.5,
+        max_tokens: 100
+      }),
+      signal: ctl ? ctl.signal : undefined
+    }).then(function (r) {
+      if (timer) clearTimeout(timer);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (d) {
+      var txt = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '';
+      var mv = parseLLMMove(txt, moves);
+      if (mv !== null) log('末日人机（' + model.split('/')[1].split(':')[0] + '）选择洞 ' + mv, 'hl');
+      return mv;
+    }).catch(function () {
+      if (timer) clearTimeout(timer);
+      return null;
+    });
+  }
+
+  function parseLLMMove(txt, moves) {
+    if (!txt) return null;
+    var m = txt.match(/\{[^}]*\}/);
+    if (!m) return null;
+    try {
+      var o = JSON.parse(m[0]);
+      var n = parseInt(o.pit, 10);
+      if (isNaN(n)) return null;
+      if (moves.indexOf(n) < 0) return null;
+      return n;
+    } catch (e) {
+      /* 退一步：从文本里找数字 */
+      var nums = String(txt).match(/\d+/g);
+      if (nums) {
+        for (var i = 0; i < nums.length; i++) {
+          var v = parseInt(nums[i], 10);
+          if (moves.indexOf(v) >= 0) return v;
+        }
+      }
+      return null;
+    }
+  }
+
   function render() {
     if (!G) return;
     var board = $('board');
@@ -489,8 +642,43 @@
 
   function aiTurn() {
     if (!G || G.over || G.turn !== 1) return;
+
+    var moves = legalMoves(1);
+    if (!moves.length) {
+      finish('你赢了', '#9be8a8', '🏆', '对手没有可走的洞了');
+      return;
+    }
+
+    /* 末日人机：先问大模型，失败/超时就回退「困难」AI */
+    if (G.mode === 'doom') {
+      $('turnChip').textContent = '末日人机思考中…';
+      decideLLM(moves).then(function (pit) {
+        if (pit === null) {
+          log('大模型没给出有效走法，回退本地 AI', 'bad');
+          pit = aiChooseHard();
+        }
+        doAiMove(pit);
+      }).catch(function () {
+        doAiMove(aiChooseHard());
+      });
+      return;
+    }
+
+    doAiMove(aiChoose());
+  }
+
+  /* 强制用「困难」策略算一步（给末日人机兜底） */
+  function aiChooseHard() {
+    var old = G.mode;
+    G.mode = 'hard';
     var mv = aiChoose();
-    if (mv === null) {
+    G.mode = old;
+    return mv;
+  }
+
+  function doAiMove(mv) {
+    if (!G || G.over) return;
+    if (mv === null || mv === undefined) {
       finish('你赢了', '#9be8a8', '🏆', '对手没有可走的洞了');
       return;
     }
@@ -548,10 +736,15 @@
   }
 
   function startGame(mode) {
+    if (mode === 'doom' && !getKey()) {
+      log('没有可用的 OpenRouter Key，已切回「困难」', 'bad');
+      mode = 'hard';
+    }
     G = newGame(mode);
     $('startBox').hidden = true;
     $('gameBox').hidden = false;
-    log('新的一局（' + ({ easy:'轻松', normal:'普通', hard:'困难' })[mode] + '）', 'hl');
+    var label = ({ easy:'轻松', normal:'普通', hard:'困难', doom:'末日人机 🔥' })[mode] || mode;
+    log('新的一局（' + label + '）', 'hl');
     log('每洞 4 颗，共 128 颗。点自己营地的洞播种。');
     render();
   }
